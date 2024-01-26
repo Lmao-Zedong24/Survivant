@@ -1,0 +1,18 @@
+# Download GLFW
+FetchContent_Declare(
+	GLFW 
+	GIT_REPOSITORY https://github.com/glfw/glfw.git
+	GIT_TAG 3.3.9
+	GIT_SHALLOW ON
+)
+
+set(BUILD_SHARED_LIBS OFF)
+set(GLFW_INSTALL OFF)
+set(GLFW_BUILD_EXAMPLES OFF)
+set(GLFW_BUILD_TESTS OFF)
+set(GLFW_BUILD_DOCS OFF)
+
+FetchContent_MakeAvailable(GLFW)
+
+set(GLFW_NAME glfw PARENT_SCOPE)
+set(GLFW_INCLUDE_DIR ${GLFW_SOURCE_DIR}/include PARENT_SCOPE)

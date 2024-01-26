@@ -1,0 +1,38 @@
+# Include sub directories
+# Merge and cache the externally accessible include directories
+
+# Core
+#add_subdirectory(Core)
+set(ENGINE_TARGETS ${CORE_NAME})
+set(ENGINE_INCLUDE_DIRS ${CORE_INCLUDE_DIR} ${RAPIDJSON_INCLUDE_DIR})
+
+# Audio
+#add_subdirectory(Audio)
+list(APPEND ENGINE_TARGETS ${AUDIO_NAME})
+list(APPEND ENGINE_INCLUDE_DIRS ${AUDIO_INCLUDE_DIR})
+
+# Physics
+#add_subdirectory(Physics)
+list(APPEND ENGINE_TARGETS ${PHYSICS_NAME})
+list(APPEND ENGINE_INCLUDE_DIRS ${PHYSICS_INCLUDE_DIR})
+
+# Rendering
+#add_subdirectory(Rendering)
+list(APPEND ENGINE_TARGETS ${RENDERING_NAME})
+list(APPEND ENGINE_INCLUDE_DIRS ${RENDERING_INCLUDE_DIR})
+
+# UI
+#add_subdirectory(UI)
+list(APPEND ENGINE_TARGETS ${UI_NAME})
+list(APPEND ENGINE_INCLUDE_DIRS ${UI_INCLUDE_DIR})
+
+# App
+#add_subdirectory(App)
+list(APPEND ENGINE_TARGETS ${APP_NAME})
+list(APPEND ENGINE_INCLUDE_DIRS ${APP_INCLUDE_DIR})
+
+message(STATUS "ENGINE_TARGETS: ${ENGINE_TARGETS}")
+message(STATUS "ENGINE_INCLUDE_DIRS: ${ENGINE_INCLUDE_DIRS}")
+
+set(ENGINE_TARGETS ${ENGINE_TARGETS} CACHE INTERNAL "")
+set(ENGINE_INCLUDE_DIRS ${ENGINE_INCLUDE_DIRS} CACHE INTERNAL "")
