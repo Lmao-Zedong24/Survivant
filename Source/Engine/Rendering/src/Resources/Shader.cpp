@@ -1,0 +1,319 @@
+#include "SurvivantRendering/Resources/Shader.h"
+
+#include "SurvivantRendering/Enums/EAccessSpecifier.h"
+
+#include <sstream>
+
+#include <glad/gl.h>
+
+#include <SurvivantCore/Debug/Assertion.h>
+#include <SurvivantCore/Debug/Logger.h>
+#include <SurvivantCore/Utility/Utility.h>
+
+using namespace SvCore::Utility;
+using namespace SvRendering::Enums;
+
+namespace SvRendering::Resources
+{
+    Shader::Shader(std::string p_source)
+        : m_source(std::move(p_source))
+    {
+        ASSERT(ParseSource(), "Unable to initialize shader - Couldn't pare source");
+    }
+
+    Shader::Shader(const Shader& p_other)
+        : m_source(p_other.m_source)
+    {
+        if (p_other.m_program != 0)
+        ASSERT(ParseSource());
+    }
+
+    Shader::Shader(Shader&& p_other) noexcept
+        : m_source(std::move(p_other.m_source)), m_program(p_other.m_program)
+    {
+        p_other.m_program = 0;
+    }
+
+    Shader::~Shader()
+    {
+        glDeleteProgram(m_program);
+    }
+
+    Shader& Shader::operator=(const Shader& p_other)
+    {
+        if (&p_other == this)
+            return *this;
+
+        m_source = p_other.m_source;
+
+        if (p_other.m_program != 0)
+        ASSERT(ParseSource());
+
+        return *this;
+    }
+
+    Shader& Shader::operator=(Shader&& p_other) noexcept
+    {
+        if (&p_other == this)
+            return *this;
+
+        m_source  = p_other.m_source;
+        m_program = p_other.m_program;
+
+        p_other.m_program = 0;
+
+        return *this;
+    }
+
+    void Shader::Use() const
+    {
+        glUseProgram(m_program);
+    }
+
+    void Shader::Unbind()
+    {
+        glUseProgram(0);
+    }
+
+    void Shader::SetUniformInt(const std::string& p_name, const int p_value)
+    {
+        glUniform1i(GetUniformLocation(p_name), p_value);
+    }
+
+    void Shader::SetUniformFloat(const std::string& p_name, const float p_value)
+    {
+        glUniform1f(GetUniformLocation(p_name), p_value);
+    }
+
+    void Shader::SetUniformVec2(const std::string& p_name, const LibMath::Vector2& p_value)
+    {
+        glUniform2fv(GetUniformLocation(p_name), 1, p_value.getArray());
+    }
+
+    void Shader::SetUniformVec3(const std::string& p_name, const LibMath::Vector3& p_value)
+    {
+        glUniform3fv(GetUniformLocation(p_name), 1, p_value.getArray());
+    }
+
+    void Shader::SetUniformVec4(const std::string& p_name, const LibMath::Vector4& p_value)
+    {
+        glUniform4fv(GetUniformLocation(p_name), 1, p_value.getArray());
+    }
+
+    void Shader::SetUniformMat4(const std::string& p_name, const LibMath::Matrix4& p_value)
+    {
+        glUniformMatrix4fv(GetUniformLocation(p_name), 1, GL_TRUE, p_value.getArray());
+    }
+
+    int Shader::GetUniformInt(const std::string& p_name)
+    {
+        int value;
+        glGetUniformiv(m_program, GetUniformLocation(p_name), &value);
+        return value;
+    }
+
+    float Shader::GetUniformFloat(const std::string& p_name)
+    {
+        float value;
+        glGetUniformfv(m_program, GetUniformLocation(p_name), &value);
+        return value;
+    }
+
+    LibMath::Vector2 Shader::GetUniformVec2(const std::string& p_name)
+    {
+        GLfloat values[16];
+        glGetUniformfv(m_program, GetUniformLocation(p_name), values);
+        return reinterpret_cast<LibMath::Vector2&>(values);
+    }
+
+    LibMath::Vector3 Shader::GetUniformVec3(const std::string& p_name)
+    {
+        GLfloat values[16];
+        glGetUniformfv(m_program, GetUniformLocation(p_name), values);
+        return reinterpret_cast<LibMath::Vector3&>(values);
+    }
+
+    LibMath::Vector4 Shader::GetUniformVec4(const std::string& p_name)
+    {
+        GLfloat values[16];
+        glGetUniformfv(m_program, GetUniformLocation(p_name), values);
+        return reinterpret_cast<LibMath::Vector4&>(values);
+    }
+
+    LibMath::Matrix4 Shader::GetUniformMat4(const std::string& p_name)
+    {
+        GLfloat values[16];
+        glGetUniformfv(m_program, GetUniformLocation(p_name), values);
+        return reinterpret_cast<LibMath::Matrix4&>(values);
+    }
+
+    std::string Shader::GetTokenFromType(const uint32_t p_shaderType)
+    {
+        switch (p_shaderType)
+        {
+        case GL_VERTEX_SHADER:
+            return "vertex";
+        case GL_FRAGMENT_SHADER:
+            return "fragment";
+        case GL_GEOMETRY_SHADER:
+            return "geometry";
+        case GL_TESS_EVALUATION_SHADER:
+            return "tess_evaluation";
+        case GL_TESS_CONTROL_SHADER:
+            return "tess_control";
+        case GL_COMPUTE_SHADER:
+            return "compute";
+        default:
+            return {};
+        }
+    }
+
+    uint32_t Shader::GetTypeFromToken(const std::string& p_shaderType)
+    {
+        if (p_shaderType == "vertex" || p_shaderType == "vert")
+            return GL_VERTEX_SHADER;
+
+        if (p_shaderType == "fragment" || p_shaderType == "frag")
+            return GL_FRAGMENT_SHADER;
+
+        if (p_shaderType == "geometry" || p_shaderType == "geo")
+            return GL_GEOMETRY_SHADER;
+
+        if (p_shaderType == "tesselation_evaluation" || p_shaderType == "tess_evaluation"
+            || p_shaderType == "tesselation_eval" || p_shaderType == "tess_eval")
+            return GL_TESS_EVALUATION_SHADER;
+
+        if (p_shaderType == "tesselation_control" || p_shaderType == "tess_control"
+            || p_shaderType == "tesselation_ctrl" || p_shaderType == "tess_ctrl")
+            return GL_TESS_CONTROL_SHADER;
+
+        if (p_shaderType == "compute" || p_shaderType == "com")
+            return GL_COMPUTE_SHADER;
+
+        return GL_INVALID_VALUE;
+    }
+
+    GLuint Shader::CompileSource(const GLenum p_shaderType, const std::string& p_source)
+    {
+        const GLuint shaderId     = glCreateShader(p_shaderType);
+        const char*  shaderSource = p_source.c_str();
+        const auto   sourceSize   = static_cast<GLint>(p_source.size());
+
+        glShaderSource(shaderId, 1, &shaderSource, &sourceSize);
+        glCompileShader(shaderId);
+
+        int success;
+        glGetShaderiv(shaderId, GL_COMPILE_STATUS, &success);
+
+        if (!success)
+        {
+            char infoLog[INFO_LOG_SIZE];
+            glGetShaderInfoLog(shaderId, INFO_LOG_SIZE, nullptr, infoLog);
+            SV_LOG_ERROR("ERROR::SHADER::%s::COMPILATION_FAILED\n%s", GetTokenFromType(p_shaderType).c_str(), infoLog);
+            glDeleteShader(shaderId);
+            return 0;
+        }
+
+        return shaderId;
+    }
+
+    bool Shader::ParseSource()
+    {
+        Reset();
+
+        if (m_source.empty())
+            return false;
+
+        m_program = glCreateProgram();
+
+        std::vector<std::string> sources = SplitString(m_source, "#shader ", true);
+
+        std::vector<GLuint> shaderIds;
+        shaderIds.reserve(sources.size());
+
+        for (std::string& source : sources)
+        {
+            if (source.empty())
+                continue;
+
+            std::istringstream iStrStream(source);
+            std::string        token;
+
+            iStrStream >> token;
+            std::ranges::transform(token, token.begin(), [](const char p_c)
+            {
+                return static_cast<char>(std::tolower(p_c));
+            });
+            const GLuint shaderType = GetTypeFromToken(token);
+
+            if (shaderType != GL_INVALID_VALUE)
+            {
+                std::string firstLine;
+                std::getline(iStrStream, firstLine);
+                source.erase(0, token.size() + firstLine.size());
+
+                if (const GLuint shaderId = CompileSource(shaderType, source))
+                {
+                    shaderIds.emplace_back(shaderId);
+                    glAttachShader(m_program, shaderId);
+                }
+            }
+        }
+
+        const bool isSuccess = Link();
+
+        for (const GLuint shaderId : shaderIds)
+            glDeleteShader(shaderId);
+
+        return isSuccess;
+    }
+
+    bool Shader::Link() const
+    {
+        if (m_program == 0)
+            return false;
+
+        int success;
+        glLinkProgram(m_program);
+        glGetProgramiv(m_program, GL_LINK_STATUS, &success);
+
+        if (!success)
+        {
+            char infoLog[INFO_LOG_SIZE];
+            glGetProgramInfoLog(m_program, INFO_LOG_SIZE, nullptr, infoLog);
+            SV_LOG_ERROR("ERROR::SHADER::PROGRAM::LINKING_FAILED\n%s", infoLog);
+            return false;
+        }
+
+        glValidateProgram(m_program);
+        glGetProgramiv(m_program, GL_VALIDATE_STATUS, &success);
+
+        if (!success)
+        {
+            char infoLog[INFO_LOG_SIZE];
+            glGetProgramInfoLog(m_program, INFO_LOG_SIZE, nullptr, infoLog);
+            SV_LOG_ERROR("ERROR::SHADER::PROGRAM::VALIDATION_FAILED\n%s", infoLog);
+            return false;
+        }
+
+        return true;
+    }
+
+    GLint Shader::GetUniformLocation(const std::string& p_uniformName)
+    {
+        const auto& it = m_uniformLocationsCache.find(p_uniformName);
+
+        if (it != m_uniformLocationsCache.end())
+            return it->second;
+
+        return m_uniformLocationsCache[p_uniformName] = glGetUniformLocation(m_program, p_uniformName.c_str());
+    }
+
+    void Shader::Reset()
+    {
+        glDeleteProgram(m_program);
+        m_program = 0;
+
+        m_uniformLocationsCache.clear();
+    }
+}
