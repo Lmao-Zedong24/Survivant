@@ -7,7 +7,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 # Merge and cache the externally accessible include directories
 
 # Core
-#add_subdirectory(Core)
+add_subdirectory(Core)
 set(ENGINE_TARGETS ${CORE_NAME})
 set(ENGINE_INCLUDE_DIRS ${CORE_INCLUDE_DIR} ${RAPIDJSON_INCLUDE_DIR})
 
