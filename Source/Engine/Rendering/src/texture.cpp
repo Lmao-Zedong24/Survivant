@@ -3,12 +3,7 @@
 #include "stb_image.h"
 #include "SurvivantRendering/Resources/texture.h"
 
-Texture::Texture(const std::string& p_filepath) :
-	m_path(p_filepath)
-	, m_width(0)
-	, m_height(0)
-	, m_numchannels(0)
-	, m_pixels(nullptr)
+Texture::Texture(const std::string& p_filepath)
 {
 	// Load image using stb_image
 	int width, height, channels;
@@ -23,6 +18,16 @@ Texture::Texture(const std::string& p_filepath) :
 	}
 
 	LoadTexture();
+}
+
+Texture::Texture() :
+	m_path("")
+	, m_width(0)
+	, m_height(0)
+	, m_numchannels(0)
+	, m_pixels(nullptr)
+{
+
 }
 
 Texture::~Texture()
@@ -48,7 +53,7 @@ void Texture::LoadTexture()
 
 	if (m_pixels && dataFormat == 0)
 	{
-		std::cerr << "Texture format not supported - num channels: {}" << m_numchannels << std::endl;
+		std::runtime_error("Texture format not supported - num channels: {}"  + std::to_string(m_numchannels));
 	}
 
 	if (m_pixels && dataFormat != 0)
@@ -104,7 +109,20 @@ void Texture::SetWrapping(GLenum p_wrapS, GLenum p_wrapT)
 void Texture::GenerateMipmaps()
 {
 	glBindTexture(GL_TEXTURE_2D, m_textureID);
+
 	glGenerateMipmap(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+void Texture::GenerateMipmaps(bool p_generateMipMaps)
+{
+	glBindTexture(GL_TEXTURE_2D, m_textureID);
+
+	if (p_generateMipMaps)
+	{
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
@@ -171,6 +189,14 @@ unsigned char* Texture::LoadFile(const char* p_filepath, int& p_width, int& p_he
 	}
 
 	return data;
+}
+void Texture::CheckGLErrors(const std::string& p_location)
+{
+	GLenum error = glGetError();
+	if (error != GL_NO_ERROR)
+	{
+		std::cerr << "OpenGL error at " << p_location << ":" << std::endl;
+	}
 }
 
 void Texture::FreeImageData(unsigned char* p_data)

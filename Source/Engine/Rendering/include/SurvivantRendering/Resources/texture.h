@@ -6,6 +6,8 @@ class Texture
 {
 public:
 
+	//Default constructor
+	Texture();
 	//Initialise and allocate resources for your texture in the constructor
 	Texture(const std::string& p_filepath);
 
@@ -28,6 +30,9 @@ public:
 	//Generate mipmaps for the texture for better rendering quality
 	void									GenerateMipmaps();
 
+	// Flag to control mipmaps generation
+	void									GenerateMipmaps(bool p_generateMipmaps);
+
 	//Get the OpenGL ID associated with the texture
 	GLuint									GetID() const;
 
@@ -48,7 +53,10 @@ public:
 	static void								SetActiveTextureUnit(GLenum p_TextureUnit);
 
 	//Load image data from a file
-	static unsigned char* LoadFile(const char* p_filepath, int& p_width, int& p_height, GLenum& p_format);
+	static unsigned char*					LoadFile(const char* p_filepath, int& p_width, int& p_height, GLenum& p_format);
+
+	//Checking OpenGL errors
+	void									CheckGLErrors(const std::string& p_location);
 
 	//Free memory allocated for image data
 	static void								FreeImageData(unsigned char* p_data);
