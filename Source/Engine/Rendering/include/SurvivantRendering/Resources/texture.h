@@ -58,6 +58,9 @@ public:
 	//Checking OpenGL errors
 	void									CheckGLErrors(const std::string& p_location);
 
+	//Create a copy clone of the texture
+	Texture Clone() const;
+
 	//Free memory allocated for image data
 	static void								FreeImageData(unsigned char* p_data);
 

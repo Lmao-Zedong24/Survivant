@@ -199,6 +199,41 @@ void Texture::CheckGLErrors(const std::string& p_location)
 	}
 }
 
+Texture  Texture::Clone() const
+{
+	//Create a new texture
+	Texture clonedTexture;
+
+	clonedTexture.m_height = m_height;
+	clonedTexture.m_width = m_width;
+	clonedTexture.m_numchannels = m_numchannels;
+	clonedTexture.m_path = m_path;
+
+	//Generate a new OpenGL TextureID
+	glGenTextures(1, &clonedTexture.m_textureID);
+
+	// Bind the new texture to set its parameters
+	glBindTexture(GL_TEXTURE_2D, clonedTexture.m_textureID);
+
+	// Set internal format and allocate storage (you may need to adjust this based on your use case)
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+
+	// Copy data from the original texture if it exists
+	if (m_pixels)
+	{
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_width, m_height, GL_RGBA, GL_UNSIGNED_BYTE, m_pixels);
+	}
+
+	// Set the same filtering and wrapping parameters
+	clonedTexture.SetFiltering(GL_TEXTURE_MIN_FILTER, GL_TEXTURE_MAG_FILTER);
+	clonedTexture.SetWrapping(GL_TEXTURE_WRAP_S, GL_TEXTURE_WRAP_T);
+
+	// Unbind the texture
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	return clonedTexture;
+}
+
 void Texture::FreeImageData(unsigned char* p_data)
 {
 	stbi_image_free(p_data);
