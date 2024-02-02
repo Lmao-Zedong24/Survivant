@@ -109,7 +109,6 @@ void Texture::SetWrapping(GLenum p_wrapS, GLenum p_wrapT)
 void Texture::GenerateMipmaps()
 {
 	glBindTexture(GL_TEXTURE_2D, m_textureID);
-
 	glGenerateMipmap(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
@@ -232,6 +231,17 @@ Texture  Texture::Clone() const
 	glBindTexture(GL_TEXTURE_2D, 0);
 
 	return clonedTexture;
+}
+
+bool Texture::operator==(const Texture& other) const
+{
+	return m_textureID == other.m_textureID;
+}
+
+
+bool Texture::operator!=(const Texture& other) const
+{
+	return !(*this == other);
 }
 
 void Texture::FreeImageData(unsigned char* p_data)

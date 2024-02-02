@@ -64,6 +64,10 @@ public:
 	//Free memory allocated for image data
 	static void								FreeImageData(unsigned char* p_data);
 
+	//Compare two textures for equality
+	bool									operator==(const Texture& other) const;
+	bool									operator!=(const Texture& other) const;
+
 
 private:
 	GLuint									m_textureID;
