@@ -47,6 +47,32 @@ namespace SvCore::Utility
      */
     template <class CompareFunc>
     void TrimString(std::string& p_str, CompareFunc p_compareFunc = &isspace);
+
+    /**
+     * \brief Converts a string to upper case
+     * \param p_str The string to convert to upper case
+     */
+    void ToUpperInPlace(std::string& p_str);
+
+    /**
+     * \brief Converts a string to lower case
+     * \param p_str The string to convert to lower case
+     */
+    void ToLowerInPlace(std::string& p_str);
+
+    /**
+     * \brief Converts a string to upper case
+     * \param p_str The string to convert to upper case
+     * \return The string converted to upper case
+     */
+    std::string ToUpper(std::string p_str);
+
+    /**
+     * \brief Converts a string to lower case
+     * \param p_str The string to convert to lower case
+     * \return The string converted to lower case
+     */
+    std::string ToLower(std::string p_str);
 }
 
 #include "SurvivantCore/Utility/Utility.inl"

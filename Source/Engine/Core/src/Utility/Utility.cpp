@@ -17,7 +17,7 @@ namespace SvCore::Utility
         }
 
         size_t start = 0;
-        size_t end = p_str.find(p_delimiter, start);
+        size_t end   = p_str.find(p_delimiter, start);
 
         while (start < p_str.size())
         {
@@ -30,9 +30,37 @@ namespace SvCore::Utility
                 break;
 
             start = end + strlen(p_delimiter);
-            end = p_str.find(p_delimiter, start);
+            end   = p_str.find(p_delimiter, start);
         }
 
         return result;
+    }
+
+    void ToUpperInPlace(std::string& p_str)
+    {
+        std::ranges::transform(p_str, p_str.begin(), [](const char p_c)
+        {
+            return static_cast<char>(std::toupper(p_c));
+        });
+    }
+
+    void ToLowerInPlace(std::string& p_str)
+    {
+        std::ranges::transform(p_str, p_str.begin(), [](const char p_c)
+        {
+            return static_cast<char>(std::tolower(p_c));
+        });
+    }
+
+    std::string ToUpper(std::string p_str)
+    {
+        ToUpperInPlace(p_str);
+        return p_str;
+    }
+
+    std::string ToLower(std::string p_str)
+    {
+        ToLowerInPlace(p_str);
+        return p_str;
     }
 }
