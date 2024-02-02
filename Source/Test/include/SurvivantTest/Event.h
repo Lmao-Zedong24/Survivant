@@ -65,10 +65,9 @@ namespace Core
 	template<typename ...Args>
 	void Event<Args...>::Invoke(Args... p_parameters)
 	{
-		for (EventDelegate& action : m_listeners)
+		for (EventDelegate& eventDelegate : m_listeners)
 		{
-			action(p_parameters...);
-
+			eventDelegate(p_parameters...);
 		}
 	}
 
@@ -78,21 +77,4 @@ namespace Core
 	{
 		this->AddListeners(p_other.m_listeners);
 	}
-
-	/*template<typename ...Args>
-	void Event<Args...>::Combine(const EventBase* p_other)
-	{
-		Event<Args...>* ptr = nullptr;
-		try
-		{
-			ptr = dynamic_cast<Event<Args...>*>(p_other);
-		}
-		catch
-		{
-			printf("Cant combine events because they are not the same type.")
-		}
-
-		m_listeners.insert()
-
-	}*/
 }
