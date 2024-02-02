@@ -163,8 +163,6 @@ namespace SvRendering::Resources
         std::string                          m_source;
         uint32_t                             m_program = 0;
 
-        static constexpr int INFO_LOG_SIZE = 512;
-
         /**
          * \brief Converts a shader type enum value to its corresponding token string
          * \param p_shaderType The target shader type
@@ -177,7 +175,34 @@ namespace SvRendering::Resources
          * \param p_shaderType The target shader type
          * \return The type enum value corresponding to the given shader type token
          */
-        static uint32_t GetTypeFromToken(const std::string& p_shaderType);
+        static uint32_t GetTypeFromToken(std::string p_shaderType);
+
+        /**
+         * \brief Fetches the log info string for the given shader program
+         * \param p_shaderId The shader program for which to get the log info
+         * \return The given shader program's log info string
+         */
+        static std::string GetShaderLog(uint32_t p_shaderId);
+
+        /**
+         * \brief Fetches the log info string for the given shader program
+         * \param p_shaderProgram The shader program for which to get the log info
+         * \return The given shader program's log info string
+         */
+        static std::string GetProgramLog(uint32_t p_shaderProgram);
+
+        /**
+         * \brief Parses the shader's source and create the appropriate shader types
+         * \return True if at least one type of shader was extracted. False otherwise
+         */
+        bool ParseSource();
+
+        /**
+         * \brief Processes includes for the given shader source
+         * \param p_source The shader source to process includes for
+         * \return True on success. False otherwise
+         */
+        static bool ProcessIncludes(std::string& p_source);
 
         /**
          * \brief Compiles the given shader source
@@ -186,12 +211,6 @@ namespace SvRendering::Resources
          * \return The compiled shader's handle
          */
         static uint32_t CompileSource(uint32_t p_shaderType, const std::string& p_source);
-
-        /**
-         * \brief Parses the shader's source and create the appropriate shader types
-         * \return True if at least one type of shader was extracted. False otherwise
-         */
-        bool ParseSource();
 
         /**
          * \brief Links the shader program.\n

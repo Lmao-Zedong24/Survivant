@@ -195,8 +195,10 @@ namespace SvRendering::Resources
         }
     }
 
-    uint32_t Shader::GetTypeFromToken(const std::string& p_shaderType)
+    uint32_t Shader::GetTypeFromToken(std::string p_shaderType)
     {
+        ToLowerInPlace(p_shaderType);
+
         if (p_shaderType == "vertex" || p_shaderType == "vert")
             return GL_VERTEX_SHADER;
 
@@ -220,28 +222,26 @@ namespace SvRendering::Resources
         return GL_INVALID_VALUE;
     }
 
-    GLuint Shader::CompileSource(const GLenum p_shaderType, const std::string& p_source)
+    std::string Shader::GetShaderLog(const uint32_t p_shaderId)
     {
-        const GLuint shaderId     = glCreateShader(p_shaderType);
-        const char*  shaderSource = p_source.c_str();
-        const auto   sourceSize   = static_cast<GLint>(p_source.size());
+        GLint infoLogLength = 0;
+        glGetShaderiv(p_shaderId, GL_INFO_LOG_LENGTH, &infoLogLength);
 
-        glShaderSource(shaderId, 1, &shaderSource, &sourceSize);
-        glCompileShader(shaderId);
+        std::string infoLog(infoLogLength, '\0');
+        glGetShaderInfoLog(p_shaderId, infoLogLength, &infoLogLength, infoLog.data());
 
-        int success;
-        glGetShaderiv(shaderId, GL_COMPILE_STATUS, &success);
+        return infoLog;
+    }
 
-        if (!success)
-        {
-            char infoLog[INFO_LOG_SIZE];
-            glGetShaderInfoLog(shaderId, INFO_LOG_SIZE, nullptr, infoLog);
-            SV_LOG_ERROR("ERROR::SHADER::%s::COMPILATION_FAILED\n%s", GetTokenFromType(p_shaderType).c_str(), infoLog);
-            glDeleteShader(shaderId);
-            return 0;
-        }
+    std::string Shader::GetProgramLog(const uint32_t p_shaderProgram)
+    {
+        GLint infoLogLength = 0;
+        glGetProgramiv(p_shaderProgram, GL_INFO_LOG_LENGTH, &infoLogLength);
 
-        return shaderId;
+        std::string infoLog(infoLogLength, '\0');
+        glGetProgramInfoLog(p_shaderProgram, infoLogLength, &infoLogLength, infoLog.data());
+
+        return infoLog;
     }
 
     bool Shader::ParseSource()
@@ -267,10 +267,7 @@ namespace SvRendering::Resources
             std::string        token;
 
             iStrStream >> token;
-            std::ranges::transform(token, token.begin(), [](const char p_c)
-            {
-                return static_cast<char>(std::tolower(p_c));
-            });
+
             const GLuint shaderType = GetTypeFromToken(token);
 
             if (shaderType != GL_INVALID_VALUE)
@@ -278,6 +275,9 @@ namespace SvRendering::Resources
                 std::string firstLine;
                 std::getline(iStrStream, firstLine);
                 source.erase(0, token.size() + firstLine.size());
+
+                if (!ProcessIncludes(source))
+                    continue;
 
                 if (const GLuint shaderId = CompileSource(shaderType, source))
                 {
@@ -295,6 +295,79 @@ namespace SvRendering::Resources
         return isSuccess;
     }
 
+    bool Shader::ProcessIncludes(std::string& p_source)
+    {
+        if (p_source.empty())
+            return true;
+
+        std::string        line;
+        std::istringstream sourceStream(p_source);
+
+        while (std::getline(sourceStream, line))
+        {
+            if (!line.starts_with("#include "))
+                continue;
+
+            const size_t lineSize = line.size();
+            const size_t curPos   = !sourceStream.eof() ? static_cast<size_t>(sourceStream.tellg()) - 1 : p_source.size();
+            const size_t startPos = curPos - lineSize;
+
+            line.erase(0, 9); // Remove the #include
+            const auto trimCallback = [](const char c)
+            {
+                return std::isspace(c) || c == '"' || c == '<' || c == '>';
+            };
+
+            TrimString(line, trimCallback);
+
+            if (!CHECK(!line.empty(), "Empty shader include path", line.c_str()))
+                return false;
+
+            std::ifstream sourceFile(line, std::ios::binary | std::ios::ate);
+
+            if (!CHECK(sourceFile.is_open(), "Invalid shader include path: \"%s\"", line.c_str()))
+                return false;
+
+            const std::ifstream::pos_type length = sourceFile.tellg();
+            sourceFile.seekg(0, std::ios::beg);
+
+            std::string includedShader(length, 0);
+            sourceFile.read(includedShader.data(), length);
+            sourceFile.close();
+
+            if (!ProcessIncludes(includedShader))
+                return false;
+
+            p_source.replace(startPos, lineSize, includedShader);
+        }
+
+        return true;
+    }
+
+    GLuint Shader::CompileSource(const GLenum p_shaderType, const std::string& p_source)
+    {
+        const GLuint shaderId     = glCreateShader(p_shaderType);
+        const char*  shaderSource = p_source.c_str();
+        const auto   sourceSize   = static_cast<GLint>(p_source.size());
+
+        glShaderSource(shaderId, 1, &shaderSource, &sourceSize);
+        glCompileShader(shaderId);
+
+        int success;
+        glGetShaderiv(shaderId, GL_COMPILE_STATUS, &success);
+
+        if (!success)
+        {
+            SV_LOG_ERROR("ERROR::SHADER::%s::COMPILATION_FAILED\n%s", ToUpper(GetTokenFromType(p_shaderType)).c_str(),
+                GetShaderLog(shaderId).c_str());
+
+            glDeleteShader(shaderId);
+            return 0;
+        }
+
+        return shaderId;
+    }
+
     bool Shader::Link() const
     {
         if (m_program == 0)
@@ -306,9 +379,7 @@ namespace SvRendering::Resources
 
         if (!success)
         {
-            char infoLog[INFO_LOG_SIZE];
-            glGetProgramInfoLog(m_program, INFO_LOG_SIZE, nullptr, infoLog);
-            SV_LOG_ERROR("ERROR::SHADER::PROGRAM::LINKING_FAILED\n%s", infoLog);
+            SV_LOG_ERROR("ERROR::SHADER::PROGRAM::LINKING_FAILED\n%s", GetProgramLog(m_program).c_str());
             return false;
         }
 
@@ -317,9 +388,7 @@ namespace SvRendering::Resources
 
         if (!success)
         {
-            char infoLog[INFO_LOG_SIZE];
-            glGetProgramInfoLog(m_program, INFO_LOG_SIZE, nullptr, infoLog);
-            SV_LOG_ERROR("ERROR::SHADER::PROGRAM::VALIDATION_FAILED\n%s", infoLog);
+            SV_LOG_ERROR("ERROR::SHADER::PROGRAM::VALIDATION_FAILED\n%s", GetProgramLog(m_program).c_str());
             return false;
         }
 
