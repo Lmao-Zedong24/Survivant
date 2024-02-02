@@ -65,6 +65,33 @@ namespace SvRendering::Resources
         return *this;
     }
 
+    bool Shader::Load(const std::string& p_path)
+    {
+        Reset();
+        m_source.clear();
+
+        if (!CHECK(!p_path.empty(), "Unable to load the shader - empty path"))
+            return false;
+
+        std::ifstream fileStream(p_path, std::ios::binary | std::ios::ate);
+
+        if (!CHECK(fileStream.is_open(), "Failed to load the shader - Couldn't open file at path \"%s\"", p_path.c_str()))
+            return false;
+
+        const std::ios::pos_type fileLength = fileStream.tellg();
+        fileStream.seekg(0, std::ios::beg);
+
+        m_source.resize(fileLength);
+        fileStream.read(m_source.data(), fileLength);
+
+        return true;
+    }
+
+    bool Shader::Init()
+    {
+        return ParseSource();
+    }
+
     void Shader::Use() const
     {
         glUseProgram(m_program);

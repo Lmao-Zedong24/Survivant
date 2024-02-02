@@ -1,12 +1,15 @@
 #pragma once
+#include "SurvivantCore/Resources/IResource.h"
+
 #include <Matrix.h>
+#include <Vector.h>
+
 #include <string>
 #include <unordered_map>
-#include <Vector.h>
 
 namespace SvRendering::Resources
 {
-    class Shader
+    class Shader final : public SvCore::Resources::IResource
     {
     public:
         Shader() = default;
@@ -16,12 +19,50 @@ namespace SvRendering::Resources
          * \param p_source The shader's source
          */
         explicit Shader(std::string p_source);
-        Shader(const Shader& p_other);
-        Shader(Shader&& p_other) noexcept;
-        ~Shader();
 
+        /**
+         * \brief Copies the given shader
+         * \param p_other The shader to copy
+         */
+        Shader(const Shader& p_other);
+
+        /**
+         * \brief Moves the given shader
+         * \param p_other The shader to move
+         */
+        Shader(Shader&& p_other) noexcept;
+
+        /**
+         * \brief Destroys the shader and frees its resources
+         */
+        ~Shader() override;
+
+        /**
+         * \brief Assigns a copy of the given shader to the current one
+         * \param p_other The shader to copy
+         * \return A reference to the updated shader
+         */
         Shader& operator=(const Shader& p_other);
+
+        /**
+         * \brief Moves the given shader into the current one
+         * \param p_other The shader to move
+         * \return A reference to the modified shader
+         */
         Shader& operator=(Shader&& p_other) noexcept;
+
+        /**
+         * \brief Loads the shader from the file at the given path
+         * \param p_path The loaded shader's path
+         * \return True on success. False otherwise
+         */
+        bool Load(const std::string& p_path) override;
+
+        /**
+         * \brief Initializes the shader
+         * \return True on success. False otherwise
+         */
+        bool Init() override;
 
         /**
          * \brief Uses the shader program.
