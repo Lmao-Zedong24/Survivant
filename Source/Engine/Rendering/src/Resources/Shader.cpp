@@ -18,7 +18,7 @@ namespace SvRendering::Resources
     Shader::Shader(std::string p_source)
         : m_source(std::move(p_source))
     {
-        ASSERT(ParseSource(), "Unable to initialize shader - Couldn't pare source");
+        ASSERT(ParseSource(), "Unable to initialize shader - Couldn't parse source");
     }
 
     Shader::Shader(const Shader& p_other)
