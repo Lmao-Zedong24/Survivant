@@ -58,4 +58,6 @@ else()
 	target_compile_options(${TARGET_NAME} PRIVATE -Wall -Wextra -Wpedantic -Werror)
 endif()
 
+copy_resources(${TARGET_NAME})
+
 set(EDITOR_NAME ${TARGET_NAME} PARENT_SCOPE)
