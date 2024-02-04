@@ -6,54 +6,18 @@
 
 // TODO: Implement relevant parts in rendering lib to get rid of glad/glfw dependencies
 #include "SurvivantCore/Debug/Assertion.h"
+#include "SurvivantCore/Utility/FileSystem.h"
 
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>
 
 using namespace LibMath;
+using namespace SvCore::Utility;
 using namespace SvRendering::Core;
 using namespace SvRendering::Core::Buffers;
 using namespace SvRendering::Resources;
 
-constexpr const char* UNLIT_SHADER_SOURCE = R"(
-#shader vertex
-#version 330 core
-
-layout(location = 0) in vec3 _pos;
-layout(location = 1) in vec3 _normal;
-layout(location = 2) in vec2 _texCoords;
-
-out vec2 TexCoords;
-
-uniform mat4 u_mvp;
-
-void main()
-{
-	gl_Position = u_mvp * vec4(_pos, 1.0);
-}
-
-#shader fragment
-#version 330 core
-
-in vec2 TexCoords;
-
-out vec4 FragColor;
-
-uniform sampler2D u_diffuse;
-
-void main()
-{
-	vec4 texColor = texture(u_diffuse, TexCoords);
-
-	if (texColor.a == 0)
-	{
-		discard;
-		return;
-	}
-
-	FragColor = texColor;
-}
-)";
+constexpr const char* UNLIT_SHADER_PATH = "assets/shaders/Unlit.glsl";
 
 std::pair<const Vertex*, const uint32_t*> MakeCube()
 {
@@ -127,6 +91,9 @@ GLuint GetDefaultTexture()
 
 int main()
 {
+    ASSERT(SetWorkingDirectory(GetApplicationDirectory()), "Failed to update working directory");
+    SV_LOG("Current working directory: \"%s\"", GetWorkingDirectory().c_str());
+
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
@@ -137,7 +104,9 @@ int main()
 
     ASSERT(gladLoadGL(glfwGetProcAddress), "Failed to initialize glad");
 
-    Shader shader(UNLIT_SHADER_SOURCE);
+    Shader shader;
+    ASSERT(shader.Load(UNLIT_SHADER_PATH), "Failed to load shader at path \"%s\"", UNLIT_SHADER_PATH);
+    ASSERT(shader.Init(), "Failed to initialize shader at path \"%s\"", UNLIT_SHADER_PATH);
 
     const auto [vertices, indices] = MakeCube();
 
