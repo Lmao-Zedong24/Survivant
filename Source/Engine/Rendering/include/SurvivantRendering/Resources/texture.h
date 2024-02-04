@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <vector>
 #include "glad/gl.h"
 
 class Texture
@@ -8,8 +9,6 @@ public:
 
 	//Default constructor
 	Texture();
-	//Initialise and allocate resources for your texture in the constructor
-	Texture(const std::string& p_filepath);
 
 	//Release any allocated resources in the destructor
 	~Texture();
@@ -59,16 +58,20 @@ public:
 	void									CheckGLErrors(const std::string& p_location);
 
 	//Create a copy clone of the texture
-	Texture Clone() const;
+	Texture									Clone() const;
 
 	//Free memory allocated for image data
 	static void								FreeImageData(unsigned char* p_data);
 
 	//Compare two textures for equality
-	bool									operator==(const Texture& other) const;
-	bool									operator!=(const Texture& other) const;
+	bool									operator==(const Texture& p_other) const;
+	bool									operator!=(const Texture& p_other) const;
 
+	//Resize the texture
+	void									Resize(int p_newWidth, int p_newHeight);
 
+	//Loads a cubemap texture from a set of six images representing the faces of the cube
+	void									LoadCubeMap(const std::vector<std::string>& p_faceFilepaths);
 private:
 	GLuint									m_textureID;
 	int										m_width;

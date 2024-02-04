@@ -3,23 +3,6 @@
 #include "stb_image.h"
 #include "SurvivantRendering/Resources/texture.h"
 
-Texture::Texture(const std::string& p_filepath)
-{
-	// Load image using stb_image
-	int width, height, channels;
-	stbi_set_flip_vertically_on_load(true);
-	m_pixels = stbi_load(p_filepath.c_str(), &width, &height, &channels, 0);
-
-	if (m_pixels)
-	{
-		m_width = width;
-		m_height = height;
-		m_numchannels = (uint32_t)channels;
-	}
-
-	LoadTexture();
-}
-
 Texture::Texture() :
 	m_path("")
 	, m_width(0)
@@ -121,7 +104,7 @@ void Texture::GenerateMipmaps(bool p_generateMipMaps)
 	{
 		glGenerateMipmap(GL_TEXTURE_2D);
 	}
-	
+
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
