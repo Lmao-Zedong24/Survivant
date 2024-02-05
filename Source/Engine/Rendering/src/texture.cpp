@@ -1,14 +1,69 @@
-#include <iostream>
-#include "glad/gl.h"
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
 #include "SurvivantRendering/Resources/texture.h"
 
+#include <iostream>
+#include <glad/gl.h>
+
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
+GLenum ToGLEnum(ETextureFilter p_filter)
+{
+	switch (p_filter)
+	{
+	case ETextureFilter::Nearest:
+		return GL_NEAREST;
+	case ETextureFilter::Linear:
+		return GL_LINEAR;
+	case ETextureFilter::MipmapNearest:
+		return GL_NEAREST_MIPMAP_NEAREST;
+	case ETextureFilter::MipmapLinear:
+		return GL_LINEAR_MIPMAP_LINEAR;
+	default:
+		return GL_INVALID_ENUM;
+	}
+}
+
+GLenum ToGLEnum(ETextureWrapMode p_wrap)
+{
+	switch (p_wrap)
+	{
+	case ETextureWrapMode::Repeat:
+		return GL_REPEAT;
+	case ETextureWrapMode::ClampToEdge:
+		return GL_CLAMP_TO_EDGE;
+	case ETextureWrapMode::MirroredRepeat:
+		return GL_MIRRORED_REPEAT;
+	default:
+		return GL_INVALID_ENUM;
+	}
+}
+
+GLenum GetGLFormat(uint8_t channels)
+{
+	// Determine the OpenGL format based on the number of channels
+	if (channels == 1)
+	{
+		return GL_RED;
+	}
+	else if (channels == 3)
+	{
+		return GL_RGB;
+	}
+	else if (channels == 4)
+	{
+		return GL_RGBA;
+	}
+	else
+	{
+		std::cerr << "Unsupported number of channels: " << channels << std::endl;
+		return GL_INVALID_ENUM;
+	}
+}
+
 Texture::Texture() :
-	m_path("")
-	, m_width(0)
+	m_width(0)
 	, m_height(0)
-	, m_numchannels(0)
+	, m_numChannels(0)
 	, m_pixels(nullptr)
 {
 
@@ -18,80 +73,6 @@ Texture::~Texture()
 {
 	stbi_image_free(m_pixels);
 	m_pixels = nullptr;
-}
-
-Texture::Texture(const Texture& other) : m_textureID(0), m_width(0), m_height(0), m_numchannels(0), m_pixels(nullptr),
-m_minFilter(TextureMinFilter::Linear), m_magFilter(TextureMagFilter::Linear), m_wrapS(TextureWrapMode::Repeat),
-m_wrapT(TextureWrapMode::Repeat), m_generateMipmaps(false)
-{
-	// Copy the data from the source texture
-	if (other.m_textureID != 0) {
-		glGenTextures(1, &m_textureID);
-		Bind();
-
-		// Copy texture parameters
-		SetFiltering(m_minFilter, m_magFilter);
-		SetWrapping(m_wrapS, m_wrapT);
-
-		// Copy texture data if necessary
-		if (other.m_pixels != nullptr) {
-			m_width = other.m_width;
-			m_height = other.m_height;
-			m_numchannels = other.m_numchannels;
-			m_pixels = new unsigned char[m_width * m_height * m_numchannels];
-			std::copy(other.m_pixels, other.m_pixels + m_width * m_height * m_numchannels, m_pixels);
-
-			// Generate mipmaps if needed
-			if (other.m_generateMipmaps) {
-				GenerateMipmaps();
-			}
-		}
-		Unbind();
-	}
-}
-
-void Texture::LoadTexture()
-{
-	glGenTextures(1, &m_textureID);
-	glBindTexture(GL_TEXTURE_2D, m_textureID);
-
-	GLenum dataFormat = 0;
-	if (m_numchannels == 4)
-	{
-		dataFormat = GL_RGBA;
-	}
-	else if (m_numchannels == 3)
-	{
-		dataFormat = GL_RGB;
-	}
-
-	if (m_pixels && dataFormat == 0)
-	{
-		std::runtime_error("Texture format not supported - num channels: {}"  + std::to_string(m_numchannels));
-	}
-
-	if (m_pixels && dataFormat != 0)
-	{
-		glTexImage2D(GL_TEXTURE_2D, 0, dataFormat, m_width, m_height, 0, dataFormat, GL_UNSIGNED_BYTE, m_pixels);
-		std::cerr << "Loaded {}-channel texture: {}" << m_numchannels << " " << m_path.c_str() << std::endl;
-	}
-	else
-	{
-		float pixels[] = {
-			1.f, 0.f, 1.f,			1.f,1.f,1.f,         1.f,0.f,1.f,          1.f,1.f,1.f,
-			1.f,1.f,1.f,			1.f,0.f,1.f			 ,1.f,1.f,1.f			,1.f,1.f,1.f,
-			1.f, 0.f, 1.f,			1.f,1.f,1.f,         1.f,0.f,1.f,          1.f,1.f,1.f,
-			1.f,1.f,1.f,			1.f,0.f,1.f			 ,1.f,1.f,1.f			,1.f,1.f,1.f
-		};
-
-		m_width = 4;
-		m_height = 4;
-		m_numchannels = 3;
-
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, m_width, m_height, 0, GL_RGB, GL_FLOAT, pixels);
-		std::cerr << "Unable to load texture: {} " << m_path.c_str() << std::endl;
-	}
-	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 void Texture::Bind() const
@@ -104,39 +85,99 @@ void Texture::Unbind() const
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void Texture::SetFiltering(TextureMinFilter p_minFilter, TextureMagFilter p_magFilter)
+Texture::Texture(const Texture& other) : m_textureID(0), m_width(0), m_height(0), m_numChannels(0), m_pixels(nullptr),
+m_minFilter(ETextureFilter::Linear), m_magFilter(ETextureFilter::Linear), m_wrapS(ETextureWrapMode::Repeat),
+m_wrapT(ETextureWrapMode::Repeat), m_generateMipmaps(false)
 {
-	glBindTexture(GL_TEXTURE_2D, m_textureID);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, static_cast<GLenum>(p_minFilter));
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, static_cast<GLenum>(p_magFilter));
-	glBindTexture(GL_TEXTURE_2D, 0);
+	// Copy the data from the source texture
+	if (other.m_textureID != 0) 
+	{
+		glGenTextures(1, &m_textureID);
+		Bind();
+
+		// Copy texture parameters
+		SetFiltering(m_minFilter, m_magFilter);
+		SetWrapping(m_wrapS, m_wrapT);
+
+		// Copy texture data if necessary
+		if (other.m_pixels != nullptr) {
+			m_width = other.m_width;
+			m_height = other.m_height;
+			m_numChannels = other.m_numChannels;
+			m_pixels = new unsigned char[m_width * m_height * m_numChannels];
+			std::copy(other.m_pixels, other.m_pixels + m_width * m_height * m_numChannels, m_pixels);
+
+			// Generate mipmaps if needed
+			if (other.m_generateMipmaps) {
+				GenerateMipmaps();
+			}
+		}
+		Unbind();
+	}
 }
 
-void Texture::SetWrapping(TextureWrapMode p_wrapS, TextureWrapMode p_wrapT)
+bool Texture::Load(const std::string& p_path)
 {
+	m_pixels = LoadFile(p_path.c_str(), m_width, m_height, m_numChannels);
+	return m_pixels != nullptr;
+}
+
+bool Texture::Init()
+{
+	if (m_pixels == nullptr)
+	{
+		std::cerr << "No texture data";
+		return false;
+	}
+
+	GLenum dataFormat = GetGLFormat(m_numChannels);
+
+	if (dataFormat == GL_INVALID_ENUM)
+	{
+		std::cerr << "Texture format not supported - num channels: " << m_numChannels;
+		return false;
+	}
+
+	if (m_textureID == 0)
+	{
+		glGenTextures(1, &m_textureID);
+
+		if (m_textureID == 0)
+		{
+			std::cerr << "Failed to create texture id";
+			return false;
+		}
+	}
+
 	glBindTexture(GL_TEXTURE_2D, m_textureID);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, static_cast<GLenum>(p_wrapS));
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, static_cast<GLenum>(p_wrapT));
-	glBindTexture(GL_TEXTURE_2D, 0);
+
+	glTexImage2D(GL_TEXTURE_2D, 0, dataFormat, m_width, m_height, 0, dataFormat, GL_UNSIGNED_BYTE, m_pixels);
+
+	Unbind();
+	return true;
+}
+
+void Texture::SetFiltering(ETextureFilter p_minFilter, ETextureFilter p_magFilter)
+{
+	Bind();
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, ToGLEnum(p_minFilter));
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, ToGLEnum(p_magFilter));
+	Unbind();
+}
+
+void Texture::SetWrapping(ETextureWrapMode p_wrapS, ETextureWrapMode p_wrapT)
+{
+	Bind();
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, ToGLEnum(p_wrapS));
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, ToGLEnum(p_wrapT));
+	Unbind();
 }
 
 void Texture::GenerateMipmaps()
 {
-	glBindTexture(GL_TEXTURE_2D, m_textureID);
+	Bind();
 	glGenerateMipmap(GL_TEXTURE_2D);
-	glBindTexture(GL_TEXTURE_2D, 0);
-}
-
-void Texture::EnableMipmaps(bool p_generateMipMaps)
-{
-	glBindTexture(GL_TEXTURE_2D, m_textureID);
-
-	if (p_generateMipMaps)
-	{
-		glGenerateMipmap(GL_TEXTURE_2D);
-	}
-
-	glBindTexture(GL_TEXTURE_2D, 0);
+	Unbind();
 }
 
 int Texture::GetWidth() const
@@ -151,43 +192,26 @@ int Texture::GetHeight() const
 
 uint32_t Texture::GetNumberOfChannels() const
 {
-	return m_numchannels;
+	return m_numChannels;
 }
 
-void Texture::SetActiveTextureUnit(GLenum p_textureUnit)
+void Texture::SetActiveTextureUnit(uint8_t p_textureUnit)
 {
-	glActiveTexture(p_textureUnit);
+	glActiveTexture(GL_TEXTURE0 + static_cast<GLint>(p_textureUnit));
 }
 
-unsigned char* Texture::LoadFile(const char* p_filepath, int& p_width, int& p_height, GLenum& p_format)
+unsigned char* Texture::LoadFile(const char* p_filepath, int& p_width, int& p_height, uint8_t& p_channels)
 {
-	int channels;
 	stbi_set_flip_vertically_on_load(true);
+
+	int channels;
 	unsigned char* data = stbi_load(p_filepath, &p_width, &p_height, &channels, 0);
+
+	p_channels = static_cast<uint8_t>(channels);
 
 	if (!data)
 	{
 		std::cerr << "Failed to load texture: " << p_filepath << std::endl;
-		return nullptr;
-	}
-
-	// Determine the OpenGL format based on the number of channels
-	if (channels == 1)
-	{
-		p_format = GL_RED;
-	}
-	else if (channels == 3)
-	{
-		p_format = GL_RGB;
-	}
-	else if (channels == 4)
-	{
-		p_format = GL_RGBA;
-	}
-	else
-	{
-		std::cerr << "Unsupported number of channels: " << channels << std::endl;
-		stbi_image_free(data);
 		return nullptr;
 	}
 
@@ -207,7 +231,6 @@ bool Texture::operator==(const Texture& other) const
 {
 	return m_textureID == other.m_textureID;
 }
-
 
 bool Texture::operator!=(const Texture& other) const
 {

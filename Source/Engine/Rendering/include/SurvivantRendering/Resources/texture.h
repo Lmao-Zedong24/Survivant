@@ -2,25 +2,19 @@
 #include <string>
 #include <vector>
 
-enum class TextureMinFilter
+enum class ETextureFilter
 {
-	Nearest = GL_NEAREST,
-	Linear = GL_LINEAR,
-	MipmapNearest = GL_NEAREST_MIPMAP_NEAREST,
-	MipmapLinear = GL_LINEAR_MIPMAP_LINEAR
+	Nearest,
+	Linear,
+	MipmapNearest,
+	MipmapLinear
 };
 
-enum class TextureMagFilter
+enum class ETextureWrapMode
 {
-	Nearest = GL_NEAREST,
-	Linear = GL_LINEAR
-};
-
-enum class TextureWrapMode
-{
-	Repeat = GL_REPEAT,
-	ClampToEdge = GL_CLAMP_TO_EDGE,
-	MirroredRepeat = GL_MIRRORED_REPEAT
+	Repeat,
+	ClampToEdge,
+	MirroredRepeat
 };
 
 class Texture
@@ -37,7 +31,10 @@ public:
 	Texture(const Texture& other);
 
 	//Load the image data texture from a file and set up the texture
-	void									LoadTexture();
+	bool									Load(const std::string& path);
+
+	//Load the image data texture from a file and set up the texture
+	bool									Init();
 
 	//Bind the texture before rendering to use it 
 	void									Bind() const;
@@ -46,14 +43,11 @@ public:
 	void									Unbind() const;
 
 	//Set textures parameters, filtering and Wrapping
-	void									SetFiltering(TextureMinFilter p_minFilter, TextureMagFilter p_magFilter);
-	void									SetWrapping(TextureWrapMode p_wrapS, TextureWrapMode p_wrapT);
+	void									SetFiltering(ETextureFilter p_minFilter, ETextureFilter p_magFilter);
+	void									SetWrapping(ETextureWrapMode p_wrapS, ETextureWrapMode p_wrapT);
 
 	//Generate mipmaps for the texture for better rendering quality
 	void									GenerateMipmaps();
-
-	// Flag to control mipmaps generation
-	void									EnableMipmaps(bool p_generateMipmaps);
 
 	//Get width of the texture
 	int										GetWidth() const;
@@ -65,10 +59,10 @@ public:
 	uint32_t								GetNumberOfChannels() const;
 
 	//Set the active texture unit
-	static void								SetActiveTextureUnit(GLenum p_TextureUnit);
+	static void								SetActiveTextureUnit(uint8_t p_TextureUnit);
 
 	//Load image data from a file
-	static unsigned char*					LoadFile(const char* p_filepath, int& p_width, int& p_height, GLenum& p_format);
+	static unsigned char*					LoadFile(const char* p_filepath, int& p_width, int& p_height, uint8_t& p_channels);
 
 	//Checking OpenGL errors
 	void									CheckGLErrors(const std::string& p_location);
@@ -86,15 +80,14 @@ public:
 	//Loads a cubemap texture from a set of six images representing the faces of the cube
 	void									LoadCubeMap(const std::vector<std::string>& p_faceFilepaths);
 private:
-	GLuint									m_textureID;
+	uint32_t								m_textureID;
 	int										m_width;
 	int										m_height;
-	uint32_t								m_numchannels;
-	std::string								m_path;
+	uint8_t									m_numChannels;
 	unsigned char*							m_pixels;
-	TextureMinFilter						m_minFilter;
-	TextureMagFilter						m_magFilter;
-	TextureWrapMode							m_wrapS;
-	TextureWrapMode							m_wrapT;
+	ETextureFilter							m_minFilter;
+	ETextureFilter							m_magFilter;
+	ETextureWrapMode						m_wrapS;
+	ETextureWrapMode						m_wrapT;
 	bool									m_generateMipmaps;
 };

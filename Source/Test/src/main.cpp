@@ -1,7 +1,11 @@
+#include "SurvivantRendering/Resources/texture.h"
+
 #include <iostream>
 
 int main()
 {
-	std::cout << "Hello World" << std::endl;
+    // glfw: initialize and configure
+    // ------------------------------
+    std::cout << "Hello" << std::endl;
 	return 0;
 }
