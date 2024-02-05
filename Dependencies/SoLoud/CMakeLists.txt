@@ -32,3 +32,6 @@ option(SOLOUD_BACKEND_SDL2 "Set to ON for building SDL2 backend (SDL2 is NOT inc
 FetchContent_MakeAvailable(soloud)
 
 add_subdirectory(${soloud_SOURCE_DIR}/contrib build)
+
+set(SOLOUD_NAME soloud PARENT_SCOPE)
+set(SOLOUD_INCLUDE_DIR ${soloud_SOURCE_DIR}/include PARENT_SCOPE)
