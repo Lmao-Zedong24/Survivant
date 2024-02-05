@@ -1,7 +1,27 @@
 #pragma once
 #include <string>
 #include <vector>
-#include "glad/gl.h"
+
+enum class TextureMinFilter
+{
+	Nearest = GL_NEAREST,
+	Linear = GL_LINEAR,
+	MipmapNearest = GL_NEAREST_MIPMAP_NEAREST,
+	MipmapLinear = GL_LINEAR_MIPMAP_LINEAR
+};
+
+enum class TextureMagFilter
+{
+	Nearest = GL_NEAREST,
+	Linear = GL_LINEAR
+};
+
+enum class TextureWrapMode
+{
+	Repeat = GL_REPEAT,
+	ClampToEdge = GL_CLAMP_TO_EDGE,
+	MirroredRepeat = GL_MIRRORED_REPEAT
+};
 
 class Texture
 {
@@ -13,6 +33,9 @@ public:
 	//Release any allocated resources in the destructor
 	~Texture();
 
+	//Copy constructor
+	Texture(const Texture& other);
+
 	//Load the image data texture from a file and set up the texture
 	void									LoadTexture();
 
@@ -23,17 +46,14 @@ public:
 	void									Unbind() const;
 
 	//Set textures parameters, filtering and Wrapping
-	void									SetFiltering(GLenum p_minFilter, GLenum p_magFilter);
-	void									SetWrapping(GLenum p_wrapS, GLenum p_wrapT);
+	void									SetFiltering(TextureMinFilter p_minFilter, TextureMagFilter p_magFilter);
+	void									SetWrapping(TextureWrapMode p_wrapS, TextureWrapMode p_wrapT);
 
 	//Generate mipmaps for the texture for better rendering quality
 	void									GenerateMipmaps();
 
 	// Flag to control mipmaps generation
-	void									GenerateMipmaps(bool p_generateMipmaps);
-
-	//Get the OpenGL ID associated with the texture
-	GLuint									GetID() const;
+	void									EnableMipmaps(bool p_generateMipmaps);
 
 	//Get width of the texture
 	int										GetWidth() const;
@@ -44,10 +64,6 @@ public:
 	//Get the number of channels
 	uint32_t								GetNumberOfChannels() const;
 
-	//Get the path of our texture
-	std::string								GetPath();
-
-
 	//Set the active texture unit
 	static void								SetActiveTextureUnit(GLenum p_TextureUnit);
 
@@ -56,9 +72,6 @@ public:
 
 	//Checking OpenGL errors
 	void									CheckGLErrors(const std::string& p_location);
-
-	//Create a copy clone of the texture
-	Texture									Clone() const;
 
 	//Free memory allocated for image data
 	static void								FreeImageData(unsigned char* p_data);
@@ -78,5 +91,10 @@ private:
 	int										m_height;
 	uint32_t								m_numchannels;
 	std::string								m_path;
-	unsigned char* m_pixels;
+	unsigned char*							m_pixels;
+	TextureMinFilter						m_minFilter;
+	TextureMagFilter						m_magFilter;
+	TextureWrapMode							m_wrapS;
+	TextureWrapMode							m_wrapT;
+	bool									m_generateMipmaps;
 };

@@ -1,4 +1,5 @@
 #include <iostream>
+#include "glad/gl.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 #include "SurvivantRendering/Resources/texture.h"
@@ -17,6 +18,36 @@ Texture::~Texture()
 {
 	stbi_image_free(m_pixels);
 	m_pixels = nullptr;
+}
+
+Texture::Texture(const Texture& other) : m_textureID(0), m_width(0), m_height(0), m_numchannels(0), m_pixels(nullptr),
+m_minFilter(TextureMinFilter::Linear), m_magFilter(TextureMagFilter::Linear), m_wrapS(TextureWrapMode::Repeat),
+m_wrapT(TextureWrapMode::Repeat), m_generateMipmaps(false)
+{
+	// Copy the data from the source texture
+	if (other.m_textureID != 0) {
+		glGenTextures(1, &m_textureID);
+		Bind();
+
+		// Copy texture parameters
+		SetFiltering(m_minFilter, m_magFilter);
+		SetWrapping(m_wrapS, m_wrapT);
+
+		// Copy texture data if necessary
+		if (other.m_pixels != nullptr) {
+			m_width = other.m_width;
+			m_height = other.m_height;
+			m_numchannels = other.m_numchannels;
+			m_pixels = new unsigned char[m_width * m_height * m_numchannels];
+			std::copy(other.m_pixels, other.m_pixels + m_width * m_height * m_numchannels, m_pixels);
+
+			// Generate mipmaps if needed
+			if (other.m_generateMipmaps) {
+				GenerateMipmaps();
+			}
+		}
+		Unbind();
+	}
 }
 
 void Texture::LoadTexture()
@@ -73,19 +104,19 @@ void Texture::Unbind() const
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void Texture::SetFiltering(GLenum p_minFilter, GLenum p_magFilter)
+void Texture::SetFiltering(TextureMinFilter p_minFilter, TextureMagFilter p_magFilter)
 {
 	glBindTexture(GL_TEXTURE_2D, m_textureID);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, p_minFilter);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, p_magFilter);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, static_cast<GLenum>(p_minFilter));
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, static_cast<GLenum>(p_magFilter));
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void Texture::SetWrapping(GLenum p_wrapS, GLenum p_wrapT)
+void Texture::SetWrapping(TextureWrapMode p_wrapS, TextureWrapMode p_wrapT)
 {
 	glBindTexture(GL_TEXTURE_2D, m_textureID);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, p_wrapS);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, p_wrapT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, static_cast<GLenum>(p_wrapS));
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, static_cast<GLenum>(p_wrapT));
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
@@ -96,7 +127,7 @@ void Texture::GenerateMipmaps()
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void Texture::GenerateMipmaps(bool p_generateMipMaps)
+void Texture::EnableMipmaps(bool p_generateMipMaps)
 {
 	glBindTexture(GL_TEXTURE_2D, m_textureID);
 
@@ -106,11 +137,6 @@ void Texture::GenerateMipmaps(bool p_generateMipMaps)
 	}
 
 	glBindTexture(GL_TEXTURE_2D, 0);
-}
-
-GLuint Texture::GetID() const
-{
-	return m_textureID;
 }
 
 int Texture::GetWidth() const
@@ -126,11 +152,6 @@ int Texture::GetHeight() const
 uint32_t Texture::GetNumberOfChannels() const
 {
 	return m_numchannels;
-}
-
-std::string Texture::GetPath()
-{
-	return m_path;
 }
 
 void Texture::SetActiveTextureUnit(GLenum p_textureUnit)
@@ -172,6 +193,7 @@ unsigned char* Texture::LoadFile(const char* p_filepath, int& p_width, int& p_he
 
 	return data;
 }
+
 void Texture::CheckGLErrors(const std::string& p_location)
 {
 	GLenum error = glGetError();
@@ -179,41 +201,6 @@ void Texture::CheckGLErrors(const std::string& p_location)
 	{
 		std::cerr << "OpenGL error at " << p_location << ":" << std::endl;
 	}
-}
-
-Texture  Texture::Clone() const
-{
-	//Create a new texture
-	Texture clonedTexture;
-
-	clonedTexture.m_height = m_height;
-	clonedTexture.m_width = m_width;
-	clonedTexture.m_numchannels = m_numchannels;
-	clonedTexture.m_path = m_path;
-
-	//Generate a new OpenGL TextureID
-	glGenTextures(1, &clonedTexture.m_textureID);
-
-	// Bind the new texture to set its parameters
-	glBindTexture(GL_TEXTURE_2D, clonedTexture.m_textureID);
-
-	// Set internal format and allocate storage (you may need to adjust this based on your use case)
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-
-	// Copy data from the original texture if it exists
-	if (m_pixels)
-	{
-		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_width, m_height, GL_RGBA, GL_UNSIGNED_BYTE, m_pixels);
-	}
-
-	// Set the same filtering and wrapping parameters
-	clonedTexture.SetFiltering(GL_TEXTURE_MIN_FILTER, GL_TEXTURE_MAG_FILTER);
-	clonedTexture.SetWrapping(GL_TEXTURE_WRAP_S, GL_TEXTURE_WRAP_T);
-
-	// Unbind the texture
-	glBindTexture(GL_TEXTURE_2D, 0);
-
-	return clonedTexture;
 }
 
 bool Texture::operator==(const Texture& other) const
