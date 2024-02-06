@@ -6,8 +6,12 @@ project(Survivant LANGUAGES CXX C)
 # Setup cpp version
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/CMake)
 
 enable_testing()
+
+set(SURVIVANT_ASSETS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/Resources)
+include(CopyResources)
 
 set(CMAKE_FOLDER deps)
 add_subdirectory(Dependencies)
