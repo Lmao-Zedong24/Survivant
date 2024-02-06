@@ -1,3 +1,6 @@
+#include "SurvivantRendering/Resources/texture.h"
+
+#include <iostream>
 #include "SurvivantRendering/Core/Vertex.h"
 #include "SurvivantRendering/Core/VertexAttributes.h"
 #include "SurvivantRendering/Core/Buffers/IndexBuffer.h"
@@ -120,10 +123,41 @@ int main()
     vbo.Bind();
     ebo.Bind();
 
-    const GLuint textureId = GetDefaultTexture();
+    /*const GLuint textureId = GetDefaultTexture();
 
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, textureId);
+    glBindTexture(GL_TEXTURE_2D, textureId);*/
+    // Création d'une texture
+    Texture texture;
+
+    // Chargement de l'image depuis un fichier
+    if (!texture.Load("C:/Users/OWNER/Desktop/TextureTest/Brick.png")) {
+        std::cerr << "Failed to load texture!" << std::endl;
+        return 1;
+    }
+
+    // Initialisation de la texture
+    if (!texture.Init()) {
+        std::cerr << "Failed to initialize texture!" << std::endl;
+        return 1;
+    }
+
+    // Définition des paramètres de filtrage
+    texture.SetFiltering(ETextureFilter::Linear, ETextureFilter::Linear);
+
+    // Définition des modes de wrapping
+    texture.SetWrapping(ETextureWrapMode::Repeat, ETextureWrapMode::Repeat);
+
+    // Génération des mipmaps
+    texture.GenerateMipmaps();
+
+    // Obtention des informations sur la texture
+    int width = texture.GetWidth();
+    int height = texture.GetHeight();
+    uint32_t numChannels = texture.GetNumberOfChannels();
+
+    std::cout << "Texture loaded successfully!" << std::endl;
+    std::cout << "Width: " << width << ", Height: " << height << ", Channels: " << numChannels << std::endl;
 
     const Matrix4 projMat     = perspectiveProjection(90_deg, 4.f / 3.f, .01f, 14.f);
     const Matrix4 viewMat     = lookAt({ 0.f, 1.8f, 1.f }, Vector3::zero(), Vector3::up());
