@@ -14,6 +14,5 @@ namespace Core
 
 	public:
 		virtual void ClearListeners() = 0;
-
 	};
 }

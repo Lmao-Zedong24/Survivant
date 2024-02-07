@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "IEvent.h"
+#include "EventBase.h"
 
 #include <functional>
 #include <vector>
