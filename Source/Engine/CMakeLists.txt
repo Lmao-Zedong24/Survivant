@@ -7,7 +7,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 # Merge and cache the externally accessible include directories
 
 # Core
-#add_subdirectory(Core)
+add_subdirectory(Core)
 set(ENGINE_TARGETS ${CORE_NAME})
 set(ENGINE_INCLUDE_DIRS ${CORE_INCLUDE_DIR} ${RAPIDJSON_INCLUDE_DIR})
 
@@ -22,7 +22,7 @@ list(APPEND ENGINE_TARGETS ${PHYSICS_NAME})
 list(APPEND ENGINE_INCLUDE_DIRS ${PHYSICS_INCLUDE_DIR})
 
 # Rendering
-#add_subdirectory(Rendering)
+add_subdirectory(Rendering)
 list(APPEND ENGINE_TARGETS ${RENDERING_NAME})
 list(APPEND ENGINE_INCLUDE_DIRS ${RENDERING_INCLUDE_DIR})
 

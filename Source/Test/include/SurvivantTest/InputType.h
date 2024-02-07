@@ -41,7 +41,6 @@ namespace App
 	public:
 		bool operator==(const InputType<Args...>& other) const;
 
-
 	public:
 		std::tuple<Args...> m_inputInfo;
 	};
