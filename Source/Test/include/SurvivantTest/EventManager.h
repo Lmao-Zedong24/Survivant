@@ -27,7 +27,7 @@ namespace Core
 
 	public:
 		template <class T, typename ...Args>
-		void Invoke(const Args&... p_paramaters);
+		void Invoke(Args... p_paramaters);
 
 		template <class T, typename ...Args>
 		void Invoke(const std::tuple<Args...>& p_paramaters);
@@ -44,7 +44,7 @@ namespace Core
 	};
 
 	template<class T, typename ...Args>
-	void EventManager::Invoke(const Args&...p_paramaters)
+	void EventManager::Invoke(Args...p_paramaters)
 	{
 		if constexpr (!std::is_base_of_v<Event<Args...>, T> || !std::is_same_v<Event<Args...>, T>)
 			return;

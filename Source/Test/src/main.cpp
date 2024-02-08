@@ -91,11 +91,17 @@ GLuint GetDefaultTexture()
 
 #include "SurvivantTest/EventManager.h"
 #include "SurvivantTest/InputManager.h"
+#include "SurvivantTest/Window.h"
 
 
-std::tuple<int, int> func(int i) 
+std::tuple<int, int> AddInputTranslate(char i) 
 { 
 	return { i, 10 }; 
+}
+
+std::tuple<int, int> AddMouseTranslate(float i, float j)
+{
+    return { (int)i, (int)j };
 }
 
 
@@ -112,7 +118,10 @@ int main()
     GLFWwindow* window = glfwCreateWindow(800, 600, "Test", nullptr, nullptr);
     glfwMakeContextCurrent(window);
 
+    // TODO : including glad/gl.h brings up error in Window constructor
     ASSERT(gladLoadGL(glfwGetProcAddress), "Failed to initialize glad");
+
+    App::Window::SetupInputManager(window);
 
     Shader shader;
     ASSERT(shader.Load(UNLIT_SHADER_PATH), "Failed to load shader at path \"%s\"", UNLIT_SHADER_PATH);
@@ -144,6 +153,28 @@ int main()
 
     glClearColor(0, 0, 0, 1);
 
+    //event and inputs
+    using namespace Core;
+    using namespace App;
+    using AddEvent = Event<int, int>;
+
+    EventManager& em = EventManager::GetInstance();
+    InputManager& im = InputManager::GetInstance();
+
+    AddEvent::EventDelegate printAdd = [](int i, int j) { std::cout << "Add = " << i + j << std::endl; };
+    std::shared_ptr<AddEvent> ligEvent = std::make_shared<AddEvent>();
+    ligEvent->AddListener(printAdd);
+    em.AddEvent<AddEvent>(ligEvent);
+
+    InputManager::KeyboardKeyType   a(EKey::KEY_A, EKeyState::KEY_RELEASED, EInputModifier::MOD_ALT);
+    InputManager::KeyboardKeyType   b(EKey::KEY_B, EKeyState::KEY_PRESSED, EInputModifier());
+    InputManager::MouseKeyType      mouse(EMouseButton::MOUSE_BUTTON_1, EMouseButtonState::MOUSE_PRESSED, EInputModifier());
+    im.AddInputEventBinding<AddEvent>(a, &AddInputTranslate);
+    im.AddInputEventBinding<AddEvent>(b, &AddInputTranslate);
+    //mouse, &AddMouseTranslate
+    im.AddInputEventBinding<AddEvent>(mouse, &AddMouseTranslate);
+    //im.CallInput(b, 'b');
+
     while (!glfwWindowShouldClose(window))
     {
         glfwPollEvents();
@@ -162,50 +193,24 @@ int main()
     glfwDestroyWindow(window);
     glfwTerminate();
 
-	//std::cout << "Hello World" << std::endl;
-	//return 0;
+
     //test events and inputs
-	using namespace Core;
-	using namespace App;
-	using HelloWorldEvent = Event<>;
-	using ligma = Event<int, int>;
 
 
-	EventManager& em = EventManager::GetInstance();
-	InputManager& im = InputManager::GetInstance();
 
-	HelloWorldEvent::EventDelegate printHW = []() { std::cout << "Hello world" << std::endl; };
-	ligma::EventDelegate printLig = [](int i, int j) { std::cout << "Ligma "<< i+j<< std::endl; };
+	//em.AddEvent<HelloWorldEvent>(hwEvent);
+	//em.Invoke<HelloWorldEvent>();
 
-	std::shared_ptr<HelloWorldEvent> hwEvent = std::make_shared<HelloWorldEvent>();
-	hwEvent->AddListener(printHW);
+	//ligEvent->Invoke(8, 9);
+	//em.Invoke<AddEvent>(9, 10);
 
-	std::shared_ptr<ligma> ligEvent = std::make_shared<ligma>();
-	ligEvent->AddListener(printLig);
+	//InputManager::KeyboardKeyType a(EKey::KEY_A, EKeyState::KEY_PRESSED, EInputModifier());
+	//InputManager::KeyCallback aF = [](int i) { std::cout << "Test A: " << i << std::endl; };
+
+	//im.AddInputBinding(a, aF);
+	//im.CallInput(a, 'a');
 
 
-	em.AddEvent<HelloWorldEvent>(hwEvent);
-	em.AddEvent<ligma>(ligEvent);
-	em.Invoke<HelloWorldEvent>();
-
-	ligEvent->Invoke(8, 9);
-	em.Invoke<ligma>(9, 10);
-
-	InputManager::KeyboardKeyType a(1, 1, 1);
-	InputManager::KeyCallback aF = [](int i) { std::cout << "Test A: " << i << std::endl; };
-
-	im.AddInputBinding(a, aF);
-	im.CallInput(a);
-
-	InputManager::KeyboardKeyType b(1, 2, 3);
-
-	//struct bFunc
-	//{
-	//	std::tuple<int, int> func(int i) { return { i, 10 }; }
-	//};
-	
-	im.AddInputEventBinding<ligma>(b, &func);
-	im.CallInput(b);
     
     return 0;
 }

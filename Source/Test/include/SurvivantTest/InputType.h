@@ -7,7 +7,6 @@
 #include <functional>
 #include <tuple>
 
-
 namespace App
 {
 	template<typename ...Args>
