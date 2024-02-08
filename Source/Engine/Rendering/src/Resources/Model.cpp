@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <glad/gl.h>
 #include "SurvivantRendering/Resources/Model.h"
 
 
@@ -52,7 +53,7 @@ bool Model::LoadModel(const std::string& p_filename)
 
 void Model::RenderModel()
 {
-
+	
 }
 
 void Model::SetTransformation(float p_x, float p_y, float p_z, float p_rotationX,
