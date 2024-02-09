@@ -1,8 +1,15 @@
+#pragma once
 #include <vector>
 #include <string>
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <glad/gl.h>
+#include "Matrix/Matrix4.h"
+#include "Vector/Vector3.h"
 #include "SurvivantRendering/Resources/texture.h"
 
 struct Vertex
@@ -38,7 +45,7 @@ public:
 
 	void								ProcessNode(aiNode* node, const aiScene* scene);
 
-	void								ProcessMesh(aiMesh* mesh, const aiScene* scene);
+	void								ProcessMesh(aiMesh* mesh);
 private:
 
 	std::vector<Vertex>					m_vertices;

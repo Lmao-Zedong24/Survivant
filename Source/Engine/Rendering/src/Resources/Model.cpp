@@ -1,10 +1,4 @@
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <glad/gl.h>
 #include "SurvivantRendering/Resources/Model.h"
-#include "Matrix/Matrix4.h"
-#include "Vector/Vector3.h"
 
 bool Model::LoadModel(const std::string& p_filename)
 {
@@ -39,30 +33,30 @@ void Model::SetTransformation(float p_x, float p_y, float p_z, float p_rotationX
 	m_transformationMatrix = translationMatrix * rotationMatrixX * rotationMatrixY * rotationMatrixZ * scalingMatrix;
 }
 
-void Model::PlayAnimation(const std::string& p_animationName)
-{
-
-}
-
-void Model::StopAnimation()
-{
-
-}
-
-void Model::SetMaterial()
-{
-
-}
-
-bool Model::CheckCollision()
-{
-
-}
-
-void Model::Update(float p_deltatime)
-{
-
-}
+//void Model::PlayAnimation(const std::string& p_animationName)
+//{
+//
+//}
+//
+//void Model::StopAnimation()
+//{
+//
+//}
+//
+//void Model::SetMaterial()
+//{
+//
+//}
+//
+//bool Model::CheckCollision()
+//{
+//
+//}
+//
+//void Model::Update(float p_deltatime)
+//{
+//
+//}
 
 void Model::CleanUp()
 {
@@ -84,7 +78,7 @@ void Model::ProcessNode(aiNode* node, const aiScene* scene)
 	for (unsigned int i = 0; i < node->mNumMeshes; ++i)
 	{
 		aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
-		ProcessMesh(mesh, scene);
+		ProcessMesh(mesh);
 	}
 
 	// Process all child nodes
@@ -94,7 +88,7 @@ void Model::ProcessNode(aiNode* node, const aiScene* scene)
 	}
 }
 
-void Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
+void Model::ProcessMesh(aiMesh* mesh)
 {
 	// Process vertices
 	for (unsigned int i = 0; i < mesh->mNumVertices; ++i)
