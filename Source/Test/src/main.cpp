@@ -94,9 +94,9 @@ GLuint GetDefaultTexture()
 #include "SurvivantTest/Window.h"
 
 
-std::tuple<int, int> AddInputTranslate(char i) 
-{ 
-	return { i, 10 }; 
+std::tuple<int, int> AddInputTranslate(char i)
+{
+	return { i, 10 };
 }
 
 std::tuple<int, int> AddMouseTranslate(float i, float j)
@@ -166,9 +166,9 @@ int main()
     ligEvent->AddListener(printAdd);
     em.AddEvent<AddEvent>(ligEvent);
 
-    InputManager::KeyboardKeyType   a(EKey::KEY_A, EKeyState::KEY_RELEASED, EInputModifier::MOD_ALT);
-    InputManager::KeyboardKeyType   b(EKey::KEY_B, EKeyState::KEY_PRESSED, EInputModifier());
-    InputManager::MouseKeyType      mouse(EMouseButton::MOUSE_BUTTON_1, EMouseButtonState::MOUSE_PRESSED, EInputModifier());
+    InputManager::KeyboardKeyType   a(EKey::A, EKeyState::RELEASED, EInputModifier::ALT);
+    InputManager::KeyboardKeyType   b(EKey::B, EKeyState::PRESSED, EInputModifier());
+    InputManager::MouseKeyType      mouse(EMouseButton::MOUSE_1, EMouseButtonState::PRESSED, EInputModifier());
     im.AddInputEventBinding<AddEvent>(a, &AddInputTranslate);
     im.AddInputEventBinding<AddEvent>(b, &AddInputTranslate);
     //mouse, &AddMouseTranslate
@@ -204,14 +204,14 @@ int main()
 	//ligEvent->Invoke(8, 9);
 	//em.Invoke<AddEvent>(9, 10);
 
-	//InputManager::KeyboardKeyType a(EKey::KEY_A, EKeyState::KEY_PRESSED, EInputModifier());
+	//InputManager::KeyboardKeyType a(EKey::A, EKeyState::PRESSED, EInputModifier());
 	//InputManager::KeyCallback aF = [](int i) { std::cout << "Test A: " << i << std::endl; };
 
 	//im.AddInputBinding(a, aF);
 	//im.CallInput(a, 'a');
 
 
-    
+
     return 0;
 }
 
