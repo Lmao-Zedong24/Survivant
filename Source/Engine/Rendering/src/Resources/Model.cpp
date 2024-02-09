@@ -3,62 +3,33 @@
 #include <sstream>
 #include <glad/gl.h>
 #include "SurvivantRendering/Resources/Model.h"
-
+#include "Matrix/Matrix4.h"
+#include "Vector/Vector3.h"
 
 bool Model::LoadModel(const std::string& p_filename)
 {
-	std::ifstream file(p_filename);
-	if (!file.is_open()) 
+	Assimp::Importer importer;
+	const aiScene* scene = importer.ReadFile(p_filename, aiProcess_Triangulate | aiProcess_FlipUVs);
+
+	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
 	{
-		std::cerr << "Error: Unable to open file: " << p_filename << std::endl;
+		// Error handling if the model file cannot be loaded
+		std::cerr << "Error: " << importer.GetErrorString() << std::endl;
 		return false;
 	}
 
-	std::string line;
-	while (std::getline(file, line)) 
-	{
-		std::istringstream iss(line);
-		std::string type;
-		iss >> type;
+	// Process all nodes recursively
+	ProcessNode(scene->mRootNode, scene);
 
-		if (type == "v")
-		{
-			Vertex vertex;
-			iss >> vertex.x >> vertex.y >> vertex.z;
-			m_vertices.push_back(vertex);
-		}
-		else if (type == "vn")
-		{
-			float nx, ny, nz;
-			iss >> nx >> ny >> nz;
-			m_vertices.back().nx = nx;
-			m_vertices.back().ny = ny;
-			m_vertices.back().nz = nz;
-		}
-		else if (type == "vt")
-		{
-			float u, v;
-			iss >> u >> v;
-			m_vertices.back().u = u;
-			m_vertices.back().v = v;
-		}
-	}
-
-	file.close();
-	std::cout <<"Model loaded successfully from file: "<< p_filename << std::endl;
 	return true;
-}
-
-void Model::RenderModel()
-{
-	
 }
 
 void Model::SetTransformation(float p_x, float p_y, float p_z, float p_rotationX,
 	float p_rotationY, float p_rotationZ, float p_scaleX,
 	float p_scaleY, float p_scaleZ)
 {
-
+	// Create transformation matrices for translation, rotation, and scaling
+	/*LibMath::Matrix4 translationMatrix = translationMatrix.tra;*/
 }
 
 void Model::PlayAnimation(const std::string& p_animationName)
@@ -88,5 +59,69 @@ void Model::Update(float p_deltatime)
 
 void Model::CleanUp()
 {
+	// Clear vectors to release memory
+	m_vertices.clear();
+	m_normals.clear();
+	m_UVs.clear();
+	m_indices.clear();
 
+	// Reset transformation parameters
+	m_x = m_y = m_z = 0.0f;
+	m_rotationX = m_rotationY = m_rotationZ = 0.0f;
+	m_scaleX = m_scaleY = m_scaleZ = 1.0f;
+}
+
+void Model::ProcessNode(aiNode* node, const aiScene* scene)
+{
+	// Process all meshes in this node
+	for (unsigned int i = 0; i < node->mNumMeshes; ++i)
+	{
+		aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
+		ProcessMesh(mesh, scene);
+	}
+
+	// Process all child nodes
+	for (unsigned int i = 0; i < node->mNumChildren; ++i)
+	{
+		ProcessNode(node->mChildren[i], scene);
+	}
+}
+
+void Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
+{
+	// Process vertices
+	for (unsigned int i = 0; i < mesh->mNumVertices; ++i)
+	{
+		Vertex vertex;
+		// Fill in vertex data (position, normal, texture coordinates)
+		// You'll need to adjust this according to Assimp's vertex data structure
+		// For example:
+		vertex.x = mesh->mVertices[i].x;
+		vertex.y = mesh->mVertices[i].y;
+		vertex.z = mesh->mVertices[i].z;
+		vertex.nx = mesh->mNormals[i].x;
+		vertex.ny = mesh->mNormals[i].y;
+		vertex.nz = mesh->mNormals[i].z;
+		if (mesh->mTextureCoords[0]) // Check if the mesh has texture coordinates
+		{
+			vertex.u = mesh->mTextureCoords[0][i].x;
+			vertex.v = mesh->mTextureCoords[0][i].y;
+		}
+		else
+		{
+			vertex.u = 0.0f;
+			vertex.v = 0.0f;
+		}
+		m_vertices.push_back(vertex);
+	}
+
+	// Process indices
+	for (unsigned int i = 0; i < mesh->mNumFaces; ++i)
+	{
+		aiFace face = mesh->mFaces[i];
+		for (unsigned int j = 0; j < face.mNumIndices; ++j)
+		{
+			m_indices.push_back(face.mIndices[j]);
+		}
+	}
 }
