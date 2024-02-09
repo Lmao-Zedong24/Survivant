@@ -29,7 +29,7 @@ namespace SvCore::Debug
         if (m_filePath.empty())
             return;
 
-        std::ofstream file(m_filePath);
+        std::ofstream file(m_filePath, std::ios::app);
         assert(file.is_open());
         file << message << std::flush;
     }
