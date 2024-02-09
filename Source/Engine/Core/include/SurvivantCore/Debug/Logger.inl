@@ -35,7 +35,8 @@ namespace SvCore::Debug
     }
 
     template <typename... Args>
-    void Logger::DebugLog(const char* p_file, const size_t p_line, const char* p_format, const bool p_isError, Args... p_args)
+    void Logger::DebugLog([[maybe_unused]] const char*  p_file,
+                          [[maybe_unused]] const size_t p_line, const char* p_format, const bool p_isError, Args... p_args)
     {
         std::string message = Utility::FormatString(p_format, p_args...);
 
@@ -43,8 +44,6 @@ namespace SvCore::Debug
         message = Utility::FormatString("%s(%d): %s\n", p_file, p_line, message.c_str());
 #else
         message += '\n';
-        (void)sizeof(file);
-        (void)sizeof(line);
 #endif // _DEBUG || SV_VERBOSE_LOG
 
         Print(message.c_str(), p_isError);
