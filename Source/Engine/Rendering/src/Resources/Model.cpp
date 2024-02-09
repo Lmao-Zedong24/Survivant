@@ -23,26 +23,24 @@ bool Model::LoadModel(const std::string& p_filename)
 
 		if (type == "v")
 		{
-			float x, y, z;
-			iss >> x >> y >> z;
-			m_vertices.push_back(x);
-			m_vertices.push_back(y);
-			m_vertices.push_back(z);
+			Vertex vertex;
+			iss >> vertex.x >> vertex.y >> vertex.z;
+			m_vertices.push_back(vertex);
 		}
 		else if (type == "vn")
 		{
 			float nx, ny, nz;
 			iss >> nx >> ny >> nz;
-			m_normals.push_back(nx);
-			m_normals.push_back(ny);
-			m_normals.push_back(nz);
+			m_vertices.back().nx = nx;
+			m_vertices.back().ny = ny;
+			m_vertices.back().nz = nz;
 		}
 		else if (type == "vt")
 		{
 			float u, v;
 			iss >> u >> v;
-			m_UVs.push_back(u);
-			m_UVs.push_back(v);
+			m_vertices.back().u = u;
+			m_vertices.back().v = v;
 		}
 	}
 
