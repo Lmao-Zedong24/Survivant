@@ -2,6 +2,13 @@
 #include <string>
 #include "SurvivantRendering/Resources/texture.h"
 
+struct Vertex
+{
+	float			x, y, z;
+	float			nx, ny, nz;
+	float			u, v;
+};
+
 class Model
 {
 public:
@@ -29,7 +36,7 @@ public:
 	void								CleanUp();
 private:
 
-	std::vector<float>					m_vertices;
-	std::vector<float>					m_normals;
-	std::vector<float>					m_UVs;
+	std::vector<Vertex>					m_vertices;
+	std::vector<Vertex>					m_normals;
+	std::vector<Vertex>					m_UVs;
 };
