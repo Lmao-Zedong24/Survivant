@@ -600,6 +600,17 @@ namespace LibMath
             min(a.m_z, b.m_z),                                                       \
             min(a.m_w, b.m_w)                                                        \
         };                                                                           \
+    }                                                                                \
+                                                                                     \
+    template <>                                                                      \
+    inline Alias max<Alias>(const Alias a, const Alias b)                            \
+    {                                                                                \
+        return {                                                                     \
+            max(a.m_x, b.m_x),                                                       \
+            max(a.m_y, b.m_y),                                                       \
+            max(a.m_z, b.m_z),                                                       \
+            max(a.m_w, b.m_w)                                                        \
+        };                                                                           \
     }
 
     VEC4_ALIAS_IMPL(float, Vector4F)
