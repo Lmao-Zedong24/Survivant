@@ -89,9 +89,11 @@ GLuint GetDefaultTexture()
     return textureId;
 }
 
-#include "SurvivantTest/EventManager.h"
-#include "SurvivantTest/InputManager.h"
-#include "SurvivantTest/Window.h"
+#include "SurvivantCore/Events/EventManager.h"
+#include "SurvivantApp/Inputs/InputManager.h"
+#include "SurvivantApp/Windows/Window.h"
+#include "SurvivantApp/Inputs/KeyboardInputs.h"
+#include "SurvivantApp/Inputs/MouseInputs.h"
 
 
 std::tuple<int, int> AddInputTranslate(char i) 
@@ -102,6 +104,12 @@ std::tuple<int, int> AddInputTranslate(char i)
 std::tuple<int, int> AddMouseTranslate(float i, float j)
 {
     return { (int)i, (int)j };
+}
+
+std::tuple<> SpaceTranslate(char c)
+{
+    c;
+    return { };
 }
 
 
@@ -115,13 +123,15 @@ int main()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    GLFWwindow* window = glfwCreateWindow(800, 600, "Test", nullptr, nullptr);
-    glfwMakeContextCurrent(window);
+    //window
+    App::Window window;
+    GLFWwindow* windowPtr = window.GetWindow();
+
 
     // TODO : including glad/gl.h brings up error in Window constructor
     ASSERT(gladLoadGL(glfwGetProcAddress), "Failed to initialize glad");
 
-    App::Window::SetupInputManager(window);
+    App::Window::SetupInputManager(windowPtr);
 
     Shader shader;
     ASSERT(shader.Load(UNLIT_SHADER_PATH), "Failed to load shader at path \"%s\"", UNLIT_SHADER_PATH);
@@ -144,8 +154,8 @@ int main()
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, textureId);
 
-    const Matrix4 projMat     = perspectiveProjection(90_deg, 4.f / 3.f, .01f, 14.f);
-    const Matrix4 viewMat     = lookAt({ 0.f, 1.8f, 1.f }, Vector3::zero(), Vector3::up());
+    const Matrix4 projMat = perspectiveProjection(90_deg, 4.f / 3.f, .01f, 14.f);
+    const Matrix4 viewMat = lookAt({ 0.f, 1.8f, 1.f }, Vector3::zero(), Vector3::up());
     const Matrix4 viewProjMat = projMat * viewMat;
     shader.SetUniformInt("u_diffuse", 0);
 
@@ -157,25 +167,33 @@ int main()
     using namespace Core;
     using namespace App;
     using AddEvent = Event<int, int>;
+    using ToggleEvent = Event<>;
 
     EventManager& em = EventManager::GetInstance();
     InputManager& im = InputManager::GetInstance();
 
     AddEvent::EventDelegate printAdd = [](int i, int j) { std::cout << "Add = " << i + j << std::endl; };
+    ToggleEvent::EventDelegate toggle = std::bind(&App::Window::ToggleFullScreenMode, &window);
     std::shared_ptr<AddEvent> ligEvent = std::make_shared<AddEvent>();
+    std::shared_ptr<ToggleEvent> toggleEvent = std::make_shared<ToggleEvent>();
     ligEvent->AddListener(printAdd);
+    toggleEvent->AddListener(toggle);
     em.AddEvent<AddEvent>(ligEvent);
+    em.AddEvent<ToggleEvent>(toggleEvent);
 
     InputManager::KeyboardKeyType   a(EKey::KEY_A, EKeyState::KEY_RELEASED, EInputModifier::MOD_ALT);
     InputManager::KeyboardKeyType   b(EKey::KEY_B, EKeyState::KEY_PRESSED, EInputModifier());
     InputManager::MouseKeyType      mouse(EMouseButton::MOUSE_BUTTON_1, EMouseButtonState::MOUSE_PRESSED, EInputModifier());
+    InputManager::KeyboardKeyType   space(EKey::KEY_SPACE, EKeyState::KEY_PRESSED, EInputModifier());
     im.AddInputEventBinding<AddEvent>(a, &AddInputTranslate);
     im.AddInputEventBinding<AddEvent>(b, &AddInputTranslate);
-    //mouse, &AddMouseTranslate
     im.AddInputEventBinding<AddEvent>(mouse, &AddMouseTranslate);
+    im.AddInputEventBinding<ToggleEvent>(space, &SpaceTranslate);
+
+    
     //im.CallInput(b, 'b');
 
-    while (!glfwWindowShouldClose(window))
+    while (!glfwWindowShouldClose(windowPtr))
     {
         glfwPollEvents();
 
@@ -187,10 +205,10 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
 
-        glfwSwapBuffers(window);
+        glfwSwapBuffers(windowPtr);
     }
 
-    glfwDestroyWindow(window);
+    glfwDestroyWindow(windowPtr);
     glfwTerminate();
 
 

@@ -1,5 +1,4 @@
 //TupleHasher.h
-
 //https://stackoverflow.com/questions/7110301/generic-hash-for-tuples-in-unordered-map-unordered-set
 
 #include <cinttypes>

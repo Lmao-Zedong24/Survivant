@@ -1,6 +1,6 @@
 //InputManager.cpp
 
-#include "SurvivantTest/InputManager.h"
+#include "SurvivantApp/Inputs/InputManager.h"
 
 using namespace App;
 

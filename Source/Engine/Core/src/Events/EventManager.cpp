@@ -1,6 +1,6 @@
 //EventMaanger.cpp
 
-#include "SurvivantTest/EventManager.h"
+#include "SurvivantCore/Events/EventManager.h"
 
 using namespace Core;
 

@@ -1,14 +1,12 @@
 //InputManager.h
 
 #pragma once
-#include "EventManager.h"
-#include "EInputModifier.h"
-#include "EKey.h"
-#include "EKeyState.h"
-#include "EMouseButton.h"
-#include "EMouseButtonState.h"
-#include "Event.h"
+#include "KeyboardInputs.h"
+#include "MouseInputs.h"
 #include "InputType.h"
+
+#include "SurvivantCore/Events/Event.h"
+#include "SurvivantCore/Events/EventManager.h"
 
 #include <memory>
 #include <tuple>
@@ -17,9 +15,6 @@ namespace App
 {
 	class InputManager
 	{
-	private:
-		//friend class EventManager;
-
 	public:
 		using GLFWwindow = int;
 		using KeyboardKeyType = InputType<EKey, EKeyState, EInputModifier>;

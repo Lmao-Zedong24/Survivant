@@ -2,7 +2,7 @@
 
 #pragma once
 #include "InputTypeBase.h"
-#include "TupleHasher.h"
+#include "SurvivantCore/TupleHasher.h"
 
 #include <functional>
 #include <tuple>

@@ -9,14 +9,20 @@ namespace App
 		Window();
 		~Window();
 		
-		//void SetWindow(GLFWwindow* p_window);
-		//GLFWwindow* GetWindow();
+		GLFWwindow* GetWindow();
 
 	public:
 		static void SetupInputManager(GLFWwindow* p_window);
 
+	public:
+		void ToggleFullScreenMode();
+
 	private:
-		static GLFWwindow* s_window;
+		GLFWwindow*		m_window;
+		GLFWmonitor*	m_monitor;
+
+		bool	m_isInFullscreen;
+		int		m_yWindowedPos;
 	};
 }
 

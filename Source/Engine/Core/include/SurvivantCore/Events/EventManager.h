@@ -55,16 +55,15 @@ namespace Core
 			dynamic_cast<T*>(m_events[id].get())->Invoke(p_paramaters...);
 
 	}
+
 	template<class T, typename ...Args>
 	inline void EventManager::Invoke(const std::tuple<Args...>& p_paramaters)
 	{
 		if constexpr (!std::is_base_of_v<Event<Args...>, T> || !std::is_same_v<Event<Args...>, T>)
 			return;
-		//std::apply([](auto &&... args) { my_func(args...); }, my_tuple);
-		std::apply([this](auto &&... args) { this->Invoke<T>(args...); }, p_paramaters);
-		//std::apply(&EventManager::Invoke<T, ...Args>, p_paramaters);
-	}
 
+		std::apply([this](auto &&... args) { this->Invoke<T>(args...); }, p_paramaters);
+	}
 
 	template<class T>
 	T* EventManager::AddEvent(std::shared_ptr<EventBase> p_event)
