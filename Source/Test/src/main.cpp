@@ -1,5 +1,6 @@
 #include "SurvivantCore/Debug/Assertion.h"
 #include "SurvivantCore/Utility/FileSystem.h"
+#include "SurvivantCore/Utility/Timer.h"
 
 #include "SurvivantRendering/Core/Camera.h"
 #include "SurvivantRendering/Core/Color.h"
@@ -182,17 +183,20 @@ int main()
 
     cam.SetClearColor(Color::black);
 
+    Timer timer;
+
     while (!glfwWindowShouldClose(window))
     {
+        timer.tick();
         glfwPollEvents();
 
-        angle += .011_deg; // TODO: use delta time
+        angle += 20_deg * timer.getDeltaTime();
 
         const Matrix4 modelRot  = rotation(angle, Vector3::up());
         const Matrix4 modelMat1 = translation(-1.f, .5f, 0.f);
         const Matrix4 modelMat2 = translation(1.f, .5f, 0.f) * modelRot;
 
-        camPos.rotate(.1_deg, Vector3::up());
+        camPos.rotate(20_deg * timer.getDeltaTime(), Vector3::up());
         cam.SetView(lookAt(camPos, Vector3::zero(), Vector3::up()));
         cam.Clear();
 
