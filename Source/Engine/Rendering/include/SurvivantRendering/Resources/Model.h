@@ -45,7 +45,7 @@ private:
 	std::vector<Vertex>					m_normals;
 	std::vector<Vertex>					m_UVs;
 	std::vector<unsigned int>			m_indices;
-
+	LibMath::Matrix4					m_transformationMatrix;
 	// Transformation parameters
 	float								m_x, m_y, m_z;
 	float								m_rotationX, m_rotationY, m_rotationZ;

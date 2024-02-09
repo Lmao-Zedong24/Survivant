@@ -25,11 +25,18 @@ bool Model::LoadModel(const std::string& p_filename)
 }
 
 void Model::SetTransformation(float p_x, float p_y, float p_z, float p_rotationX,
-	float p_rotationY, float p_rotationZ, float p_scaleX,
-	float p_scaleY, float p_scaleZ)
+							  float p_rotationY, float p_rotationZ, float p_scaleX,
+							  float p_scaleY, float p_scaleZ)
 {
 	// Create transformation matrices for translation, rotation, and scaling
-	/*LibMath::Matrix4 translationMatrix = translationMatrix.tra;*/
+	LibMath::Matrix4 translationMatrix = LibMath::translation(LibMath::Vector3(p_x, p_y, p_z));
+	LibMath::Matrix4 rotationMatrixX = LibMath::rotation(LibMath::Radian(p_rotationX), LibMath::Vector3(1.0f, 0.0f, 0.0f));
+	LibMath::Matrix4 rotationMatrixY = LibMath::rotation(LibMath::Radian(p_rotationY), LibMath::Vector3(0.0f, 1.0f, 0.0f));
+	LibMath::Matrix4 rotationMatrixZ = LibMath::rotation(LibMath::Radian(p_rotationZ), LibMath::Vector3(0.0f, 0.0f, 1.0f));
+	LibMath::Matrix4 scalingMatrix = LibMath::scaling(LibMath::Vector3(p_scaleX, p_scaleY, p_scaleZ));
+
+	// Combine the transformation matrices to get the final transformation matrix
+	m_transformationMatrix = translationMatrix * rotationMatrixX * rotationMatrixY * rotationMatrixZ * scalingMatrix;
 }
 
 void Model::PlayAnimation(const std::string& p_animationName)
@@ -101,7 +108,7 @@ void Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
 		vertex.z = mesh->mVertices[i].z;
 		vertex.nx = mesh->mNormals[i].x;
 		vertex.ny = mesh->mNormals[i].y;
-		vertex.nz = mesh->mNormals[i].z;
+		vertex.nz = mesh->mNormals[i].z;	
 		if (mesh->mTextureCoords[0]) // Check if the mesh has texture coordinates
 		{
 			vertex.u = mesh->mTextureCoords[0][i].x;
