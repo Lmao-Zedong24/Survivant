@@ -29,6 +29,8 @@ namespace SvRendering::Core
         // texture coordinates attribute
         glEnableVertexAttribArray(2);
         glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride, reinterpret_cast<void*>(offsetof(Vertex, m_textureUV)));
+
+        Unbind();
     }
 
     VertexAttributes::VertexAttributes(VertexAttributes&& p_other) noexcept
