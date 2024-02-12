@@ -20,7 +20,6 @@ bool Model::LoadModel(const std::string& p_filename)
 
 void Model::SetTransformation(float p_x, float p_y, float p_z, float p_rotationX,float p_rotationY, float p_rotationZ, float p_scaleX,float p_scaleY, float p_scaleZ)
 {
-
 	m_x			= p_x;
 	m_y			= p_y;
 	m_z			= p_z;
@@ -110,23 +109,28 @@ void Model::ProcessNode(aiNode* node, const aiScene* scene)
 void Model::ProcessMesh(aiMesh* mesh)
 {
 	// Process vertices
-	for (unsigned int i = 0; i < mesh->mNumVertices; ++i)
-	{
+	for (unsigned int i = 0; i < mesh->mNumVertices; ++i) {
 		Vertex vertex;
 		// Fill in vertex data (position, normal, texture coordinates)
-		// You'll need to adjust this according to Assimp's vertex data structure
-		// For example:
-		vertex.x  = mesh->mVertices[i].x;
-		vertex.y  = mesh->mVertices[i].y;
-		vertex.z  = mesh->mVertices[i].z;
+		vertex.x = mesh->mVertices[i].x;
+		vertex.y = mesh->mVertices[i].y;
+		vertex.z = mesh->mVertices[i].z;
 		vertex.nx = mesh->mNormals[i].x;
 		vertex.ny = mesh->mNormals[i].y;
 		vertex.nz = mesh->mNormals[i].z;
 
-		if (mesh->mTextureCoords[0]) // Check if the mesh has texture coordinates
-		{
-			vertex.u = mesh->mTextureCoords[0][i].x;
-			vertex.v = mesh->mTextureCoords[0][i].y;
+		if (mesh->mTextureCoords[0] != nullptr && i < mesh->mNumVertices) {
+			// Check if the mesh has texture coordinates and if the index i is within bounds
+			if (mesh->mTextureCoords[0][i] != nullptr) 
+			{
+				// Check if texture coordinates are available for this vertex
+				vertex.u = mesh->mTextureCoords[0][i].x;
+				vertex.v = mesh->mTextureCoords[0][i].y;
+			}
+			else {
+				vertex.u = 0.0f;
+				vertex.v = 0.0f;
+			}
 		}
 		else
 		{
@@ -140,8 +144,7 @@ void Model::ProcessMesh(aiMesh* mesh)
 	for (unsigned int i = 0; i < mesh->mNumFaces; ++i)
 	{
 		aiFace face = mesh->mFaces[i];
-		for (unsigned int j = 0; j < face.mNumIndices; ++j)
-		{
+		for (unsigned int j = 0; j < face.mNumIndices; ++j) {
 			m_indices.push_back(face.mIndices[j]);
 		}
 	}
