@@ -46,6 +46,8 @@ public:
 	void								ProcessNode(aiNode* node, const aiScene* scene);
 
 	void								ProcessMesh(aiMesh* mesh);
+
+	float								ToRadians(float degrees);
 private:
 
 	std::vector<Vertex>					m_vertices;
@@ -53,8 +55,10 @@ private:
 	std::vector<Vertex>					m_UVs;
 	std::vector<unsigned int>			m_indices;
 	LibMath::Matrix4					m_transformationMatrix;
-	// Transformation parameters
+	
 	float								m_x, m_y, m_z;
 	float								m_rotationX, m_rotationY, m_rotationZ;
 	float								m_scaleX, m_scaleY, m_scaleZ;
+
+	
 };
