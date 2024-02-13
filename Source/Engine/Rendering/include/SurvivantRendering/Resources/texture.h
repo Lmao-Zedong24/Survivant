@@ -108,18 +108,6 @@ public:
  */
 	bool									operator!=(const Texture& p_other) const;
 
-	/**
- * @brief Resize the texture
- * @param p_newWidth The new width of the texture
- * @param p_newHeight The new height of the texture
- */
-	void									Resize(int p_newWidth, int p_newHeight);
-
-	/**
- * @brief Load a cubemap texture from a set of six images representing the faces of the cube
- * @param p_faceFilepaths Vector containing file paths to the images representing the faces of the cube
- */
-	void									LoadCubeMap(const std::vector<std::string>& p_faceFilepaths);
 private:
 
 	/**
