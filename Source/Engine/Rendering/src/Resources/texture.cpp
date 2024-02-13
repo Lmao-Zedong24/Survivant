@@ -110,7 +110,7 @@ m_wrapT(ETextureWrapMode::REPEAT), m_generateMipmaps(false)
 			m_height = other.m_height;
 			m_numChannels = other.m_numChannels;
 			m_pixels = new unsigned char[m_width * m_height * m_numChannels];
-			std::copy(other.m_pixels, other.m_pixels + m_width * m_height * m_numChannels, m_pixels);
+			std::copy_n(other.m_pixels, other.m_pixels + m_width * m_height * m_numChannels, m_pixels);
 
 			// Generate mipmaps if needed
 			if (other.m_generateMipmaps) {
@@ -123,9 +123,27 @@ m_wrapT(ETextureWrapMode::REPEAT), m_generateMipmaps(false)
 
 bool Texture::Load(const std::string& p_path)
 {
-	m_pixels = LoadFile(p_path.c_str(), m_width, m_height, m_numChannels);
-	return m_pixels != nullptr;
+	stbi_set_flip_vertically_on_load(true);
+
+	int channels;
+	m_pixels = stbi_load(p_path.c_str(), &m_width, &m_height, &channels, 0);
+
+	m_numChannels = static_cast<uint8_t>(channels);
+
+	if (!m_pixels)
+	{
+		std::cerr << "Failed to load texture: " << p_path << std::endl;
+		return false;
+	}
+
+	return true;
 }
+
+//bool Texture::Load(const std::string& p_path)
+//{
+//	m_pixels = LoadFile(p_path.c_str(), m_width, m_height, m_numChannels);
+//	return m_pixels != nullptr;
+//}
 
 bool Texture::Init()
 {
@@ -205,23 +223,23 @@ void Texture::SetActiveTextureUnit(uint8_t p_textureUnit)
 	glActiveTexture(GL_TEXTURE0 + static_cast<GLint>(p_textureUnit));
 }
 
-unsigned char* Texture::LoadFile(const char* p_filepath, int& p_width, int& p_height, uint8_t& p_channels)
-{
-	stbi_set_flip_vertically_on_load(true);
-
-	int channels;
-	unsigned char* data = stbi_load(p_filepath, &p_width, &p_height, &channels, 0);
-
-	p_channels = static_cast<uint8_t>(channels);
-
-	if (!data)
-	{
-		std::cerr << "Failed to load texture: " << p_filepath << std::endl;
-		return nullptr;
-	}
-
-	return data;
-}
+//unsigned char* Texture::LoadFile(const char* p_filepath, int& p_width, int& p_height, uint8_t& p_channels)
+//{
+//	stbi_set_flip_vertically_on_load(true);
+//
+//	int channels;
+//	unsigned char* data = stbi_load(p_filepath, &p_width, &p_height, &channels, 0);
+//
+//	p_channels = static_cast<uint8_t>(channels);
+//
+//	if (!data)
+//	{
+//		std::cerr << "Failed to load texture: " << p_filepath << std::endl;
+//		return nullptr;
+//	}
+//
+//	return data;
+//}
 
 void Texture::CheckGLErrors(const std::string& p_location)
 {
