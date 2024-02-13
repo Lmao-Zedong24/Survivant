@@ -302,6 +302,7 @@ namespace SvRendering::Resources
 
         std::string        line;
         std::istringstream sourceStream(p_source);
+        ptrdiff_t          offset = 0;
 
         while (std::getline(sourceStream, line))
         {
@@ -338,7 +339,8 @@ namespace SvRendering::Resources
             if (!ProcessIncludes(includedShader))
                 return false;
 
-            p_source.replace(startPos, lineSize, includedShader);
+            p_source.replace(startPos + offset, lineSize, includedShader);
+            offset += static_cast<ptrdiff_t>(includedShader.size()) - lineSize;
         }
 
         return true;

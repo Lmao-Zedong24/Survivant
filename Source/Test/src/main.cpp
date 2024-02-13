@@ -92,6 +92,22 @@ GLuint GetDefaultTexture()
     return textureId;
 }
 
+#include "SurvivantTest/EventManager.h"
+#include "SurvivantTest/InputManager.h"
+#include "SurvivantTest/Window.h"
+
+
+std::tuple<int, int> AddInputTranslate(char i)
+{
+	return { i, 10 };
+}
+
+std::tuple<int, int> AddMouseTranslate(float i, float j)
+{
+    return { (int)i, (int)j };
+}
+
+
 int main()
 {
     ASSERT(SetWorkingDirectory(GetApplicationDirectory()), "Failed to update working directory");
@@ -105,7 +121,10 @@ int main()
     GLFWwindow* window = glfwCreateWindow(800, 600, "Test", nullptr, nullptr);
     glfwMakeContextCurrent(window);
 
+    // TODO : including glad/gl.h brings up error in Window constructor
     ASSERT(gladLoadGL(glfwGetProcAddress), "Failed to initialize glad");
+
+    App::Window::SetupInputManager(window);
 
     Shader shader;
     ASSERT(shader.Load(UNLIT_SHADER_PATH), "Failed to load shader at path \"%s\"", UNLIT_SHADER_PATH);
@@ -168,6 +187,28 @@ int main()
 
     glClearColor(0, 0, 0, 1);
 
+    //event and inputs
+    using namespace Core;
+    using namespace App;
+    using AddEvent = Event<int, int>;
+
+    EventManager& em = EventManager::GetInstance();
+    InputManager& im = InputManager::GetInstance();
+
+    AddEvent::EventDelegate printAdd = [](int i, int j) { std::cout << "Add = " << i + j << std::endl; };
+    std::shared_ptr<AddEvent> ligEvent = std::make_shared<AddEvent>();
+    ligEvent->AddListener(printAdd);
+    em.AddEvent<AddEvent>(ligEvent);
+
+    InputManager::KeyboardKeyType   a(EKey::A, EKeyState::RELEASED, EInputModifier::ALT);
+    InputManager::KeyboardKeyType   b(EKey::B, EKeyState::PRESSED, EInputModifier());
+    InputManager::MouseKeyType      mouse(EMouseButton::MOUSE_1, EMouseButtonState::PRESSED, EInputModifier());
+    im.AddInputEventBinding<AddEvent>(a, &AddInputTranslate);
+    im.AddInputEventBinding<AddEvent>(b, &AddInputTranslate);
+    //mouse, &AddMouseTranslate
+    im.AddInputEventBinding<AddEvent>(mouse, &AddMouseTranslate);
+    //im.CallInput(b, 'b');
+
     while (!glfwWindowShouldClose(window))
     {
         glfwPollEvents();
@@ -185,5 +226,26 @@ int main()
 
     glfwDestroyWindow(window);
     glfwTerminate();
+
+
+    //test events and inputs
+
+
+
+	//em.AddEvent<HelloWorldEvent>(hwEvent);
+	//em.Invoke<HelloWorldEvent>();
+
+	//ligEvent->Invoke(8, 9);
+	//em.Invoke<AddEvent>(9, 10);
+
+	//InputManager::KeyboardKeyType a(EKey::A, EKeyState::PRESSED, EInputModifier());
+	//InputManager::KeyCallback aF = [](int i) { std::cout << "Test A: " << i << std::endl; };
+
+	//im.AddInputBinding(a, aF);
+	//im.CallInput(a, 'a');
+
+
+
     return 0;
 }
+
