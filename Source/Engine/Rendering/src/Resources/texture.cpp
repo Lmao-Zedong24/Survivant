@@ -38,7 +38,7 @@ GLenum ToGLEnum(ETextureWrapMode p_wrap)
 	}
 }
 
-GLenum GetGLFormat(uint8_t channels)
+GLint GetGLFormat(uint8_t channels)
 {
 	// Determine the OpenGL format based on the number of channels
 	if (channels == 1)
