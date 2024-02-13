@@ -1,19 +1,23 @@
-#include "SurvivantCore/Debug/Assertion.h"
-#include "SurvivantCore/Utility/FileSystem.h"
-#include "SurvivantCore/Utility/Timer.h"
+#include "SurvivantTest/EventManager.h"
+#include "SurvivantTest/InputManager.h"
 
-#include "SurvivantRendering/Core/Camera.h"
-#include "SurvivantRendering/Core/Color.h"
-#include "SurvivantRendering/Core/Vertex.h"
-#include "SurvivantRendering/Core/VertexAttributes.h"
-#include "SurvivantRendering/Core/Buffers/IndexBuffer.h"
-#include "SurvivantRendering/Core/Buffers/VertexBuffer.h"
-#include "SurvivantRendering/Geometry/BoundingBox.h"
-#include "SurvivantRendering/Resources/Shader.h"
+#include <SurvivantCore/Debug/Assertion.h>
+#include <SurvivantCore/Utility/FileSystem.h>
+#include <SurvivantCore/Utility/Timer.h>
 
-// TODO: Implement relevant parts in rendering lib to get rid of glad/glfw dependencies
+#include <SurvivantRendering/Core/Camera.h>
+#include <SurvivantRendering/Core/Color.h>
+#include <SurvivantRendering/Core/Vertex.h>
+#include <SurvivantRendering/Core/VertexAttributes.h>
+#include <SurvivantRendering/Core/Buffers/IndexBuffer.h>
+#include <SurvivantRendering/Core/Buffers/VertexBuffer.h>
+#include <SurvivantRendering/Geometry/BoundingBox.h>
+#include <SurvivantRendering/Resources/Shader.h>
+
+// TODO: Implement relevant parts in corresponding libs to get rid of glad/glfw dependencies
 #include <glad/gl.h>
-#include <GLFW/glfw3.h>
+
+#include "SurvivantTest/Window.h"
 
 using namespace LibMath;
 using namespace SvCore::Utility;
@@ -94,6 +98,16 @@ GLuint GetDefaultTexture()
     return textureId;
 }
 
+std::tuple<int, int> AddInputTranslate(char i)
+{
+    return { i, 10 };
+}
+
+std::tuple<int, int> AddMouseTranslate(float i, float j)
+{
+    return { (int)i, (int)j };
+}
+
 void DrawCube(const VertexAttributes& p_vao)
 {
     p_vao.Bind();
@@ -152,6 +166,7 @@ int main()
     ASSERT(gladLoadGL(glfwGetProcAddress), "Failed to initialize glad");
 
     glEnable(GL_DEPTH_TEST);
+    App::Window::SetupInputManager(window);
 
     const auto [vertices, indices] = MakeCube();
 
@@ -184,6 +199,31 @@ int main()
     cam.SetClearColor(Color::black);
 
     Timer timer;
+
+    //event and inputs
+    using namespace Core;
+    using namespace App;
+    using AddEvent = Event<int, int>;
+
+    EventManager& em = EventManager::GetInstance();
+    InputManager& im = InputManager::GetInstance();
+
+    AddEvent::EventDelegate printAdd = [](int i, int j)
+    {
+        std::cout << "Add = " << i + j << std::endl;
+    };
+    std::shared_ptr<AddEvent> ligEvent = std::make_shared<AddEvent>();
+    ligEvent->AddListener(printAdd);
+    em.AddEvent<AddEvent>(ligEvent);
+
+    InputManager::KeyboardKeyType a(EKey::A, EKeyState::RELEASED, EInputModifier::ALT);
+    InputManager::KeyboardKeyType b(EKey::B, EKeyState::PRESSED, EInputModifier());
+    InputManager::MouseKeyType    mouse(EMouseButton::MOUSE_1, EMouseButtonState::PRESSED, EInputModifier());
+    im.AddInputEventBinding<AddEvent>(a, &AddInputTranslate);
+    im.AddInputEventBinding<AddEvent>(b, &AddInputTranslate);
+    //mouse, &AddMouseTranslate
+    im.AddInputEventBinding<AddEvent>(mouse, &AddMouseTranslate);
+    //im.CallInput(b, 'b');
 
     while (!glfwWindowShouldClose(window))
     {
@@ -229,5 +269,23 @@ int main()
 
     glfwDestroyWindow(window);
     glfwTerminate();
+
+
+    //test events and inputs
+
+
+    //em.AddEvent<HelloWorldEvent>(hwEvent);
+    //em.Invoke<HelloWorldEvent>();
+
+    //ligEvent->Invoke(8, 9);
+    //em.Invoke<AddEvent>(9, 10);
+
+    //InputManager::KeyboardKeyType a(EKey::A, EKeyState::PRESSED, EInputModifier());
+    //InputManager::KeyCallback aF = [](int i) { std::cout << "Test A: " << i << std::endl; };
+
+    //im.AddInputBinding(a, aF);
+    //im.CallInput(a, 'a');
+
+
     return 0;
 }
