@@ -121,12 +121,6 @@ private:
 	static unsigned char* LoadFile(const char* p_filepath, int& p_width, int& p_height, uint8_t& p_channels);
 
 	/**
- * @brief Check for OpenGL errors
- * @param p_location A string indicating the location where the error check is being performed
- */
-	void									CheckGLErrors(const std::string& p_location);
-
-	/**
  * @brief Free memory allocated for image data
  * @param p_data Pointer to the image data to be freed
  */

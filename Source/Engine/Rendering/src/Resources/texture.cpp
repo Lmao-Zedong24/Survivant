@@ -6,7 +6,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-GLenum ToGLEnum(ETextureFilter p_filter)
+GLint ToGLEnum(ETextureFilter p_filter)
 {
 	switch (p_filter)
 	{
@@ -23,7 +23,7 @@ GLenum ToGLEnum(ETextureFilter p_filter)
 	}
 }
 
-GLenum ToGLEnum(ETextureWrapMode p_wrap)
+GLint ToGLEnum(ETextureWrapMode p_wrap)
 {
 	switch (p_wrap)
 	{
@@ -240,15 +240,6 @@ void Texture::SetActiveTextureUnit(uint8_t p_textureUnit)
 //
 //	return data;
 //}
-
-void Texture::CheckGLErrors(const std::string& p_location)
-{
-	GLenum error = glGetError();
-	if (error != GL_NO_ERROR)
-	{
-		std::cerr << "OpenGL error at " << p_location << ":" << std::endl;
-	}
-}
 
 bool Texture::operator==(const Texture& other) const
 {
