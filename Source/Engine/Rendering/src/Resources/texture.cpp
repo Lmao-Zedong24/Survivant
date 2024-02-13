@@ -10,13 +10,13 @@ GLenum ToGLEnum(ETextureFilter p_filter)
 {
 	switch (p_filter)
 	{
-	case ETextureFilter::Nearest:
+	case ETextureFilter::NEAREST:
 		return GL_NEAREST;
-	case ETextureFilter::Linear:
+	case ETextureFilter::LINEAR:
 		return GL_LINEAR;
-	case ETextureFilter::MipmapNearest:
+	case ETextureFilter::MIPMAP_NEAREST:
 		return GL_NEAREST_MIPMAP_NEAREST;
-	case ETextureFilter::MipmapLinear:
+	case ETextureFilter::MIPMAP_LINEAR:
 		return GL_LINEAR_MIPMAP_LINEAR;
 	default:
 		return GL_INVALID_ENUM;
@@ -27,11 +27,11 @@ GLenum ToGLEnum(ETextureWrapMode p_wrap)
 {
 	switch (p_wrap)
 	{
-	case ETextureWrapMode::Repeat:
+	case ETextureWrapMode::REPEAT:
 		return GL_REPEAT;
-	case ETextureWrapMode::ClampToEdge:
+	case ETextureWrapMode::CLAMP_TO_EDGE:
 		return GL_CLAMP_TO_EDGE;
-	case ETextureWrapMode::MirroredRepeat:
+	case ETextureWrapMode::MIRRORED_REPEAT:
 		return GL_MIRRORED_REPEAT;
 	default:
 		return GL_INVALID_ENUM;
@@ -86,8 +86,8 @@ void Texture::Unbind() const
 }
 
 Texture::Texture(const Texture& other) : m_textureID(0), m_width(0), m_height(0), m_numChannels(0), m_pixels(nullptr),
-m_minFilter(ETextureFilter::Linear), m_magFilter(ETextureFilter::Linear), m_wrapS(ETextureWrapMode::Repeat),
-m_wrapT(ETextureWrapMode::Repeat), m_generateMipmaps(false)
+m_minFilter(ETextureFilter::LINEAR), m_magFilter(ETextureFilter::LINEAR), m_wrapS(ETextureWrapMode::REPEAT),
+m_wrapT(ETextureWrapMode::REPEAT), m_generateMipmaps(false)
 {
 	// Copy the data from the source texture
 	if (other.m_textureID != 0) 
