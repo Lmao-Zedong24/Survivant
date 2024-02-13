@@ -132,7 +132,7 @@ bool Texture::Load(const std::string& p_path)
 
 	if (!m_pixels)
 	{
-		std::cerr << "Failed to load texture: " << p_path << std::endl;
+		SV_LOG_ERROR << "Failed to load texture: " << p_path << std::endl;
 		return false;
 	}
 
