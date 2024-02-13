@@ -92,27 +92,7 @@ public:
  */
 	static void								SetActiveTextureUnit(uint8_t p_TextureUnit);
 
-	/**
- * @brief Load image data from a file
- * @param p_filepath The path to the image file
- * @param p_width Reference to store the width of the image
- * @param p_height Reference to store the height of the image
- * @param p_channels Reference to store the number of color channels of the image
- * @return Pointer to the loaded image data
- */
-	static unsigned char*					LoadFile(const char* p_filepath, int& p_width, int& p_height, uint8_t& p_channels);
 
-	/**
- * @brief Check for OpenGL errors
- * @param p_location A string indicating the location where the error check is being performed
- */
-	void									CheckGLErrors(const std::string& p_location);
-
-	/**
- * @brief Free memory allocated for image data
- * @param p_data Pointer to the image data to be freed
- */
-	static void								FreeImageData(unsigned char* p_data);
 
 	/**
  * @brief Compare two textures for equality
@@ -141,6 +121,30 @@ public:
  */
 	void									LoadCubeMap(const std::vector<std::string>& p_faceFilepaths);
 private:
+
+	/**
+* @brief Load image data from a file
+* @param p_filepath The path to the image file
+* @param p_width Reference to store the width of the image
+* @param p_height Reference to store the height of the image
+* @param p_channels Reference to store the number of color channels of the image
+* @return Pointer to the loaded image data
+*/
+	static unsigned char* LoadFile(const char* p_filepath, int& p_width, int& p_height, uint8_t& p_channels);
+
+	/**
+ * @brief Check for OpenGL errors
+ * @param p_location A string indicating the location where the error check is being performed
+ */
+	void									CheckGLErrors(const std::string& p_location);
+
+	/**
+ * @brief Free memory allocated for image data
+ * @param p_data Pointer to the image data to be freed
+ */
+	static void								FreeImageData(unsigned char* p_data);
+
+
 	uint32_t								m_textureID;
 	int										m_width;
 	int										m_height;
