@@ -61,10 +61,15 @@ GLenum GetGLFormat(uint8_t channels)
 }
 
 Texture::Texture() :
-	m_width(0)
+	  m_width(0)
 	, m_height(0)
 	, m_numChannels(0)
-	, m_pixels(nullptr)
+	, m_pixels(nullptr),
+	m_textureID(0),
+	m_minFilter(ETextureFilter::NEAREST),
+	m_magFilter(ETextureFilter::NEAREST),
+	m_wrapS(ETextureWrapMode::REPEAT),
+	m_wrapT(ETextureWrapMode::REPEAT) 
 {
 
 }
