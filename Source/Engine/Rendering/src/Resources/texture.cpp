@@ -2,7 +2,7 @@
 
 #include <iostream>
 #include <glad/gl.h>
-
+#include "SurvivantCore/Debug/Logger.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
@@ -55,7 +55,7 @@ GLint GetGLFormat(uint8_t channels)
 	}
 	else
 	{
-		std::cerr << "Unsupported number of channels: " << channels << std::endl;
+		SV_LOG_ERROR("Unsupported number of channels: ");
 		return GL_INVALID_ENUM;
 	}
 }
@@ -132,7 +132,7 @@ bool Texture::Load(const std::string& p_path)
 
 	if (!m_pixels)
 	{
-		SV_LOG_ERROR << "Failed to load texture: " << p_path << std::endl;
+		SV_LOG_ERROR ("Failed to load texture: ");
 		return false;
 	}
 
@@ -149,7 +149,7 @@ bool Texture::Init()
 {
 	if (m_pixels == nullptr)
 	{
-		std::cerr << "No texture data";
+		SV_LOG_ERROR("No texture data");
 		return false;
 	}
 
@@ -157,7 +157,7 @@ bool Texture::Init()
 
 	if (dataFormat == GL_INVALID_ENUM)
 	{
-		std::cerr << "Texture format not supported - num channels: " << m_numChannels;
+		SV_LOG_ERROR("Texture format not supported - num channels: ");
 		return false;
 	}
 
@@ -167,7 +167,7 @@ bool Texture::Init()
 
 		if (m_textureID == 0)
 		{
-			std::cerr << "Failed to create texture id";
+			SV_LOG_ERROR("Failed to create texture id");
 			return false;
 		}
 	}
