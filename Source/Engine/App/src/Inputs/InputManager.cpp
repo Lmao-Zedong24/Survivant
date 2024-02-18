@@ -11,6 +11,11 @@ InputManager& App::InputManager::GetInstance()
 	return s_instance;
 }
 
+void App::InputManager::SetMousePosFunc(const std::function<void(double&, double&)>& p_func)
+{
+	m_mousePosFunc = p_func;
+}
+
 void App::InputManager::CallInput(const KeyboardKeyType& p_type, char p_scancode)
 {
 	auto callback = m_keyCallbacks.find(p_type);
@@ -39,9 +44,19 @@ void App::InputManager::CallInput(const MouseKeyType& p_type, float p_x, float p
 
 	//calls mouse key callback with mous pos (x,y)
 	callback->second(p_x, p_y);
+
+	double i, j;
+	GetMousePos(i, j);
+	callback->second((float)i, (float)j);
 }
 
 void App::InputManager::AddInputBinding(const MouseKeyType& p_type, const MouseCallback& p_callback)
 {
 	m_mouseKeyCallbacks.emplace(p_type, p_callback);
 }
+
+void App::InputManager::GetMousePos(double& p_x, double& p_y)
+{
+	m_mousePosFunc(p_x, p_y);
+}
+

@@ -51,7 +51,8 @@ target_link_libraries(${TARGET_NAME}
 	PRIVATE
 	${LIBMATH_NAME}
 	${ENGINE_TARGETS}
-	${GLAD_NAME} ${GLFW_NAME}
+	${GLAD_NAME} 
+	${GLFW_NAME}
 )
 
 if(MSVC)

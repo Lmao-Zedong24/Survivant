@@ -24,15 +24,14 @@ namespace App
 		using MouseKeyType = InputType<EMouseButton, EMouseButtonState, EInputModifier>;
 		using MouseCallback = std::function<void(float, float)>;
 
-	public:
 		InputManager() {}
 		InputManager(InputManager const&) = delete;
 		void operator=(InputManager const&) = delete;
 
-	public:
 		static InputManager& GetInstance();
 
-	public:
+		void SetMousePosFunc(const std::function<void(double&, double&)>& p_func);
+
 		void CallInput(const KeyboardKeyType& p_type, char p_scancode);
 
 		void AddInputBinding(const KeyboardKeyType& p_type, const KeyCallback& p_callback);
@@ -48,15 +47,13 @@ namespace App
 		template<class Event, typename ...Args>
 		void AddInputEventBinding(const MouseKeyType& p_type, std::tuple<Args...>(*p_translate)(float, float));
 
-		//void AddInputBinding();
-		//void AddInputBinding();
+		void GetMousePos(double& p_x, double& p_y);
 
 	public:
 		//container peripherique
 		std::unordered_map<KeyboardKeyType, KeyCallback> m_keyCallbacks;
 		std::unordered_map<MouseKeyType, MouseCallback> m_mouseKeyCallbacks;
-
-
+		std::function<void(double&, double&)> m_mousePosFunc;
 	};
 
 	template<class T, typename ...Args>

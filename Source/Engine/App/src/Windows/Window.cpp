@@ -5,8 +5,6 @@
 #include "SurvivantCore/Debug/Assertion.h"
 
 #include "GLFW/glfw3.h"
-//#include "glad/gl.h"
-
 
 using namespace App;
 
@@ -20,7 +18,7 @@ void InputManagerKeyCallback(GLFWwindow* /*p_window*/, int p_key, int p_scancode
         static_cast<char>(p_scancode));
 }  
 
-void InputManagerMousCallback(GLFWwindow* p_window, int p_button, int p_action, int p_mods)
+void InputManagerMouseCallback(GLFWwindow* p_window, int p_button, int p_action, int p_mods)
 {
     double xpos, ypos;
     glfwGetCursorPos(p_window, &xpos, &ypos);
@@ -52,6 +50,9 @@ Window::Window()
     glfwSetWindowPos(m_window, 0, m_yWindowedPos);
 
     glfwMakeContextCurrent(m_window);
+
+    //call inputs form manager
+    SetupInputManager();
 }
 
 App::Window::~Window()
@@ -64,10 +65,19 @@ GLFWwindow* App::Window::GetWindow()
     return m_window;
 }
 
-void App::Window::SetupInputManager(GLFWwindow* p_window)
+void App::Window::SetupInputManager()
 {
-    glfwSetKeyCallback(p_window, InputManagerKeyCallback);
-    glfwSetMouseButtonCallback(p_window, InputManagerMousCallback);
+    using namespace std::placeholders;
+
+    glfwSetKeyCallback(m_window, InputManagerKeyCallback);
+    glfwSetMouseButtonCallback(m_window, InputManagerMouseCallback);
+
+    App::InputManager::GetInstance().SetMousePosFunc(std::bind(&App::Window::GetMousePos, this, _1, _2));
+}
+
+void App::Window::GetMousePos(double& p_x, double& p_y)
+{
+    glfwGetCursorPos(m_window, &p_x, &p_y);
 }
 
 void App::Window::ToggleFullScreenMode()

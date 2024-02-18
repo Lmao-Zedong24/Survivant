@@ -1,5 +1,4 @@
 //Event.h
-
 #pragma once
 
 #include "EventBase.h"

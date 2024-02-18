@@ -38,13 +38,14 @@ list(APPEND HEADER_FILES ${imgui_SOURCE_DIR}/misc/cpp/imgui_stdlib.h)
 
 function(AddBackend BACKEND)
 	list(APPEND SOURCE_FILES ${imgui_SOURCE_DIR}/backends/imgui_impl_${BACKEND}.cpp)
+	set(SOURCE_FILES ${SOURCE_FILES} PARENT_SCOPE)
 	list(APPEND HEADER_FILES ${imgui_SOURCE_DIR}/backends/imgui_impl_${BACKEND}.h)
+	set(HEADER_FILES ${HEADER_FILES} PARENT_SCOPE)
 	message(STATUS "[IMGUI] Added ${BACKEND} backend")
 endfunction()
 
 AddBackend(glfw)
 AddBackend(opengl3)
-
 
 ###############################
 #                             #

@@ -1,5 +1,4 @@
 //EventBase.h
-
 #pragma once
 
 namespace Core

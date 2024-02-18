@@ -94,6 +94,7 @@ GLuint GetDefaultTexture()
 #include "SurvivantApp/Windows/Window.h"
 #include "SurvivantApp/Inputs/KeyboardInputs.h"
 #include "SurvivantApp/Inputs/MouseInputs.h"
+#include "SurvivantUI/UI.h"
 
 
 std::tuple<int, int> AddInputTranslate(char i) 
@@ -131,7 +132,7 @@ int main()
     // TODO : including glad/gl.h brings up error in Window constructor
     ASSERT(gladLoadGL(glfwGetProcAddress), "Failed to initialize glad");
 
-    App::Window::SetupInputManager(windowPtr);
+    //App::Window::SetupInputManager(window);
 
     Shader shader;
     ASSERT(shader.Load(UNLIT_SHADER_PATH), "Failed to load shader at path \"%s\"", UNLIT_SHADER_PATH);
@@ -164,34 +165,37 @@ int main()
     glClearColor(0, 0, 0, 1);
 
     //event and inputs
-    using namespace Core;
-    using namespace App;
-    using AddEvent = Event<int, int>;
-    using ToggleEvent = Event<>;
+    {
+        using namespace Core;
+        using namespace App;
+        using AddEvent = Event<int, int>;
+        using ToggleEvent = Event<>;
 
-    EventManager& em = EventManager::GetInstance();
-    InputManager& im = InputManager::GetInstance();
+        EventManager& em = EventManager::GetInstance();
+        InputManager& im = InputManager::GetInstance();
 
-    AddEvent::EventDelegate printAdd = [](int i, int j) { std::cout << "Add = " << i + j << std::endl; };
-    ToggleEvent::EventDelegate toggle = std::bind(&App::Window::ToggleFullScreenMode, &window);
-    std::shared_ptr<AddEvent> ligEvent = std::make_shared<AddEvent>();
-    std::shared_ptr<ToggleEvent> toggleEvent = std::make_shared<ToggleEvent>();
-    ligEvent->AddListener(printAdd);
-    toggleEvent->AddListener(toggle);
-    em.AddEvent<AddEvent>(ligEvent);
-    em.AddEvent<ToggleEvent>(toggleEvent);
+        AddEvent::EventDelegate printAdd = [](int i, int j) { std::cout << "Add = " << i + j << std::endl; };
+        ToggleEvent::EventDelegate toggle = std::bind(&App::Window::ToggleFullScreenMode, &window);
+        std::shared_ptr<AddEvent> ligEvent = std::make_shared<AddEvent>();
+        std::shared_ptr<ToggleEvent> toggleEvent = std::make_shared<ToggleEvent>();
+        ligEvent->AddListener(printAdd);
+        toggleEvent->AddListener(toggle);
+        em.AddEvent<AddEvent>(ligEvent);
+        em.AddEvent<ToggleEvent>(toggleEvent);
 
-    InputManager::KeyboardKeyType   a(EKey::KEY_A, EKeyState::KEY_RELEASED, EInputModifier::MOD_ALT);
-    InputManager::KeyboardKeyType   b(EKey::KEY_B, EKeyState::KEY_PRESSED, EInputModifier());
-    InputManager::MouseKeyType      mouse(EMouseButton::MOUSE_BUTTON_1, EMouseButtonState::MOUSE_PRESSED, EInputModifier());
-    InputManager::KeyboardKeyType   space(EKey::KEY_SPACE, EKeyState::KEY_PRESSED, EInputModifier());
-    im.AddInputEventBinding<AddEvent>(a, &AddInputTranslate);
-    im.AddInputEventBinding<AddEvent>(b, &AddInputTranslate);
-    im.AddInputEventBinding<AddEvent>(mouse, &AddMouseTranslate);
-    im.AddInputEventBinding<ToggleEvent>(space, &SpaceTranslate);
+        InputManager::KeyboardKeyType   a(EKey::KEY_A, EKeyState::KEY_RELEASED, EInputModifier::MOD_ALT);
+        InputManager::KeyboardKeyType   b(EKey::KEY_B, EKeyState::KEY_PRESSED, EInputModifier());
+        InputManager::MouseKeyType      mouse(EMouseButton::MOUSE_BUTTON_1, EMouseButtonState::MOUSE_PRESSED, EInputModifier());
+        InputManager::KeyboardKeyType   space(EKey::KEY_SPACE, EKeyState::KEY_PRESSED, EInputModifier());
+        im.AddInputEventBinding<AddEvent>(a, &AddInputTranslate);
+        im.AddInputEventBinding<AddEvent>(b, &AddInputTranslate);
+        im.AddInputEventBinding<AddEvent>(mouse, &AddMouseTranslate);
+        im.AddInputEventBinding<ToggleEvent>(space, &SpaceTranslate);
+    }
 
-    
-    //im.CallInput(b, 'b');
+    //ui
+    UI::EditorUI ui;
+    //ui.InitEditorUi(&window);
 
     while (!glfwWindowShouldClose(windowPtr))
     {
@@ -204,6 +208,8 @@ int main()
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
+
+        //ui.Update();
 
         glfwSwapBuffers(windowPtr);
     }

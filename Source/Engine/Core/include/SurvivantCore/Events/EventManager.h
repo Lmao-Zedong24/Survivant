@@ -1,6 +1,6 @@
 //EventManager.h
-
 #pragma once
+
 #include "EventBase.h"
 #include "Event.h"
 
