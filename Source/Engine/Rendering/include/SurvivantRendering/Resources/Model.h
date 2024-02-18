@@ -34,11 +34,11 @@ public:
 	
 	void								SetMaterial();
 
+private:
+
 	void								ProcessNode(aiNode* node, const aiScene* scene);
 
 	void								ProcessMesh(aiMesh* mesh);
-
-private:
 
 	std::vector<Vertex>					m_vertices;
 	std::vector<Vertex>					m_normals;
