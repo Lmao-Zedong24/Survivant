@@ -1,4 +1,5 @@
 #include "SurvivantRendering/Resources/Model.h"
+#include "SurvivantCore/Debug/Logger.h"
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
@@ -11,7 +12,7 @@ bool Model::Load(const std::string& p_filename)
 	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
 	{
 		// Error handling if the model file cannot be loaded
-		std::cerr << "Error: " << importer.GetErrorString() << std::endl;
+        SV_LOG_ERROR("The model file cannot be loaded");
 		return false;
 	}
 
@@ -50,9 +51,8 @@ bool Model::Init()
 
     // Check for OpenGL errors
     GLenum error = glGetError();
-    if (error != GL_NO_ERROR) {
-        // Handle OpenGL error
-        // You may want to log the error or return false to indicate failure
+    if (error != GL_NO_ERROR) 
+    {
         return false;
     }
 
@@ -108,9 +108,6 @@ void Model::ProcessMesh(aiMesh* mesh) {
             vertex.u = 0.0f;
             vertex.v = 0.0f;
         }
-
-
-
         m_vertices.push_back(vertex);
     }
 
