@@ -1,9 +1,6 @@
 #pragma once
 #include <vector>
 #include <string>
-#include <assimp/Importer.hpp>
-#include <assimp/scene.h>
-#include <assimp/postprocess.h>
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -11,6 +8,11 @@
 #include "Matrix/Matrix4.h"
 #include "Vector/Vector3.h"
 #include "SurvivantRendering/Resources/texture.h"
+#include "SurvivantCore/Resources/IResource.h"
+
+class aiNode; 
+class aiScene;
+class aiMesh;
 
 struct Vertex
 {
@@ -19,35 +21,23 @@ struct Vertex
 	float			u, v;
 };
 
-class Model
+class Model: public SvCore::Resources::IResource
 {
 public:
 	Model();
 
 	~Model();
 
-	bool								LoadModel(const std::string& p_filename);
+	virtual bool						Load(const std::string& p_filename) override;
 
-	void								SetTransformation(float p_x, float p_y, float p_z, float p_rotationX, float p_rotationY,
-														  float p_rotationZ, float p_scaleX,float p_scaleY, float p_scaleZ);
-
-	void								PlayAnimation(const std::string& p_animationName);
-
-	void								StopAnimation();
+	virtual bool						Init() override;
 	
 	void								SetMaterial();
-
-	bool								CheckCollision();
-
-	void								Update(float p_deltaTime);
-
-	void								CleanUp();
 
 	void								ProcessNode(aiNode* node, const aiScene* scene);
 
 	void								ProcessMesh(aiMesh* mesh);
 
-	float								ToRadians(float degrees);
 private:
 
 	std::vector<Vertex>					m_vertices;
