@@ -48,46 +48,47 @@ void Model::ProcessNode(aiNode* node, const aiScene* scene)
 	}
 }
 
-void Model::ProcessMesh(aiMesh* mesh)
-{
-	// Process vertices
-	for (unsigned int i = 0; i < mesh->mNumVertices; ++i) {
-		Vertex vertex;
-		// Fill in vertex data (position, normal, texture coordinates)
-		vertex.x = mesh->mVertices[i].x;
-		vertex.y = mesh->mVertices[i].y;
-		vertex.z = mesh->mVertices[i].z;
-		vertex.nx = mesh->mNormals[i].x;
-		vertex.ny = mesh->mNormals[i].y;
-		vertex.nz = mesh->mNormals[i].z;
+void Model::ProcessMesh(aiMesh* mesh) {
+    // Process vertices
+    for (unsigned int i = 0; i < mesh->mNumVertices; ++i) {
+        Vertex vertex;
+        // Fill in vertex data (position, normal, texture coordinates)
+        vertex.x = mesh->mVertices[i].x;
+        vertex.y = mesh->mVertices[i].y;
+        vertex.z = mesh->mVertices[i].z;
+        vertex.nx = mesh->mNormals[i].x;
+        vertex.ny = mesh->mNormals[i].y;
+        vertex.nz = mesh->mNormals[i].z;
 
-		if (mesh->mTextureCoords[0] != nullptr && i < mesh->mNumVertices) {
-			// Check if the mesh has texture coordinates and if the index i is within bounds
-			if (mesh->mTextureCoords[0][i] != nullptr) 
-			{
-				// Check if texture coordinates are available for this vertex
-				vertex.u = mesh->mTextureCoords[0][i].x;
-				vertex.v = mesh->mTextureCoords[0][i].y;
-			}
-			else {
-				vertex.u = 0.0f;
-				vertex.v = 0.0f;
-			}
-		}
-		else
-		{
-			vertex.u = 0.0f;
-			vertex.v = 0.0f;
-		}
-		m_vertices.push_back(vertex);
-	}
+        // Check if the mesh has texture coordinates and if the index i is within bounds
+        if (mesh->mTextureCoords[0] && i < mesh->mNumVertices) {
+            if (mesh->mTextureCoords[0][i].x != 0.0f || mesh->mTextureCoords[0][i].y != 0.0f) {
+                vertex.u = mesh->mTextureCoords[0][i].x;
+                vertex.v = mesh->mTextureCoords[0][i].y;
+            }
+            else {
+                vertex.u = 0.0f;
+                vertex.v = 0.0f;
+            }
+        }
+        else {
+            vertex.u = 0.0f;
+            vertex.v = 0.0f;
+        }
 
-	// Process indices
-	for (unsigned int i = 0; i < mesh->mNumFaces; ++i)
-	{
-		aiFace face = mesh->mFaces[i];
-		for (unsigned int j = 0; j < face.mNumIndices; ++j) {
-			m_indices.push_back(face.mIndices[j]);
-		}
-	}
+
+
+        m_vertices.push_back(vertex);
+    }
+
+    // Process indices
+    for (unsigned int i = 0; i < mesh->mNumFaces; ++i) {
+        aiFace face = mesh->mFaces[i];
+        for (unsigned int j = 0; j < face.mNumIndices; ++j) {
+            m_indices.push_back(face.mIndices[j]);
+        }
+    }
 }
+
+
+
