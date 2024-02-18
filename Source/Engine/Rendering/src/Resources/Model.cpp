@@ -23,7 +23,40 @@ bool Model::Load(const std::string& p_filename)
 
 bool Model::Init()
 {
+    // Generate Vertex Array Object (VAO)
+    glGenVertexArrays(1, &m_vao);
+    glBindVertexArray(m_vao);
 
+    // Generate Vertex Buffer Object (VBO)
+    glGenBuffers(1, &m_vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
+    glBufferData(GL_ARRAY_BUFFER, m_vertices.size() * sizeof(Vertex), &m_vertices[0], GL_STATIC_DRAW);
+
+    // Specify vertex attribute pointers
+    glEnableVertexAttribArray(0); // Position attribute
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, x));
+    glEnableVertexAttribArray(1); // Normal attribute
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, nx));
+    glEnableVertexAttribArray(2); // Texture coordinate attribute
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, u));
+
+    // Generate Element Buffer Object (EBO)
+    glGenBuffers(1, &m_ebo);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ebo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_indices.size() * sizeof(unsigned int), &m_indices[0], GL_STATIC_DRAW);
+
+    // Unbind VAO to prevent unintended modification
+    glBindVertexArray(0);
+
+    // Check for OpenGL errors
+    GLenum error = glGetError();
+    if (error != GL_NO_ERROR) {
+        // Handle OpenGL error
+        // You may want to log the error or return false to indicate failure
+        return false;
+    }
+
+    return true; // Initialization successful
 }
 
 

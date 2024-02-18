@@ -10,9 +10,9 @@
 #include "SurvivantRendering/Resources/texture.h"
 #include "SurvivantCore/Resources/IResource.h"
 
-class aiNode; 
-class aiScene;
-class aiMesh;
+struct aiNode; 
+struct aiScene;
+struct aiMesh;
 
 struct Vertex
 {
@@ -45,7 +45,9 @@ private:
 	std::vector<Vertex>					m_UVs;
 	std::vector<unsigned int>			m_indices;
 	LibMath::Matrix4					m_transformationMatrix;
-	
+	GLuint								m_vao;
+	GLuint								m_vbo; 
+	GLuint								m_ebo;
 	float								m_x, m_y, m_z;
 	float								m_rotationX, m_rotationY, m_rotationZ;
 	float								m_scaleX, m_scaleY, m_scaleZ;
