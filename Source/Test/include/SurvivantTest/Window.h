@@ -1,5 +1,5 @@
 //Window.h
-#include "GLFW/glfw3.h"
+#include "GLFW/glfw3.h" // TODO : Get rid of glfw include in window header
 
 namespace App
 {
@@ -8,7 +8,7 @@ namespace App
 	public:
 		Window();
 		~Window();
-		
+
 		//void SetWindow(GLFWwindow* p_window);
 		//GLFWwindow* GetWindow();
 

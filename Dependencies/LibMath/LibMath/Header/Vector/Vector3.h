@@ -628,6 +628,16 @@ namespace LibMath
             min(a.m_y, b.m_y),                                                       \
             min(a.m_z, b.m_z)                                                        \
         };                                                                           \
+    }                                                                                \
+                                                                                     \
+    template <>                                                                      \
+    inline Alias max<Alias>(const Alias a, const Alias b)                            \
+    {                                                                                \
+        return {                                                                     \
+            max(a.m_x, b.m_x),                                                       \
+            max(a.m_y, b.m_y),                                                       \
+            max(a.m_z, b.m_z)                                                        \
+        };                                                                           \
     }
 
     VEC3_ALIAS_IMPL(float, Vector3F)
