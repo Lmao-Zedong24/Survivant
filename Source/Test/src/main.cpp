@@ -165,11 +165,13 @@ int main()
     glClearColor(0, 0, 0, 1);
 
     //event and inputs
+    using namespace Core;
+    using namespace App;
+    using AddEvent = Event<int, int>;
+    using ToggleEvent = Event<>;
     {
-        using namespace Core;
-        using namespace App;
-        using AddEvent = Event<int, int>;
-        using ToggleEvent = Event<>;
+
+        InputManager::GetInstance().InitWindow(&window);
 
         EventManager& em = EventManager::GetInstance();
         InputManager& im = InputManager::GetInstance();
@@ -210,6 +212,9 @@ int main()
         glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
 
         //ui.Update();
+
+        if (App::InputManager::GetInstance().EvaluateInput({ EKey::KEY_1, EKeyState::KEY_PRESSED, EInputModifier::MOD_ALT }))
+            std::cout << "1 is pressed" << std::endl;
 
         glfwSwapBuffers(windowPtr);
     }

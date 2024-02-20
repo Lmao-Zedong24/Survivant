@@ -11,16 +11,19 @@
 #include <memory>
 #include <tuple>
 
+
 namespace App
 {
+	//foward declaration
+	class Window;
+
 	class InputManager
 	{
 	public:
-		using GLFWwindow = int;
 		using KeyboardKeyType = InputType<EKey, EKeyState, EInputModifier>;
 		using KeyCallbackParam = char;
 		using KeyCallback = std::function<void(KeyCallbackParam)>;
-		
+
 		using MouseKeyType = InputType<EMouseButton, EMouseButtonState, EInputModifier>;
 		using MouseCallback = std::function<void(float, float)>;
 
@@ -30,7 +33,7 @@ namespace App
 
 		static InputManager& GetInstance();
 
-		void SetMousePosFunc(const std::function<void(double&, double&)>& p_func);
+		void InitWindow(Window* p_window);
 
 		void CallInput(const KeyboardKeyType& p_type, char p_scancode);
 
@@ -39,8 +42,9 @@ namespace App
 		template<class Event, typename ...Args>
 		void AddInputEventBinding(const KeyboardKeyType& p_type, std::tuple<Args...> (*p_translate)(KeyCallbackParam));
 
-
 		void CallInput(const MouseKeyType& p_type, float p_x, float p_y);
+
+		void CallInput(const MouseKeyType& p_type);
 
 		void AddInputBinding(const MouseKeyType& p_type, const MouseCallback& p_callback);
 
@@ -49,11 +53,16 @@ namespace App
 
 		void GetMousePos(double& p_x, double& p_y);
 
+		bool EvaluateInput(const KeyboardKeyType& p_key);
+		bool EvaluateInput(const MouseKeyType& p_key);
+
 	public:
 		//container peripherique
 		std::unordered_map<KeyboardKeyType, KeyCallback> m_keyCallbacks;
 		std::unordered_map<MouseKeyType, MouseCallback> m_mouseKeyCallbacks;
-		std::function<void(double&, double&)> m_mousePosFunc;
+
+		App::Window* m_window = nullptr;
+
 	};
 
 	template<class T, typename ...Args>

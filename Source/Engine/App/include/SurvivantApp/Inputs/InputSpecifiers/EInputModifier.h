@@ -5,6 +5,9 @@ namespace App
 #undef MOD_SHIFT
 #undef MOD_CONTROL
 #undef MOD_ALT
+
+    constexpr size_t NUM_INPUT_MODIFIERS = 6;
+
     enum class EInputModifier
     {
         MOD_SHIFT     = 1 << 0,
@@ -14,4 +17,6 @@ namespace App
         MOD_CAPS_LOCK = 1 << 4,
         MOD_NUM_LOCK  = 1 << 5
     };
+
+
 }

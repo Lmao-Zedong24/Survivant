@@ -52,7 +52,7 @@ Window::Window()
     glfwMakeContextCurrent(m_window);
 
     //call inputs form manager
-    SetupInputManager();
+    //SetupInputManager();
 }
 
 App::Window::~Window()
@@ -65,19 +65,71 @@ GLFWwindow* App::Window::GetWindow()
     return m_window;
 }
 
-void App::Window::SetupInputManager()
+void App::Window::SetupInputManager() const
 {
-    using namespace std::placeholders;
-
     glfwSetKeyCallback(m_window, InputManagerKeyCallback);
     glfwSetMouseButtonCallback(m_window, InputManagerMouseCallback);
-
-    App::InputManager::GetInstance().SetMousePosFunc(std::bind(&App::Window::GetMousePos, this, _1, _2));
 }
 
-void App::Window::GetMousePos(double& p_x, double& p_y)
+void App::Window::GetMousePos(double& p_x, double& p_y) const
 {
     glfwGetCursorPos(m_window, &p_x, &p_y);
+}
+
+bool App::Window::EvaluateInput(EKey p_key, EKeyState p_state, EInputModifier p_modif)
+{
+    return  static_cast<int>(p_state) == glfwGetKey(m_window, static_cast<int>(p_key)) &&
+            EvaluteModif(p_modif);
+}
+
+bool App::Window::EvaluateInput(EMouseButton p_button, EMouseButtonState p_state, EInputModifier p_modif)
+{
+    return  static_cast<int>(p_state) == glfwGetMouseButton(m_window, static_cast<int>(p_button)) &&
+            EvaluteModif(p_modif);
+}
+
+bool App::Window::EvaluteModif(EInputModifier p_modif)
+{
+    int disiredModif = static_cast<int>(p_modif);
+    int currentModif = 0;
+
+    if (disiredModif < 0)
+        return true;
+
+    for (size_t i = 0; i < NUM_INPUT_MODIFIERS; i++)
+    {
+        int modif = 1 << i;
+        int state = glfwGetKey(m_window, static_cast<int>(GetModifKey(static_cast<EInputModifier>(modif))));
+        if (state == static_cast<int>(EKeyState::KEY_PRESSED))
+            currentModif += modif;
+    }
+
+    return disiredModif == currentModif;
+}
+
+EKey App::Window::GetModifKey(EInputModifier p_modif)
+{
+    //gotat put this if I want to use enum
+#undef MOD_SHIFT
+#undef MOD_CONTROL
+#undef MOD_ALT
+    switch (p_modif)
+    {
+    case App::EInputModifier::MOD_SHIFT:
+        return EKey::KEY_LEFT_SHIFT;
+    case App::EInputModifier::MOD_CONTROL:
+        return EKey::KEY_LEFT_CONTROL;
+    case App::EInputModifier::MOD_ALT:
+        return EKey::KEY_LEFT_ALT;
+    case App::EInputModifier::MOD_SUPER:
+        return EKey::KEY_LEFT_SUPER;
+    case App::EInputModifier::MOD_CAPS_LOCK:
+        return EKey::KEY_CAPS_LOCK;
+    case App::EInputModifier::MOD_NUM_LOCK:
+        return EKey::KEY_NUM_LOCK;
+    default:
+        return EKey();
+    }
 }
 
 void App::Window::ToggleFullScreenMode()
