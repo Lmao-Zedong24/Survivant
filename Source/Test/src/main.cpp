@@ -34,45 +34,53 @@ constexpr Radian      CAM_ROTATION_SPEED = 90_deg;
 
 std::pair<const Vertex*, const uint32_t*> MakeCube()
 {
-    constexpr float normalLength = 0.57735027f;	// normal length = 1 / sqrt(3) ~= 0.57735027f
-
     static const Vertex vertices[]
     {
-        { { -.5f, -.5f, .5f }, { -normalLength, -normalLength, normalLength }, { 0, 0 } },   // (0) Front-bottom-left
-        { { -.5f, .5f, .5f }, { -normalLength, normalLength, normalLength }, { 0, 1 } },     // (1) Front-top-left
-        { { -.5f, -.5f, -.5f }, { -normalLength, -normalLength, -normalLength }, { 1, 0 } }, // (2) Back-bottom-left
-        { { -.5f, .5f, -.5f }, { -normalLength, normalLength, -normalLength }, { 1, 1 } },   // (3) Back-top-left
-        { { .5f, -.5f, .5f }, { normalLength, -normalLength, normalLength }, { 0, 0 } },     // (4) Front-bottom-right
-        { { .5f, .5f, .5f }, { normalLength, normalLength, normalLength }, { 0, 1 } },       // (5) Front-top-right
-        { { .5f, -.5f, -.5f }, { normalLength, -normalLength, -normalLength }, { 1, 0 } },   // (6) Back-bottom-right
-        { { .5f, .5f, -.5f }, { normalLength, normalLength, -normalLength }, { 1, 1 } }      // (7) Back-top-right
+        { { -0.5, -0.5, 0.5 }, { -1, 0, 0 }, { 0, 0 } },
+        { { -0.5, 0.5, 0.5 }, { -1, 0, 0 }, { 0, 1 } },
+        { { -0.5, 0.5, -0.5 }, { -1, 0, 0 }, { 1, 1 } },
+        { { -0.5, -0.5, -0.5 }, { -1, 0, 0 }, { 1, 0 } },
+        { { -0.5, -0.5, -0.5 }, { 0, 0, -1 }, { 0, 0 } },
+        { { -0.5, 0.5, -0.5 }, { 0, 0, -1 }, { 0, 1 } },
+        { { 0.5, 0.5, -0.5 }, { 0, 0, -1 }, { 1, 1 } },
+        { { 0.5, -0.5, -0.5 }, { 0, 0, -1 }, { 1, 0 } },
+        { { 0.5, -0.5, -0.5 }, { 1, 0, 0 }, { 1, 0 } },
+        { { 0.5, 0.5, -0.5 }, { 1, 0, 0 }, { 1, 1 } },
+        { { 0.5, 0.5, 0.5 }, { 1, 0, 0 }, { 0, 1 } },
+        { { 0.5, -0.5, 0.5 }, { 1, 0, 0 }, { 0, 0 } },
+        { { 0.5, -0.5, 0.5 }, { 0, 0, 1 }, { 1, 0 } },
+        { { 0.5, 0.5, 0.5 }, { 0, 0, 1 }, { 1, 1 } },
+        { { -0.5, 0.5, 0.5 }, { 0, 0, 1 }, { 0, 1 } },
+        { { -0.5, -0.5, 0.5 }, { 0, 0, 1 }, { 0, 0 } },
+        { { -0.5, -0.5, -0.5 }, { 0, -1, 0 }, { 0, 1 } },
+        { { 0.5, -0.5, -0.5 }, { 0, -1, 0 }, { 1, 1 } },
+        { { 0.5, -0.5, 0.5 }, { 0, -1, 0 }, { 1, 0 } },
+        { { -0.5, -0.5, 0.5 }, { 0, -1, 0 }, { 0, 0 } },
+        { { 0.5, 0.5, -0.5 }, { 0, 1, 0 }, { 1, 1 } },
+        { { -0.5, 0.5, -0.5 }, { 0, 1, 0 }, { 0, 1 } },
+        { { -0.5, 0.5, 0.5 }, { 0, 1, 0 }, { 0, 0 } },
+        { { 0.5, 0.5, 0.5 }, { 0, 1, 0 }, { 1, 0 } }
     };
 
     static constexpr uint32_t indices[]
     {
-        // Left
-        0, 1, 3,
-        0, 3, 2,
+        0, 1, 2,
+        0, 2, 3,
 
-        // Back
-        2, 3, 7,
-        2, 7, 6,
+        4, 5, 6,
+        4, 6, 7,
 
-        // Right
-        6, 7, 5,
-        6, 5, 4,
+        8, 9, 10,
+        8, 10, 11,
 
-        // Front
-        4, 5, 1,
-        4, 1, 0,
+        12, 13, 14,
+        12, 14, 15,
 
-        // Bottom
-        2, 6, 4,
-        2, 4, 0,
+        16, 17, 18,
+        16, 18, 19,
 
-        // Top
-        7, 3, 1,
-        7, 1, 5
+        20, 21, 22,
+        20, 22, 23
     };
 
     return { vertices, indices };
@@ -174,8 +182,8 @@ int main()
 
     const auto [vertices, indices] = MakeCube();
 
-    const VertexBuffer     vbo(vertices, 8);
-    const IndexBuffer      ebo(indices, 36); // 6 indices * 6 faces
+    const VertexBuffer     vbo(vertices, 24);
+    const IndexBuffer      ebo(indices, 36);
     const VertexAttributes vao(vbo, ebo);
 
     const GLuint textureId = GetDefaultTexture();
