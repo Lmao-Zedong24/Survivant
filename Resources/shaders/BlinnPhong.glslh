@@ -1,0 +1,29 @@
+struct BlinnPhongData
+{
+	vec3    lightDir;
+	vec3    viewDir;
+	vec4    lightColor;
+	vec4    diffuseColor;
+	vec4    specularColor;
+	vec3    normal;
+	float   shininess;
+};
+
+vec3 computeBlinnPhong(BlinnPhongData p_data)
+{
+	float lambertian = max(dot(p_data.lightDir, p_data.normal), 0);
+	float specularIntensity = 0;
+
+	if (lambertian > 0)
+	{
+		vec3 halfDir = normalize(p_data.lightDir + p_data.viewDir);
+		float specularAngle = max(dot(halfDir, p_data.normal), 0);
+
+		specularIntensity = pow(specularAngle, p_data.shininess);
+	}
+
+	vec3 diffuseColor = p_data.lightColor.rgb * p_data.diffuseColor.rgb * lambertian;
+	vec3 specColor = p_data.lightColor.rgb * p_data.specularColor.rgb * specularIntensity;
+
+	return (diffuseColor + specColor) * p_data.lightColor.a;
+}

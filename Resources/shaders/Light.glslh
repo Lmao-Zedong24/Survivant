@@ -1,0 +1,74 @@
+struct DirLight
+{
+	vec4	color;
+
+	vec3	direction;
+};
+
+struct PointLight
+{
+	vec4	color;
+
+	vec3	position;
+
+	float	constant;
+	float	linear;
+	float	quadratic;
+};
+
+struct SpotLight
+{
+	vec4	color;
+
+	vec3	position;
+	vec3	direction;
+
+	float	constant;
+	float	linear;
+	float	quadratic;
+
+	float	cutoff;
+	float	outerCutoff;
+};
+
+vec4 getColor(mat4 lightMat)
+{
+	return lightMat[0];
+}
+
+DirLight getDirLight(mat4 lightMat)
+{
+	DirLight light =
+	{
+		lightMat[0],
+		{ lightMat[1][0], lightMat[2][0], lightMat[3][0] }
+	};
+
+	return light;
+}
+
+PointLight getPointLight(mat4 lightMat)
+{
+	PointLight light =
+	{
+		lightMat[0],
+		{ lightMat[1][1], lightMat[2][1], lightMat[3][1] },
+		lightMat[1][2], lightMat[2][2], lightMat[3][2]
+	};
+
+	return light;
+}
+
+SpotLight getSpotLight(mat4 lightMat)
+{
+	SpotLight light =
+	{
+		lightMat[0],
+		{ lightMat[1][0], lightMat[2][0], lightMat[3][0] },
+		{ lightMat[1][1], lightMat[2][1], lightMat[3][1] },
+		lightMat[1][2], lightMat[2][2], lightMat[3][2],
+		lightMat[1][3], lightMat[2][3]
+	};
+
+	return light;
+}

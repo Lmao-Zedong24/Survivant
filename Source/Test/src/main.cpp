@@ -15,6 +15,9 @@
 #include <SurvivantRendering/Resources/Shader.h>
 
 // TODO: Implement relevant parts in corresponding libs to get rid of glad/glfw dependencies
+#include "SurvivantRendering/Core/Light.h"
+#include "SurvivantRendering/Core/Buffers/ShaderStorageBuffer.h"
+
 #include <Transform.h>
 
 #include <glad/gl.h>
@@ -25,12 +28,15 @@ using namespace LibMath;
 using namespace SvCore::Utility;
 using namespace SvRendering::Core;
 using namespace SvRendering::Core::Buffers;
+using namespace SvRendering::Enums;
 using namespace SvRendering::Geometry;
 using namespace SvRendering::Resources;
 
-constexpr const char* UNLIT_SHADER_PATH  = "assets/shaders/Unlit.glsl";
-constexpr float       CAM_MOVE_SPEED     = 3.f;
-constexpr Radian      CAM_ROTATION_SPEED = 90_deg;
+constexpr const char* UNLIT_SHADER_PATH = "assets/shaders/Unlit.glsl";
+constexpr const char* LIT_SHADER_PATH   = "assets/shaders/Lit.glsl";
+
+constexpr float  CAM_MOVE_SPEED     = 3.f;
+constexpr Radian CAM_ROTATION_SPEED = 90_deg;
 
 std::pair<const Vertex*, const uint32_t*> MakeCube()
 {
@@ -198,6 +204,13 @@ int main()
     unlitShader.Use();
     unlitShader.SetUniformInt("u_diffuse", 0);
 
+    Shader litShader;
+    ASSERT(litShader.Load(LIT_SHADER_PATH), "Failed to load shader at path \"%s\"", LIT_SHADER_PATH);
+    ASSERT(litShader.Init(), "Failed to initialize shader at path \"%s\"", LIT_SHADER_PATH);
+
+    litShader.Use();
+    litShader.SetUniformInt("u_diffuse", 0);
+
     const Matrix4 projMat = perspectiveProjection(90_deg, 4.f / 3.f, .01f, 14.f);
 
     Vector3   camPos(0.f, 1.8f, 2.f);
@@ -210,7 +223,7 @@ int main()
 
     Degree angle;
 
-    cam.SetClearColor(Color::black);
+    cam.SetClearColor(Color::gray);
 
     Timer timer;
 
@@ -333,6 +346,17 @@ int main()
         glfwSetWindowShouldClose(window, true);
     });
 
+    std::vector<Matrix4> lightMatrices;
+    lightMatrices.emplace_back(Light(cam.GetClearColor()).getMatrix());
+    lightMatrices.emplace_back(DirectionalLight(Color(1.f, .94f, .91f, 1.f), Vector3::right()).getMatrix());
+    lightMatrices.emplace_back(SpotLight(Color(1, 1, 1, 8), camPos, camTransform.worldBack(), Attenuation(10),
+        { cos(0_deg), cos(30_deg) }).getMatrix());
+    lightMatrices.emplace_back(PointLight(Light{ Color::red }, Vector3{ -1, 1, 1 }, Attenuation(16)).getMatrix());
+
+    ShaderStorageBuffer lightsSSBO(EAccessSpecifier::STREAM_DRAW);
+    lightsSSBO.Bind(0);
+    lightsSSBO.SendBlocks(lightMatrices.data(), lightMatrices.size());
+
     while (!glfwWindowShouldClose(window))
     {
         timer.tick();
@@ -383,8 +407,14 @@ int main()
 
         if (camFrustum.Intersects(GetCubeBoundingBox(testModelMat)))
         {
-            unlitShader.SetUniformMat4("u_mvp", viewProjection * testModelMat);
-            unlitShader.SetUniformVec4("u_tint", Color::yellow);
+            litShader.Use();
+            litShader.SetUniformMat4("u_mvp", viewProjection * testModelMat);
+            litShader.SetUniformMat4("u_modelMat", testModelMat);
+            litShader.SetUniformMat4("u_normalMat", testModelMat.inverse().transposed());
+            litShader.SetUniformVec4("u_tint", Color::yellow);
+            litShader.SetUniformVec3("u_viewPos", camTransform.getWorldPosition());
+            litShader.SetUniformVec4("u_specularColor", Color(.2f, .2f, .2f));
+            litShader.SetUniformFloat("u_shininess", 32.f);
             DrawCube(vao);
         }
 
