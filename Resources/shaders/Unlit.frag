@@ -4,17 +4,10 @@ in vec2 TexCoords;
 
 out vec4 FragColor;
 
-uniform sampler2D u_diffuse;
+uniform vec4		u_tint;
+uniform sampler2D	u_diffuse;
 
 void main()
 {
-	vec4 texColor = texture(u_diffuse, TexCoords);
-
-	if (texColor.a < 0.001)
-	{
-		discard;
-		return;
-	}
-
-	FragColor = texColor;
+	FragColor = texture(u_diffuse, TexCoords) * u_tint;
 }
