@@ -7,7 +7,6 @@ namespace SvRendering::Core
     class VertexAttributes
     {
     public:
-        VertexAttributes() = default;
         explicit VertexAttributes(const Buffers::VertexBuffer& p_vbo, const Buffers::IndexBuffer& p_ebo);
 
         VertexAttributes(const VertexAttributes& p_other) = delete;

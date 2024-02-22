@@ -7,7 +7,6 @@ namespace SvRendering::Core::Buffers
     class ShaderStorageBuffer final : public Buffer
     {
     public:
-        ShaderStorageBuffer() = default;
         explicit ShaderStorageBuffer(Enums::EAccessSpecifier p_accessSpecifier);
 
         /**

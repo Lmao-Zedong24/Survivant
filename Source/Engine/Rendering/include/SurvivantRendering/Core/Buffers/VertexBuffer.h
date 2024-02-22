@@ -9,7 +9,6 @@ namespace SvRendering::Core::Buffers
     class VertexBuffer final : public Buffer
     {
     public:
-        VertexBuffer() = default;
         VertexBuffer(const Vertex* p_vertices, intptr_t p_verticesCount);
         explicit VertexBuffer(const std::vector<Vertex>& p_vertices);
 
