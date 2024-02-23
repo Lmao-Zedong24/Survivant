@@ -6,7 +6,7 @@ using namespace SvRendering::Enums;
 
 namespace SvRendering::Core::Buffers
 {
-    GLenum ToGLEnum(EAccessSpecifier p_accessSpecifier)
+    GLenum ToGLEnum(const EAccessSpecifier p_accessSpecifier)
     {
         switch (p_accessSpecifier)
         {
@@ -33,40 +33,72 @@ namespace SvRendering::Core::Buffers
         }
     }
 
-    ShaderStorageBuffer::ShaderStorageBuffer(EAccessSpecifier p_accessSpecifier)
+    ShaderStorageBuffer::ShaderStorageBuffer(const EAccessSpecifier p_accessSpecifier, const uint32_t p_bindIndex)
+        : m_bindIndex(p_bindIndex), m_accessSpecifier(p_accessSpecifier)
     {
-        glGenBuffers(1, &m_bufferIndex);
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_bufferIndex);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, 0, nullptr, ToGLEnum(p_accessSpecifier));
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, m_bufferIndex);
+        glGenBuffers(1, &m_id);
     }
 
-    void ShaderStorageBuffer::SetBindingPoint(const uint32_t p_bindingPoint)
+    ShaderStorageBuffer::ShaderStorageBuffer(ShaderStorageBuffer&& p_other) noexcept
+        : m_id(p_other.m_id), m_bindIndex(p_other.m_bindIndex), m_accessSpecifier(p_other.m_accessSpecifier)
     {
-        m_bindingPoint = p_bindingPoint;
+        p_other.m_id = 0;
     }
 
-    void ShaderStorageBuffer::Bind(const uint32_t p_bindingPoint)
+    ShaderStorageBuffer::~ShaderStorageBuffer()
     {
-        SetBindingPoint(p_bindingPoint);
+        glDeleteBuffers(1, &m_id);
+    }
+
+    ShaderStorageBuffer& ShaderStorageBuffer::operator=(ShaderStorageBuffer&& p_other) noexcept
+    {
+        if (this == &p_other)
+            return *this;
+
+        glDeleteBuffers(1, &m_id);
+
+        m_id              = p_other.m_id;
+        m_bindIndex       = p_other.m_bindIndex;
+        m_accessSpecifier = p_other.m_accessSpecifier;
+
+        p_other.m_id        = 0;
+        p_other.m_bindIndex = 0;
+
+        return *this;
+    }
+
+    void ShaderStorageBuffer::SetBindIndex(const uint32_t p_bindIndex)
+    {
+        m_bindIndex = p_bindIndex;
+    }
+
+    void ShaderStorageBuffer::Bind(const uint32_t p_bindIndex)
+    {
+        SetBindIndex(p_bindIndex);
         Bind();
     }
 
     void ShaderStorageBuffer::Bind() const
     {
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, m_bindingPoint, m_bufferIndex);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, m_bindIndex, m_id);
     }
 
-    void ShaderStorageBuffer::Unbind()
+    void ShaderStorageBuffer::Unbind() const
     {
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, m_bindingPoint, 0);
-        m_bindingPoint = 0;
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, m_bindIndex, 0);
     }
 
-    void ShaderStorageBuffer::SendBlocks(const void* p_data, const size_t p_blockSize) const
+    void ShaderStorageBuffer::SetRawData(const void* p_data, const size_t p_size) const
     {
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_bufferIndex);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, static_cast<GLsizeiptr>(p_blockSize), p_data, GL_DYNAMIC_DRAW);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_id);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, static_cast<GLsizeiptr>(p_size), p_data, ToGLEnum(m_accessSpecifier));
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+    }
+
+    void ShaderStorageBuffer::SetRawSubData(const void* p_data, const size_t p_size, const intptr_t p_offset) const
+    {
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_id);
+        glBufferSubData(GL_SHADER_STORAGE_BUFFER, p_offset, static_cast<GLsizeiptr>(p_size), p_data);
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     }
 }
