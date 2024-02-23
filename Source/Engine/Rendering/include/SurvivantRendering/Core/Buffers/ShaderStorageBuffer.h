@@ -25,6 +25,7 @@ namespace SvRendering::Core::Buffers
 
         /**
          * \brief Binds the ssbo at the given bind index
+         * \param p_bindIndex The target binding point
          */
         void Bind(uint32_t p_bindIndex);
 
