@@ -2,43 +2,43 @@
 
 #include <iostream>
 #include <glad/gl.h>
-
+#include "SurvivantCore/Debug/Logger.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-GLenum ToGLEnum(ETextureFilter p_filter)
+GLint ToGLEnum(ETextureFilter p_filter)
 {
 	switch (p_filter)
 	{
-	case ETextureFilter::Nearest:
+	case ETextureFilter::NEAREST:
 		return GL_NEAREST;
-	case ETextureFilter::Linear:
+	case ETextureFilter::LINEAR:
 		return GL_LINEAR;
-	case ETextureFilter::MipmapNearest:
+	case ETextureFilter::MIPMAP_NEAREST:
 		return GL_NEAREST_MIPMAP_NEAREST;
-	case ETextureFilter::MipmapLinear:
+	case ETextureFilter::MIPMAP_LINEAR:
 		return GL_LINEAR_MIPMAP_LINEAR;
 	default:
 		return GL_INVALID_ENUM;
 	}
 }
 
-GLenum ToGLEnum(ETextureWrapMode p_wrap)
+GLint ToGLEnum(ETextureWrapMode p_wrap)
 {
 	switch (p_wrap)
 	{
-	case ETextureWrapMode::Repeat:
+	case ETextureWrapMode::REPEAT:
 		return GL_REPEAT;
-	case ETextureWrapMode::ClampToEdge:
+	case ETextureWrapMode::CLAMP_TO_EDGE:
 		return GL_CLAMP_TO_EDGE;
-	case ETextureWrapMode::MirroredRepeat:
+	case ETextureWrapMode::MIRRORED_REPEAT:
 		return GL_MIRRORED_REPEAT;
 	default:
 		return GL_INVALID_ENUM;
 	}
 }
 
-GLenum GetGLFormat(uint8_t channels)
+GLint GetGLFormat(uint8_t channels)
 {
 	// Determine the OpenGL format based on the number of channels
 	if (channels == 1)
@@ -55,16 +55,21 @@ GLenum GetGLFormat(uint8_t channels)
 	}
 	else
 	{
-		std::cerr << "Unsupported number of channels: " << channels << std::endl;
+		SV_LOG_ERROR("Unsupported number of channels: ");
 		return GL_INVALID_ENUM;
 	}
 }
 
 Texture::Texture() :
-	m_width(0)
+	  m_width(0)
 	, m_height(0)
 	, m_numChannels(0)
-	, m_pixels(nullptr)
+	, m_pixels(nullptr),
+	m_textureID(0),
+	m_minFilter(ETextureFilter::NEAREST),
+	m_magFilter(ETextureFilter::NEAREST),
+	m_wrapS(ETextureWrapMode::REPEAT),
+	m_wrapT(ETextureWrapMode::REPEAT) 
 {
 
 }
@@ -86,8 +91,8 @@ void Texture::Unbind() const
 }
 
 Texture::Texture(const Texture& other) : m_textureID(0), m_width(0), m_height(0), m_numChannels(0), m_pixels(nullptr),
-m_minFilter(ETextureFilter::Linear), m_magFilter(ETextureFilter::Linear), m_wrapS(ETextureWrapMode::Repeat),
-m_wrapT(ETextureWrapMode::Repeat), m_generateMipmaps(false)
+m_minFilter(ETextureFilter::LINEAR), m_magFilter(ETextureFilter::LINEAR), m_wrapS(ETextureWrapMode::REPEAT),
+m_wrapT(ETextureWrapMode::REPEAT), m_generateMipmaps(false)
 {
 	// Copy the data from the source texture
 	if (other.m_textureID != 0) 
@@ -105,7 +110,7 @@ m_wrapT(ETextureWrapMode::Repeat), m_generateMipmaps(false)
 			m_height = other.m_height;
 			m_numChannels = other.m_numChannels;
 			m_pixels = new unsigned char[m_width * m_height * m_numChannels];
-			std::copy(other.m_pixels, other.m_pixels + m_width * m_height * m_numChannels, m_pixels);
+			std::copy_n(other.m_pixels, other.m_pixels + m_width * m_height * m_numChannels, m_pixels);
 
 			// Generate mipmaps if needed
 			if (other.m_generateMipmaps) {
@@ -118,15 +123,33 @@ m_wrapT(ETextureWrapMode::Repeat), m_generateMipmaps(false)
 
 bool Texture::Load(const std::string& p_path)
 {
-	m_pixels = LoadFile(p_path.c_str(), m_width, m_height, m_numChannels);
-	return m_pixels != nullptr;
+	stbi_set_flip_vertically_on_load(true);
+
+	int channels;
+	m_pixels = stbi_load(p_path.c_str(), &m_width, &m_height, &channels, 0);
+
+	m_numChannels = static_cast<uint8_t>(channels);
+
+	if (!m_pixels)
+	{
+		SV_LOG_ERROR ("Failed to load texture: ");
+		return false;
+	}
+
+	return true;
 }
+
+//bool Texture::Load(const std::string& p_path)
+//{
+//	m_pixels = LoadFile(p_path.c_str(), m_width, m_height, m_numChannels);
+//	return m_pixels != nullptr;
+//}
 
 bool Texture::Init()
 {
 	if (m_pixels == nullptr)
 	{
-		std::cerr << "No texture data";
+		SV_LOG_ERROR("No texture data");
 		return false;
 	}
 
@@ -134,7 +157,7 @@ bool Texture::Init()
 
 	if (dataFormat == GL_INVALID_ENUM)
 	{
-		std::cerr << "Texture format not supported - num channels: " << m_numChannels;
+		SV_LOG_ERROR("Texture format not supported - num channels: ");
 		return false;
 	}
 
@@ -144,7 +167,7 @@ bool Texture::Init()
 
 		if (m_textureID == 0)
 		{
-			std::cerr << "Failed to create texture id";
+			SV_LOG_ERROR("Failed to create texture id");
 			return false;
 		}
 	}
@@ -200,32 +223,23 @@ void Texture::SetActiveTextureUnit(uint8_t p_textureUnit)
 	glActiveTexture(GL_TEXTURE0 + static_cast<GLint>(p_textureUnit));
 }
 
-unsigned char* Texture::LoadFile(const char* p_filepath, int& p_width, int& p_height, uint8_t& p_channels)
-{
-	stbi_set_flip_vertically_on_load(true);
-
-	int channels;
-	unsigned char* data = stbi_load(p_filepath, &p_width, &p_height, &channels, 0);
-
-	p_channels = static_cast<uint8_t>(channels);
-
-	if (!data)
-	{
-		std::cerr << "Failed to load texture: " << p_filepath << std::endl;
-		return nullptr;
-	}
-
-	return data;
-}
-
-void Texture::CheckGLErrors(const std::string& p_location)
-{
-	GLenum error = glGetError();
-	if (error != GL_NO_ERROR)
-	{
-		std::cerr << "OpenGL error at " << p_location << ":" << std::endl;
-	}
-}
+//unsigned char* Texture::LoadFile(const char* p_filepath, int& p_width, int& p_height, uint8_t& p_channels)
+//{
+//	stbi_set_flip_vertically_on_load(true);
+//
+//	int channels;
+//	unsigned char* data = stbi_load(p_filepath, &p_width, &p_height, &channels, 0);
+//
+//	p_channels = static_cast<uint8_t>(channels);
+//
+//	if (!data)
+//	{
+//		std::cerr << "Failed to load texture: " << p_filepath << std::endl;
+//		return nullptr;
+//	}
+//
+//	return data;
+//}
 
 bool Texture::operator==(const Texture& other) const
 {
