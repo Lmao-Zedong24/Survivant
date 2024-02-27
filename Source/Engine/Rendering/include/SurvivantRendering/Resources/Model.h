@@ -1,45 +1,93 @@
 #pragma once
-#include "SurvivantRendering/Core/VertexAttributes.h"
-#include "SurvivantRendering/Core/Buffers/VertexBuffer.h"
-#include "SurvivantRendering/Core/Buffers/IndexBuffer.h"
-#include "SurvivantCore/Resources/IResource.h"
+#include "SurvivantRendering/Geometry/BoundingBox.h"
+#include "SurvivantRendering/Resources/Mesh.h"
 
-#include <vector>
+#include <SurvivantCore/Resources/IResource.h>
+
 #include <string>
-
-struct aiNode; 
-struct aiScene;
-struct aiMesh;
+#include <vector>
 
 namespace SvRendering::Resources
 {
-    class Model: public SvCore::Resources::IResource
+    class Model final : public SvCore::Resources::IResource
     {
     public:
+        /**
+         * \brief Creates an empty model
+         */
+        Model();
 
-        Model() = default;
+        /**
+         * \brief Creates a model with the given meshes
+         * \param p_meshes The model's meshes
+         */
+        Model(std::vector<Mesh> p_meshes);
 
-        ~Model() = default;
+        /**
+         * \brief Creates a copy of the given model
+         * \param p_other The model to copy
+         */
+        Model(const Model& p_other) = default;
 
-        bool						Load(const std::string& p_filename) override;
+        /**
+         * \brief Creates a move copy of the given model
+         * \param p_other The model to move
+         */
+        Model(Model&& p_other) noexcept = default;
 
-        bool						Init() override;
+        /**
+         * \brief Destroys the model
+         */
+        ~Model() override = default;
 
-        void						Bind() const;
+        /**
+         * \brief Assigns a copy of the given model to this one
+         * \param p_other The model to copy
+         * \return A reference to the modified model
+         */
+        Model& operator=(const Model& p_other) = default;
 
-        uint32_t					GetIndexCount() const;
+        /**
+         * \brief Moves the given model into this one
+         * \param p_other The moved model
+         * \return A reference to the modified model
+         */
+        Model& operator=(Model&& p_other) noexcept = default;
+
+        /**
+         * \brief Loads the model from the given file
+         * \param p_path The path of the model to load
+         * \return True if the model was successfully loaded. False otherwise.
+         */
+        bool Load(const std::string& p_path) override;
+
+        /**
+         * \brief Initializes the model
+         * \return True if the model was successfully initialized. False otherwise.
+         */
+        bool Init() override;
+
+        /**
+         * \brief Gets the model's mesh at the given index
+         * \return The model's mesh at the given index
+         * \param p_index The target mesh's index
+         */
+        const Mesh& GetMesh(size_t p_index) const;
+
+        /**
+         * \brief Gets the number of meshes composing the model
+         * \return The model's mesh count
+         */
+        size_t GetMeshCount() const;
+
+        /**
+         * \brief Gets the mesh's bounding box
+         * \return The mesh's bounding box
+         */
+        Geometry::BoundingBox GetBoundingBox() const;
 
     private:
-        std::vector<Core::Vertex>	m_vertices;
-        std::vector<uint32_t>		m_indices;
-
-        Core::VertexAttributes		m_vao;
-        Core::Buffers::VertexBuffer	m_vbo;
-        Core::Buffers::IndexBuffer	m_ebo;
-
-        void						ProcessNode(aiNode* node, const aiScene* scene);
-
-        void						ProcessMesh(aiMesh* mesh);
-
+        std::vector<Mesh>     m_meshes;
+        Geometry::BoundingBox m_boundingBox;
     };
 }

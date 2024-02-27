@@ -7,14 +7,10 @@
 
 #include <SurvivantRendering/Core/Camera.h>
 #include <SurvivantRendering/Core/Color.h>
-#include <SurvivantRendering/Core/Vertex.h>
-#include <SurvivantRendering/Core/VertexAttributes.h>
-#include <SurvivantRendering/Core/Buffers/IndexBuffer.h>
-#include <SurvivantRendering/Core/Buffers/VertexBuffer.h>
-#include <SurvivantRendering/Geometry/BoundingBox.h>
+#include <SurvivantRendering/Resources/Model.h>
 #include <SurvivantRendering/Resources/Shader.h>
-#include "SurvivantRendering/Resources/Model.h"
-#include "SurvivantRendering/Resources/Texture.h"
+#include <SurvivantRendering/Resources/Texture.h>
+
 #include <Transform.h>
 
 // TODO: Implement relevant parts in corresponding libs to get rid of glad dependency
@@ -63,37 +59,15 @@ std::tuple<int, int> AddMouseTranslate(float i, float j)
     return { (int)i, (int)j };
 }
 
-BoundingBox GetCubeBoundingBox(const Matrix4& transform)
+void DrawModel(const Model& p_model)
 {
-    BoundingBox boundingBox
+    for (size_t i = 0; i < p_model.GetMeshCount(); ++i)
     {
-        { -.5f, -.5f, -.5f },
-        { .5f, .5f, .5f }
-    };
+        const Mesh& mesh = p_model.GetMesh(i);
 
-    Vector3 corners[8]
-    {
-        boundingBox.m_min,
-        { boundingBox.m_min.m_x, boundingBox.m_max.m_y, boundingBox.m_min.m_z },
-        { boundingBox.m_min.m_x, boundingBox.m_min.m_y, boundingBox.m_max.m_z },
-        { boundingBox.m_min.m_x, boundingBox.m_max.m_y, boundingBox.m_max.m_z },
-        { boundingBox.m_max.m_x, boundingBox.m_min.m_y, boundingBox.m_max.m_z },
-        { boundingBox.m_max.m_x, boundingBox.m_max.m_y, boundingBox.m_min.m_z },
-        { boundingBox.m_max.m_x, boundingBox.m_min.m_y, boundingBox.m_min.m_z },
-        boundingBox.m_max
-    };
-
-    boundingBox.m_min = Vector3(std::numeric_limits<float>::max());
-    boundingBox.m_max = Vector3(std::numeric_limits<float>::lowest());
-
-    for (Vector3& corner : corners)
-    {
-        corner            = (transform * Vector4(corner, 1.f)).xyz();
-        boundingBox.m_min = min(boundingBox.m_min, corner);
-        boundingBox.m_max = max(boundingBox.m_max, corner);
+        mesh.Bind();
+        glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(mesh.GetIndexCount()), GL_UNSIGNED_INT, nullptr);
     }
-
-    return boundingBox;
 }
 
 int main()
@@ -308,18 +282,17 @@ int main()
         unlitShader.Use();
         unlitShader.SetUniformMat4("u_mvp", viewProjection * modelMat1);
         unlitShader.SetUniformVec4("u_tint", Color::white);
-        model.Bind();
-        glDrawElements(GL_TRIANGLES, model.GetIndexCount(), GL_UNSIGNED_INT, nullptr);
+        DrawModel(model);
 
         unlitShader.SetUniformMat4("u_mvp", viewProjection * modelMat2);
         unlitShader.SetUniformVec4("u_tint", Color::red);
-        glDrawElements(GL_TRIANGLES, model.GetIndexCount(), GL_UNSIGNED_INT, nullptr);
+        DrawModel(model);
 
-        if (camFrustum.Intersects(GetCubeBoundingBox(testModelMat)))
+        if (camFrustum.Intersects(TransformBoundingBox(model.GetBoundingBox(), testModelMat)))
         {
             unlitShader.SetUniformMat4("u_mvp", viewProjection * testModelMat);
             unlitShader.SetUniformVec4("u_tint", Color::yellow);
-            glDrawElements(GL_TRIANGLES, model.GetIndexCount(), GL_UNSIGNED_INT, nullptr);
+            DrawModel(model);
         }
 
         glfwSwapBuffers(window);

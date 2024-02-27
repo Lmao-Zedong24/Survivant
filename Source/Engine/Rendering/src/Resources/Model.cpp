@@ -7,112 +7,128 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
+using namespace LibMath;
 using namespace SvRendering::Core;
 using namespace SvRendering::Core::Buffers;
+using namespace SvRendering::Geometry;
 
 namespace SvRendering::Resources
 {
-	bool Model::Load(const std::string& p_filename)
-	{
-		Assimp::Importer importer;
-		const aiScene* scene = importer.ReadFile(p_filename, aiProcess_Triangulate | aiProcess_MakeLeftHanded);
+    Model::Model()
+        : Model(std::vector<Mesh>())
+    {
+    }
 
-		if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
-		{
-			SV_LOG_ERROR("The model file cannot be loaded");
-			return false;
-		}
+    Model::Model(std::vector<Mesh> p_meshes)
+        : m_meshes(std::move(p_meshes))
+    {
+        m_boundingBox =
+        {
+            Vector3(std::numeric_limits<float>::max()),
+            Vector3(std::numeric_limits<float>::lowest())
+        };
 
-		// Process all nodes recursively
-		ProcessNode(scene->mRootNode, scene);
+        for (const Mesh& mesh : m_meshes)
+        {
+            m_boundingBox.m_min = min(m_boundingBox.m_min, mesh.GetBoundingBox().m_min);
+            m_boundingBox.m_max = max(m_boundingBox.m_max, mesh.GetBoundingBox().m_max);
+        }
+    }
 
-		return true;
-	}
+    bool Model::Load(const std::string& p_path)
+    {
+        Assimp::Importer importer;
+        importer.SetPropertyInteger(AI_CONFIG_PP_SBP_REMOVE,
+            aiPrimitiveType_POINT | aiPrimitiveType_LINE | aiPrimitiveType_POLYGON);
 
-	bool Model::Init()
-	{
-		// Generate Vertex Buffer Object (VBO)
-		m_vbo = VertexBuffer(m_vertices);
+        const aiScene* scene = importer.ReadFile(p_path.c_str(), aiProcess_Triangulate | aiProcess_JoinIdenticalVertices
+            | aiProcess_SortByPType | aiProcess_OptimizeMeshes | aiProcess_OptimizeGraph | aiProcess_RemoveRedundantMaterials
+            | aiProcess_ImproveCacheLocality | aiProcess_GenUVCoords | aiProcess_GenSmoothNormals | aiProcess_CalcTangentSpace);
 
-		// Generate Element Buffer Object (EBO)
-		m_ebo = IndexBuffer(m_indices);
+        if (!CHECK(scene && scene->HasMeshes(), "Unable to load model from path \"%s\"", p_path.c_str()))
+            return false;
 
-		// Generate Vertex Array Object (VAO)
-		m_vao = VertexAttributes(m_vbo, m_ebo);
+        m_meshes.clear();
+        m_meshes.reserve(scene->mNumMeshes);
 
-		return true; // Initialization successful
-	}
+        m_boundingBox =
+        {
+            Vector3(std::numeric_limits<float>::max()),
+            Vector3(std::numeric_limits<float>::lowest())
+        };
 
-	void Model::Bind() const
-	{
-		m_vao.Bind();
-	}
+        // Ensure assimp vec3s are compatible with ours so we can safely convert from one to the other
+        static_assert(sizeof(aiVector3D) == sizeof(Vector3));
+        static_assert(
+            offsetof(aiVector3D, x) == offsetof(Vector3, m_x) &&
+            offsetof(aiVector3D, y) == offsetof(Vector3, m_y) &&
+            offsetof(aiVector3D, z) == offsetof(Vector3, m_z)
+        );
 
-	uint32_t Model::GetIndexCount() const
-	{
-		return static_cast<uint32_t>(m_indices.size());
-	}
+        for (unsigned int i = 0; i < scene->mNumMeshes; ++i)
+        {
+            const aiMesh* mesh = scene->mMeshes[i];
 
-	void Model::ProcessNode(aiNode* node, const aiScene* scene)
-	{
-		// Process all meshes in this node
-		for (unsigned int i = 0; i < node->mNumMeshes; ++i)
-		{
-			aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
-			ProcessMesh(mesh);
-		}
+            if (!mesh || mesh->mNumVertices == 0)
+                continue;
 
-		// Process all child nodes
-		for (unsigned int i = 0; i < node->mNumChildren; ++i)
-		{
-			ProcessNode(node->mChildren[i], scene);
-		}
-	}
+            std::vector<Vertex> vertices;
+            vertices.reserve(vertices.size() + mesh->mNumVertices);
 
-	void Model::ProcessMesh(aiMesh* mesh)
-	{
-		// Process vertices
-		for (unsigned int i = 0; i < mesh->mNumVertices; ++i)
-		{
-			Vertex vertex;
+            for (unsigned int idx = 0; idx < mesh->mNumVertices; ++idx)
+            {
+                const Vector3    position  = *reinterpret_cast<Vector3*>(&mesh->mVertices[idx]);
+                const Vector3    normal    = mesh->mNormals ? *reinterpret_cast<Vector3*>(&mesh->mNormals[idx]) : Vector3(0);
+                const aiVector3D uv        = mesh->mTextureCoords[0] ? mesh->mTextureCoords[0][idx] : aiVector3D(0);
+                const Vector3    tangent   = mesh->mTangents ? *reinterpret_cast<Vector3*>(&mesh->mTangents[idx]) : Vector3(0);
+                const Vector3    bitangent = mesh->mBitangents ? *reinterpret_cast<Vector3*>(&mesh->mBitangents[idx]) : Vector3(0);
 
-			// Fill in vertex data (position, normal, texture coordinates)
-			vertex.m_position.m_x = mesh->mVertices[i].x;
-			vertex.m_position.m_y = mesh->mVertices[i].y;
-			vertex.m_position.m_z = mesh->mVertices[i].z;
+                vertices.emplace_back(position, normal, Vector2(uv.x, uv.y), tangent, bitangent);
+            }
 
-			// Check if the mesh has normals
-			if (mesh->mNormals)
-			{
-				vertex.m_normal.m_x = mesh->mNormals[i].x;
-				vertex.m_normal.m_y = mesh->mNormals[i].y;
-				vertex.m_normal.m_z = mesh->mNormals[i].z;
-			}
+            std::vector<uint32_t> indices;
+            indices.reserve(static_cast<size_t>(mesh->mNumFaces) * 3);
+            for (unsigned int faceIdx = 0; faceIdx < mesh->mNumFaces; ++faceIdx)
+            {
+                const aiFace face = mesh->mFaces[faceIdx];
 
-			// Check if the mesh has texture coordinates
-			if (mesh->mTextureCoords[0])
-			{
-				vertex.m_textureUV.m_x = mesh->mTextureCoords[0][i].x;
-				vertex.m_textureUV.m_y = mesh->mTextureCoords[0][i].y;
-			}
+                indices.push_back(face.mIndices[0]);
+                indices.push_back(face.mIndices[1]);
+                indices.push_back(face.mIndices[2]);
+            }
 
-			m_vertices.push_back(vertex);
-		}
+            const Mesh& newMesh = m_meshes.emplace_back(vertices, indices);
+            m_boundingBox.m_min = min(m_boundingBox.m_min, newMesh.GetBoundingBox().m_min);
+            m_boundingBox.m_max = max(m_boundingBox.m_max, newMesh.GetBoundingBox().m_max);
+        }
 
-		// Process indices
-		for (unsigned int i = 0; i < mesh->mNumFaces; ++i)
-		{
-			aiFace face = mesh->mFaces[i];
+        return true;
+    }
 
-			ASSERT(face.mNumIndices == 3, "Meshes should be triangulated");
+    bool Model::Init()
+    {
+        for (auto& mesh : m_meshes)
+        {
+            if (!mesh.Init())
+                return false;
+        }
 
-			for (unsigned int j = 0; j < face.mNumIndices; ++j)
-			{
-				m_indices.push_back(face.mIndices[j]);
-			}
-		}
-	}
+        return true;
+    }
+
+    const Mesh& Model::GetMesh(const size_t p_index) const
+    {
+        ASSERT(p_index < m_meshes.size());
+        return m_meshes[p_index];
+    }
+
+    size_t Model::GetMeshCount() const
+    {
+        return m_meshes.size();
+    }
+
+    BoundingBox Model::GetBoundingBox() const
+    {
+        return m_boundingBox;
+    }
 }
-
-
-
