@@ -26,6 +26,7 @@ using namespace LibMath;
 using namespace SvCore::Utility;
 using namespace SvRendering::Core;
 using namespace SvRendering::Core::Buffers;
+using namespace SvRendering::Enums;
 using namespace SvRendering::Geometry;
 using namespace SvRendering::Resources;
 
@@ -33,21 +34,21 @@ constexpr const char* UNLIT_SHADER_PATH  = "assets/shaders/Unlit.glsl";
 constexpr float       CAM_MOVE_SPEED     = 3.f;
 constexpr Radian      CAM_ROTATION_SPEED = 90_deg;
 
-const Texture& GetTexture()
+Texture& GetTexture()
 {
     static Texture texture;
-    static bool isLoaded = false;
+    static bool    isLoaded = false;
 
     if (!isLoaded)
     {
         ASSERT(texture.Load("assets/textures/grid.png"));
         ASSERT(texture.Init());
 
-        texture.SetFiltering(ETextureFilter::Nearest, ETextureFilter::Nearest);
-        texture.SetWrapping(ETextureWrapMode::Repeat, ETextureWrapMode::Repeat);
+        texture.SetFilters(ETextureFilter::NEAREST, ETextureFilter::NEAREST);
+        texture.SetWrapModes(ETextureWrapMode::REPEAT, ETextureWrapMode::REPEAT);
 
         isLoaded = true;
-}
+    }
 
     return texture;
 }
@@ -121,7 +122,7 @@ int main()
     ASSERT(model.Init(), "Failed to initialize model");
 
     const Texture& texture = GetTexture();
-    texture.Bind();
+    texture.Bind(0);
 
     Shader unlitShader;
     ASSERT(unlitShader.Load(UNLIT_SHADER_PATH), "Failed to load shader at path \"%s\"", UNLIT_SHADER_PATH);
