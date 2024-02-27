@@ -1,14 +1,16 @@
-#include "SurvivantRendering/Core/VertexAttributes.h"
+#include "SurvivantRendering/Core/VertexArray.h"
 
 #include <glad/gl.h>
 
 #include <Vector/Vector3.h>
 
 using namespace LibMath;
+using namespace SvRendering::Core::Buffers;
+using namespace SvRendering::Geometry;
 
 namespace SvRendering::Core
 {
-    VertexAttributes::VertexAttributes(const Buffers::VertexBuffer& p_vbo, const Buffers::IndexBuffer& p_ebo)
+    VertexArray::VertexArray(const VertexBuffer& p_vbo, const IndexBuffer& p_ebo)
     {
         glGenVertexArrays(1, &m_vao);
         glBindVertexArray(m_vao);
@@ -16,7 +18,7 @@ namespace SvRendering::Core
         p_vbo.Bind();
         p_ebo.Bind();
 
-        constexpr auto stride = sizeof(Vertex);
+        constexpr GLsizei stride = sizeof(Vertex);
 
         // position attribute
         glEnableVertexAttribArray(0);
@@ -30,22 +32,29 @@ namespace SvRendering::Core
         glEnableVertexAttribArray(2);
         glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride, reinterpret_cast<void*>(offsetof(Vertex, m_textureUV)));
 
+        // tangent attribute
+        glEnableVertexAttribArray(3);
+        glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, stride, reinterpret_cast<void*>(offsetof(Vertex, m_tangent)));
+
+        // bitangent attribute
+        glEnableVertexAttribArray(4);
+        glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, stride, reinterpret_cast<void*>(offsetof(Vertex, m_bitangent)));
+
         Unbind();
     }
 
-    VertexAttributes::VertexAttributes(VertexAttributes&& p_other) noexcept
+    VertexArray::VertexArray(VertexArray&& p_other) noexcept
         : m_vao(p_other.m_vao)
     {
         p_other.m_vao = 0;
     }
 
-    VertexAttributes::~VertexAttributes()
+    VertexArray::~VertexArray()
     {
         glDeleteVertexArrays(1, &m_vao);
     }
 
-    VertexAttributes& VertexAttributes::operator=(
-        VertexAttributes&& p_other) noexcept
+    VertexArray& VertexArray::operator=(VertexArray&& p_other) noexcept
     {
         if (&p_other == this)
             return *this;
@@ -59,12 +68,12 @@ namespace SvRendering::Core
         return *this;
     }
 
-    void VertexAttributes::Bind() const
+    void VertexArray::Bind() const
     {
         glBindVertexArray(m_vao);
     }
 
-    void VertexAttributes::Unbind()
+    void VertexArray::Unbind() const
     {
         glBindVertexArray(0);
     }

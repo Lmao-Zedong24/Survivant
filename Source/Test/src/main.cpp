@@ -7,16 +7,13 @@
 
 #include <SurvivantRendering/Core/Camera.h>
 #include <SurvivantRendering/Core/Color.h>
-#include <SurvivantRendering/Core/Vertex.h>
-#include <SurvivantRendering/Core/VertexAttributes.h>
-#include <SurvivantRendering/Core/Buffers/IndexBuffer.h>
-#include <SurvivantRendering/Core/Buffers/VertexBuffer.h>
-#include <SurvivantRendering/Geometry/BoundingBox.h>
+#include <SurvivantRendering/Resources/Model.h>
 #include <SurvivantRendering/Resources/Shader.h>
+#include <SurvivantRendering/Resources/Texture.h>
 
-// TODO: Implement relevant parts in corresponding libs to get rid of glad/glfw dependencies
 #include <Transform.h>
 
+// TODO: Implement relevant parts in corresponding libs to get rid of glad dependency
 #include <glad/gl.h>
 
 #include "SurvivantTest/Window.h"
@@ -25,6 +22,7 @@ using namespace LibMath;
 using namespace SvCore::Utility;
 using namespace SvRendering::Core;
 using namespace SvRendering::Core::Buffers;
+using namespace SvRendering::Enums;
 using namespace SvRendering::Geometry;
 using namespace SvRendering::Resources;
 
@@ -32,74 +30,23 @@ constexpr const char* UNLIT_SHADER_PATH  = "assets/shaders/Unlit.glsl";
 constexpr float       CAM_MOVE_SPEED     = 3.f;
 constexpr Radian      CAM_ROTATION_SPEED = 90_deg;
 
-std::pair<const Vertex*, const uint32_t*> MakeCube()
+Texture& GetTexture()
 {
-    constexpr float normalLength = 0.57735027f;	// normal length = 1 / sqrt(3) ~= 0.57735027f
+    static Texture texture;
+    static bool    isLoaded = false;
 
-    static const Vertex vertices[]
+    if (!isLoaded)
     {
-        { { -.5f, -.5f, .5f }, { -normalLength, -normalLength, normalLength }, { 0, 0 } },   // (0) Front-bottom-left
-        { { -.5f, .5f, .5f }, { -normalLength, normalLength, normalLength }, { 0, 1 } },     // (1) Front-top-left
-        { { -.5f, -.5f, -.5f }, { -normalLength, -normalLength, -normalLength }, { 1, 0 } }, // (2) Back-bottom-left
-        { { -.5f, .5f, -.5f }, { -normalLength, normalLength, -normalLength }, { 1, 1 } },   // (3) Back-top-left
-        { { .5f, -.5f, .5f }, { normalLength, -normalLength, normalLength }, { 0, 0 } },     // (4) Front-bottom-right
-        { { .5f, .5f, .5f }, { normalLength, normalLength, normalLength }, { 0, 1 } },       // (5) Front-top-right
-        { { .5f, -.5f, -.5f }, { normalLength, -normalLength, -normalLength }, { 1, 0 } },   // (6) Back-bottom-right
-        { { .5f, .5f, -.5f }, { normalLength, normalLength, -normalLength }, { 1, 1 } }      // (7) Back-top-right
-    };
+        ASSERT(texture.Load("assets/textures/grid.png"));
+        ASSERT(texture.Init());
 
-    static constexpr uint32_t indices[]
-    {
-        // Left
-        0, 1, 3,
-        0, 3, 2,
+        texture.SetFilters(ETextureFilter::NEAREST, ETextureFilter::NEAREST);
+        texture.SetWrapModes(ETextureWrapMode::REPEAT, ETextureWrapMode::REPEAT);
 
-        // Back
-        2, 3, 7,
-        2, 7, 6,
-
-        // Right
-        6, 7, 5,
-        6, 5, 4,
-
-        // Front
-        4, 5, 1,
-        4, 1, 0,
-
-        // Bottom
-        2, 6, 4,
-        2, 4, 0,
-
-        // Top
-        7, 3, 1,
-        7, 1, 5
-    };
-
-    return { vertices, indices };
-}
-
-GLuint GetDefaultTexture()
-{
-    static GLuint textureId;
-
-    if (textureId == 0)
-    {
-        constexpr GLsizei width  = 1;
-        constexpr GLsizei height = 1;
-
-        glGenTextures(1, &textureId);
-        glBindTexture(GL_TEXTURE_2D, textureId);
-
-        Vector4 color(1);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_FLOAT, color.getArray());
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        isLoaded = true;
     }
 
-    return textureId;
+    return texture;
 }
 
 std::tuple<int, int> AddInputTranslate(char i)
@@ -112,44 +59,15 @@ std::tuple<int, int> AddMouseTranslate(float i, float j)
     return { (int)i, (int)j };
 }
 
-void DrawCube(const VertexAttributes& p_vao)
+void DrawModel(const Model& p_model)
 {
-    p_vao.Bind();
-
-    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
-}
-
-BoundingBox GetCubeBoundingBox(const Matrix4& transform)
-{
-    BoundingBox boundingBox
+    for (size_t i = 0; i < p_model.GetMeshCount(); ++i)
     {
-        { -.5f, -.5f, -.5f },
-        { .5f, .5f, .5f }
-    };
+        const Mesh& mesh = p_model.GetMesh(i);
 
-    Vector3 corners[8]
-    {
-        boundingBox.m_min,
-        { boundingBox.m_min.m_x, boundingBox.m_max.m_y, boundingBox.m_min.m_z },
-        { boundingBox.m_min.m_x, boundingBox.m_min.m_y, boundingBox.m_max.m_z },
-        { boundingBox.m_min.m_x, boundingBox.m_max.m_y, boundingBox.m_max.m_z },
-        { boundingBox.m_max.m_x, boundingBox.m_min.m_y, boundingBox.m_max.m_z },
-        { boundingBox.m_max.m_x, boundingBox.m_max.m_y, boundingBox.m_min.m_z },
-        { boundingBox.m_max.m_x, boundingBox.m_min.m_y, boundingBox.m_min.m_z },
-        boundingBox.m_max
-    };
-
-    boundingBox.m_min = Vector3(std::numeric_limits<float>::max());
-    boundingBox.m_max = Vector3(std::numeric_limits<float>::lowest());
-
-    for (Vector3& corner : corners)
-    {
-        corner            = (transform * Vector4(corner, 1.f)).xyz();
-        boundingBox.m_min = min(boundingBox.m_min, corner);
-        boundingBox.m_max = max(boundingBox.m_max, corner);
+        mesh.Bind();
+        glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(mesh.GetIndexCount()), GL_UNSIGNED_INT, nullptr);
     }
-
-    return boundingBox;
 }
 
 int main()
@@ -172,16 +90,13 @@ int main()
     glEnable(GL_DEPTH_TEST);
     App::Window::SetupInputManager(window);
 
-    const auto [vertices, indices] = MakeCube();
+    Model model;
 
-    const VertexBuffer     vbo(vertices, 8);
-    const IndexBuffer      ebo(indices, 36); // 6 indices * 6 faces
-    const VertexAttributes vao(vbo, ebo);
+    ASSERT(model.Load("assets/models/cube.obj"), "Failed to load model");
+    ASSERT(model.Init(), "Failed to initialize model");
 
-    const GLuint textureId = GetDefaultTexture();
-
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, textureId);
+    const Texture& texture = GetTexture();
+    texture.Bind(0);
 
     Shader unlitShader;
     ASSERT(unlitShader.Load(UNLIT_SHADER_PATH), "Failed to load shader at path \"%s\"", UNLIT_SHADER_PATH);
@@ -202,7 +117,7 @@ int main()
 
     Degree angle;
 
-    cam.SetClearColor(Color::black);
+    cam.SetClearColor(Color::gray);
 
     Timer timer;
 
@@ -367,17 +282,17 @@ int main()
         unlitShader.Use();
         unlitShader.SetUniformMat4("u_mvp", viewProjection * modelMat1);
         unlitShader.SetUniformVec4("u_tint", Color::white);
-        DrawCube(vao);
+        DrawModel(model);
 
         unlitShader.SetUniformMat4("u_mvp", viewProjection * modelMat2);
         unlitShader.SetUniformVec4("u_tint", Color::red);
-        DrawCube(vao);
+        DrawModel(model);
 
-        if (camFrustum.Intersects(GetCubeBoundingBox(testModelMat)))
+        if (camFrustum.Intersects(TransformBoundingBox(model.GetBoundingBox(), testModelMat)))
         {
             unlitShader.SetUniformMat4("u_mvp", viewProjection * testModelMat);
             unlitShader.SetUniformVec4("u_tint", Color::yellow);
-            DrawCube(vao);
+            DrawModel(model);
         }
 
         glfwSwapBuffers(window);

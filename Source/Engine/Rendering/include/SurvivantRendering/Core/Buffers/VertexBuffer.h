@@ -2,15 +2,15 @@
 #include <vector>
 
 #include "SurvivantRendering/Core/Buffers/Buffer.h"
-#include "SurvivantRendering/Core/Vertex.h"
+#include "SurvivantRendering/Geometry/Vertex.h"
 
 namespace SvRendering::Core::Buffers
 {
     class VertexBuffer final : public Buffer
     {
     public:
-        VertexBuffer(const Vertex* p_vertices, intptr_t p_verticesCount);
-        explicit VertexBuffer(const std::vector<Vertex>& p_vertices);
+        VertexBuffer(const Geometry::Vertex* p_vertices, intptr_t p_verticesCount);
+        explicit VertexBuffer(const std::vector<Geometry::Vertex>& p_vertices);
 
         /**
          * \brief Binds the vertex buffer to the current context
