@@ -192,6 +192,11 @@ namespace SvRendering::Resources
         glGenerateMipmap(GL_TEXTURE_2D);
     }
 
+    uint32_t Texture::GetId() const
+    {
+        return m_id;
+    }
+
     LibMath::Vector2I Texture::GetSize() const
     {
         return { m_width, m_height };

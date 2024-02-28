@@ -80,7 +80,13 @@ namespace SvRendering::Resources
         void GenerateMipmap();
 
         /**
-         * \brief Gets the textures dimensions
+         * \brief Gets the texture's id
+         * \return The texture's id
+         */
+        uint32_t GetId() const;
+
+        /**
+         * \brief Gets the texture's dimensions
          * \return The texture's dimensions
          */
         LibMath::Vector2I GetSize() const;
