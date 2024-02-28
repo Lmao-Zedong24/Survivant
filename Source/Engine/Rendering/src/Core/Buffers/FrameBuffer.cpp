@@ -74,14 +74,14 @@ namespace SvRendering::Core::Buffers
     void FrameBuffer::Attach(const Texture& p_texture, const EFrameBufferAttachment p_attachmentMode) const
     {
         glBindFramebuffer(GL_FRAMEBUFFER, m_id);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, static_cast<GLenum>(p_attachmentMode), GL_TEXTURE_2D, p_texture.GetId(), 0);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, ToGLEnum(p_attachmentMode), GL_TEXTURE_2D, p_texture.GetId(), 0);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
     void FrameBuffer::Detach(const EFrameBufferAttachment p_attachmentMode) const
     {
         glBindFramebuffer(GL_FRAMEBUFFER, m_id);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, static_cast<GLenum>(p_attachmentMode), GL_TEXTURE_2D, 0, 0);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, ToGLEnum(p_attachmentMode), GL_TEXTURE_2D, 0, 0);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 }
