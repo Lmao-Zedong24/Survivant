@@ -2,6 +2,7 @@
 #include "SurvivantCore/Resources/IResource.h"
 
 #include "SurvivantRendering/Enums/ETextureFilter.h"
+#include "SurvivantRendering/Enums/ETextureFormat.h"
 #include "SurvivantRendering/Enums/ETextureWrapMode.h"
 
 #include "Vector/Vector2.h"
@@ -17,6 +18,22 @@ namespace SvRendering::Resources
          * \brief Creates a default texture
          */
         Texture() = default;
+
+        /**
+         * \brief Creates a texture with the given width, height and number of channels
+         * \param p_width The texture's width
+         * \param p_height The texture's height
+         * \param p_channels The texture's number of channels
+         */
+        Texture(int p_width, int p_height, uint8_t p_channels);
+
+        /**
+         * \brief Creates a texture with the given width, height and pixel format
+         * \param p_width The texture's width
+         * \param p_height The texture's height
+         * \param p_format The texture's pixel format
+         */
+        Texture(int p_width, int p_height, Enums::ETextureFormat p_format);
 
         /**
          * \brief Creates a copy of the given texture
