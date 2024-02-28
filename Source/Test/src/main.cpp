@@ -89,12 +89,49 @@ GLuint GetDefaultTexture()
     return textureId;
 }
 
+static GLuint frameBufferId;
+
+GLuint GetDefaultFrameBuffer()
+{
+    static GLuint textureId;
+
+    if (textureId == 0)
+    {
+        glGenFramebuffers(1, &frameBufferId);
+        glBindFramebuffer(GL_FRAMEBUFFER, frameBufferId);
+
+        glGenTextures(1, &textureId);
+        glBindTexture(GL_TEXTURE_2D, textureId);
+
+        //screen width here
+        constexpr GLsizei width = 800;
+        constexpr GLsizei height = 600;
+
+        //Vector4 c(0.5);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureId, 0);
+
+
+        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE)
+        {
+            int i = 0; i;
+        }
+    }
+
+    return textureId;
+}
+
 #include "SurvivantCore/Events/EventManager.h"
 #include "SurvivantApp/Inputs/InputManager.h"
 #include "SurvivantApp/Windows/Window.h"
 #include "SurvivantApp/Inputs/KeyboardInputs.h"
 #include "SurvivantApp/Inputs/MouseInputs.h"
 #include "SurvivantUI/UI.h"
+#include "SurvivantUI/EditorWindow.h"
 
 
 std::tuple<int, int> AddInputTranslate(char i) 
@@ -125,14 +162,11 @@ int main()
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     //window
-    App::Window window;
+    UI::EditorWindow window;
     GLFWwindow* windowPtr = window.GetWindow();
-
 
     // TODO : including glad/gl.h brings up error in Window constructor
     ASSERT(gladLoadGL(glfwGetProcAddress), "Failed to initialize glad");
-
-    //App::Window::SetupInputManager(window);
 
     Shader shader;
     ASSERT(shader.Load(UNLIT_SHADER_PATH), "Failed to load shader at path \"%s\"", UNLIT_SHADER_PATH);
@@ -151,6 +185,7 @@ int main()
     ebo.Bind();
 
     const GLuint textureId = GetDefaultTexture();
+    App::Window::m_textureId = GetDefaultFrameBuffer();
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, textureId);
@@ -168,9 +203,9 @@ int main()
     using namespace Core;
     using namespace App;
     using AddEvent = Event<int, int>;
-    using ToggleEvent = Event<>;
-    {
+    class ToggleEvent : public Core::Event<> {};
 
+    {
         InputManager::GetInstance().InitWindow(&window);
 
         EventManager& em = EventManager::GetInstance();
@@ -182,8 +217,8 @@ int main()
         std::shared_ptr<ToggleEvent> toggleEvent = std::make_shared<ToggleEvent>();
         ligEvent->AddListener(printAdd);
         toggleEvent->AddListener(toggle);
-        em.AddEvent<AddEvent>(ligEvent);
-        em.AddEvent<ToggleEvent>(toggleEvent);
+        em.AddEvent<AddEvent>(ligEvent.get());
+        em.AddEvent<ToggleEvent>(toggleEvent.get());
 
         InputManager::KeyboardKeyType   a(EKey::KEY_A, EKeyState::KEY_RELEASED, EInputModifier::MOD_ALT);
         InputManager::KeyboardKeyType   b(EKey::KEY_B, EKeyState::KEY_PRESSED, EInputModifier());
@@ -199,24 +234,32 @@ int main()
     UI::EditorUI ui;
     //ui.InitEditorUi(&window);
 
-    while (!glfwWindowShouldClose(windowPtr))
+    window.SetupUI(&ui);
+
+    while (!window.ShouldClose())
     {
-        glfwPollEvents();
+        window.StartRender();
 
         angle += .01_deg; // TODO: use delta time
 
         const Matrix4 modelMat = translation(0.f, .5f, 0.f) * rotation(angle, Vector3::up());
         shader.SetUniformMat4("u_mvp", viewProjMat * modelMat);
 
+        glBindFramebuffer(GL_FRAMEBUFFER, frameBufferId);
+        glViewport(0, 0, 800, 600);
+
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        //glClearColor(1, 1, 1, 1);
         glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
 
-        //ui.Update();
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+        window.RenderUI();
+        window.EndRender();
+
+        //input test
         if (App::InputManager::GetInstance().EvaluateInput({ EKey::KEY_1, EKeyState::KEY_PRESSED, EInputModifier::MOD_ALT }))
             std::cout << "1 is pressed" << std::endl;
-
-        glfwSwapBuffers(windowPtr);
     }
 
     glfwDestroyWindow(windowPtr);

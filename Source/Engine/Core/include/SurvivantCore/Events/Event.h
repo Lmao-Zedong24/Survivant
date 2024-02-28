@@ -19,17 +19,14 @@ namespace Core
 		Event() = default;
 		~Event() = default;
 
-	public:
 		void ClearListeners() override;
 
-	public:
-		void AddListener(EventDelegate p_delegate);
-		void AddListeners(std::vector<EventDelegate> p_delegates);
-		void RemoveListener(EventDelegate p_delegate);
+		void AddListener(const EventDelegate& p_delegate);
+		void AddListeners(const std::vector<EventDelegate>& p_delegates);
+		void RemoveListener(const EventDelegate& p_delegate);
 	
 		void Invoke(Args... p_parameters);
 
-	public:
 		template<class T>
 		void Combine(const T& p_other);
 
@@ -44,19 +41,19 @@ namespace Core
 	}
 
 	template<typename ...Args>
-	inline void Event<Args...>::AddListener(EventDelegate p_delegate)
+	inline void Event<Args...>::AddListener(const EventDelegate& p_delegate)
 	{
 		m_listeners.push_back(p_delegate);
 	}
 
 	template<typename ...Args>
-	inline void Event<Args...>::AddListeners(std::vector<EventDelegate> p_delegates)
+	inline void Event<Args...>::AddListeners(const std::vector<EventDelegate>& p_delegates)
 	{
 		m_listeners.insert(m_listeners.end(), p_delegates.begin(), p_delegates.end());
 	}
 
 	template<typename ...Args>
-	inline void Event<Args...>::RemoveListener(EventDelegate p_delegate)
+	inline void Event<Args...>::RemoveListener(const EventDelegate& p_delegate)
 	{
 		m_listeners.push_back(p_delegate);
 	}

@@ -6,17 +6,37 @@
 #include "backends/imgui_impl_glfw.h"
 #include "backends/imgui_impl_opengl3.h"
 
+#include "imgui_internal.h"
 
-UI::EditorUI::EditorUI()
+
+UI::EditorUI::EditorUI() : 
+    m_main(std::make_shared<MainPanel>()),
+    m_currentPanels()
 {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    ImGuiIO& io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Dockspace
 
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
+
+    //default panels here 
+    m_currentPanels.insert(std::make_shared<TestPanel>("Test1"));
+    m_currentPanels.insert(std::make_shared<TestPanel>("Test2"));
+    m_currentPanels.insert(std::make_shared<TestPanel>("Test3"));
+    m_currentPanels.insert(std::make_shared<TestPanel>("Test4"));
+
+    MainPanel::ChangeLayout l = std::bind(&EditorUI::Layout1, this, std::placeholders::_1);
+    m_main->ChangePanelLayout(l);
+
+    //spawn save panel on event close request
+  /*  App::Window::WindowCloseRequest save;
+    save.AddListener();*/
+    Core::EventManager::GetInstance().AddListenner<App::Window::WindowCloseRequest>(
+        App::Window::WindowCloseRequest::EventDelegate(std::bind(&EditorUI::CreateSavePanel, this)));
 }
 
 UI::EditorUI::~EditorUI()
@@ -25,7 +45,6 @@ UI::EditorUI::~EditorUI()
 
 void UI::EditorUI::InitEditorUi(App::Window* p_window)
 {
-    p_window;
     ImGui_ImplGlfw_InitForOpenGL(p_window->GetWindow(), true);
 //#ifdef __EMSCRIPTEN__
 //    ImGui_ImplGlfw_InstallEmscriptenCanvasResizeCallback("#canvas");
@@ -33,60 +52,104 @@ void UI::EditorUI::InitEditorUi(App::Window* p_window)
     ImGui_ImplOpenGL3_Init(App::GLSL_Version);
 }
 
-void Test()
+void UI::EditorUI::AddImageWindow(intptr_t p_textureId)
 {
-    static bool show_demo_window = true;
-    // 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
-    {
-        //ImGui::ShowDemoWindow(&show_demo_window);
-    }
-
-    // 2. Show a simple window that we create ourselves. We use a Begin/End pair to create a named window.
-    //{
-    //    static float f = 0.0f;
-    //    static int counter = 0;
-
-    //    ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
-
-    //    ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
-    //    ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
-    //    ImGui::Checkbox("Another Window", &show_another_window);
-
-    //    ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-    //    ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
-
-    //    if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
-    //        counter++;
-    //    ImGui::SameLine();
-    //    ImGui::Text("counter = %d", counter);
-
-    //    ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
-    //    ImGui::End();
-    //}
-
-    // 3. Show another simple window.
-    //{
-    //    ImGui::Begin("Another Window", &show_another_window);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
-    //    ImGui::Text("Hello from another window!");
-    //    if (ImGui::Button("Close Me"))
-    //        show_another_window = false;
-    //    ImGui::End();
-    //}
+    static int i = 0;
+    m_currentPanels.insert(std::make_shared<ImagePanel>(std::string("texture-") + std::to_string(i++), p_textureId));
 }
 
-void UI::EditorUI::Update()
+void UI::EditorUI::StartFrameUpdate()
 {
-    Test();
+    // Start the Dear ImGui frame
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
 
-    //ImGui::Render();
 
-    //ImGui::Render();
-    //int display_w, display_h;
-    //glfwGetFramebufferSize(window, &display_w, &display_h);
-    //glViewport(0, 0, display_w, display_h);
-    //glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
-    //glClear(GL_COLOR_BUFFER_BIT);
+    bool b = true;
+    ImGui::ShowDemoWindow(&b);
+}
 
-    //ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+void UI::EditorUI::RenderPanels()
+{
+    struct PanelFlags
+    {
+        std::shared_ptr<Panel> panel;
+        Panel::ERenderFlags flags = Panel::ERenderFlags();
+    };
 
+    std::vector<PanelFlags> pfArray(m_currentPanels.size());
+
+    {//main always first
+        auto flags = m_main->Render();
+        if (flags != Panel::ERenderFlags())
+            pfArray.push_back({ m_main, flags });
+    }
+
+    for (auto& panel : m_currentPanels)
+    {
+        auto flags = panel->Render();
+        if (flags != Panel::ERenderFlags())
+            pfArray.push_back({ panel, flags });
+    }
+
+    //handle flags after
+    for (auto& pf : pfArray)
+        HandlePanelFlags(pf.panel, pf.flags);
+}
+
+void UI::EditorUI::EndFrameUpdate()
+{
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+}
+
+void UI::EditorUI::HandlePanelFlags(std::shared_ptr<Panel> p_panel, Panel::ERenderFlags p_flags)
+{
+    if (p_flags & Panel::CLOSE)
+        m_currentPanels.erase(p_panel);
+
+    if (p_flags & Panel::ADD_TEST_PANNEL)
+        CreateNewTestPanel();
+}
+
+void UI::EditorUI::CreateNewTestPanel()
+{
+    static int i = 0;
+
+    m_currentPanels.insert(std::make_shared<TestPanel>(std::string("test-") + std::to_string(i++)));
+}
+
+void UI::EditorUI::CreateSavePanel()
+{
+    m_currentPanels.insert(std::make_shared<SavePanel>());
+}
+
+void UI::EditorUI::Layout1(int p_dockspaceId)
+{
+    ImGuiViewport* viewport = ImGui::GetMainViewport();
+    ImGuiID id = p_dockspaceId;
+
+    static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_PassthruCentralNode;
+
+
+    ImGui::DockBuilderRemoveNode(id); // clear any previous layout
+    ImGui::DockBuilderAddNode(id, dockspace_flags | ImGuiDockNodeFlags_DockSpace);
+    ImGui::DockBuilderSetNodeSize(id, viewport->Size);
+
+    auto dock_id_top = ImGui::DockBuilderSplitNode(p_dockspaceId, ImGuiDir_Up, 0.2f, nullptr, &id);
+    auto dock_id_down = ImGui::DockBuilderSplitNode(id, ImGuiDir_Down, 0.25f, nullptr, &id);
+    auto dock_id_left = ImGui::DockBuilderSplitNode(id, ImGuiDir_Left, 0.2f, nullptr, &id);
+    auto dock_id_right = ImGui::DockBuilderSplitNode(id, ImGuiDir_Right, 0.15f, nullptr, &id);
+
+
+    // we now dock our windows into the docking node we made above
+    ImGui::DockBuilderDockWindow("texture-0", id);
+    ImGui::DockBuilderDockWindow("Test1", dock_id_right);
+    ImGui::DockBuilderDockWindow("Test2", dock_id_left);
+    ImGui::DockBuilderDockWindow("Test3", dock_id_down);
+    ImGui::DockBuilderDockWindow("Test4", dock_id_top);
+
+
+    ImGui::DockBuilderFinish(id);
 }

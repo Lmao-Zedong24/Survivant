@@ -8,8 +8,9 @@ namespace App
 
     constexpr size_t NUM_INPUT_MODIFIERS = 6;
 
-    enum class EInputModifier
+    enum EInputModifier
     {
+        MOD_ANY       = -1,
         MOD_SHIFT     = 1 << 0,
         MOD_CONTROL   = 1 << 1,
         MOD_ALT       = 1 << 2,

@@ -33,7 +33,10 @@ namespace Core
 		void Invoke(const std::tuple<Args...>& p_paramaters);
 
 		template <class T>
-		T* AddEvent(std::shared_ptr<EventBase> p_event);
+		T* AddEvent(EventBase* p_event);
+
+		template <class T, class U = T::EventDelegate>
+		T* AddListenner(const U& p_callback);
 
 	private:
 		template <class T>
@@ -46,8 +49,8 @@ namespace Core
 	template<class T, typename ...Args>
 	void EventManager::Invoke(Args...p_paramaters)
 	{
-		if constexpr (!std::is_base_of_v<Event<Args...>, T> || !std::is_same_v<Event<Args...>, T>)
-			return;
+		static_assert((std::is_base_of_v<Event<Args...>, T> || std::is_same_v<Event<Args...>, T>),
+			"Event can not be Invoked, parameters are invalid");
 
 		EventId id = GetEventId<T>();
 
@@ -59,16 +62,16 @@ namespace Core
 	template<class T, typename ...Args>
 	inline void EventManager::Invoke(const std::tuple<Args...>& p_paramaters)
 	{
-		if constexpr (!std::is_base_of_v<Event<Args...>, T> || !std::is_same_v<Event<Args...>, T>)
+		if constexpr (!std::is_base_of_v<Event<Args...>, T> && !std::is_same_v<Event<Args...>, T>)
 			return;
 
 		std::apply([this](auto &&... args) { this->Invoke<T>(args...); }, p_paramaters);
 	}
 
 	template<class T>
-	T* EventManager::AddEvent(std::shared_ptr<EventBase> p_event)
+	T* EventManager::AddEvent(EventBase* p_event)
 	{
-		if constexpr (!(std::is_same_v<EventBase, T> || std::is_base_of_v<EventBase, T>))
+		if constexpr (!std::is_same_v<EventBase, T> && !std::is_base_of_v<EventBase, T>)
 			return nullptr;
 
 		EventId id = GetEventId<T>();
@@ -76,7 +79,25 @@ namespace Core
 		m_events.try_emplace(id, std::make_shared<T>());
 
 		T* eventPtr = dynamic_cast<T*>(m_events[id].get());
-		eventPtr->Combine<T>(*dynamic_cast<T*>(p_event.get()));
+		eventPtr->Combine<T>(*dynamic_cast<T*>(p_event));
+
+		return eventPtr;
+	}
+
+	template <class T, class U>
+	inline T* EventManager::AddListenner(const U& p_callback)
+	{
+		if constexpr (!std::is_same_v<EventBase, T> && !std::is_base_of_v<EventBase, T>)
+			return nullptr;
+
+		//auto tmp = std::make_shared<T>();
+
+		EventId id = GetEventId<T>();
+
+		m_events.try_emplace(id, std::make_shared<T>());
+
+		T* eventPtr = dynamic_cast<T*>(m_events[id].get());
+		eventPtr->AddListener(p_callback);
 
 		return eventPtr;
 	}
