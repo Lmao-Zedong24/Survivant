@@ -33,10 +33,8 @@ UI::EditorUI::EditorUI() :
     m_main->ChangePanelLayout(l);
 
     //spawn save panel on event close request
-  /*  App::Window::WindowCloseRequest save;
-    save.AddListener();*/
-    Core::EventManager::GetInstance().AddListenner<App::Window::WindowCloseRequest>(
-        App::Window::WindowCloseRequest::EventDelegate(std::bind(&EditorUI::CreateSavePanel, this)));
+    //Core::EventManager::GetInstance().AddListenner<App::Window::WindowCloseRequest>(
+    //    App::Window::WindowCloseRequest::EventDelegate(std::bind(&EditorUI::CreateSavePanel, this)));
 }
 
 UI::EditorUI::~EditorUI()
