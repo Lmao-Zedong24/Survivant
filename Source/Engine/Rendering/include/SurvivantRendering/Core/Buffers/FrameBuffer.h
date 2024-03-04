@@ -1,6 +1,6 @@
 #pragma once
 #include "SurvivantRendering/Enums/EFrameBufferAttachment.h"
-#include "SurvivantRendering/Resources/Texture.h"
+#include "SurvivantRendering/RHI/ITexture.h"
 
 #include <cstdint>
 
@@ -57,7 +57,7 @@ namespace SvRendering::Core::Buffers
          * \param p_texture The texture to attach
          * \param p_attachmentMode The texture's target attachment
          */
-        void Attach(const Resources::Texture& p_texture, Enums::EFrameBufferAttachment p_attachmentMode) const;
+        void Attach(const RHI::ITexture& p_texture, Enums::EFrameBufferAttachment p_attachmentMode) const;
 
         /**
          * \brief Detaches the attachment with the given mode from the frame buffer

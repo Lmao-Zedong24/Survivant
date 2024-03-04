@@ -9,9 +9,9 @@
 #include <SurvivantRendering/Core/Camera.h>
 #include <SurvivantRendering/Core/Color.h>
 #include <SurvivantRendering/Resources/Model.h>
-#include <SurvivantRendering/Resources/Shader.h>
-#include <SurvivantRendering/Resources/Texture.h>
 #include <SurvivantRendering/RHI/IRenderAPI.h>
+#include <SurvivantRendering/RHI/IShader.h>
+#include <SurvivantRendering/RHI/ITexture.h>
 
 #include <Transform.h>
 
@@ -28,23 +28,23 @@ constexpr const char* UNLIT_SHADER_PATH  = "assets/shaders/Unlit.glsl";
 constexpr float       CAM_MOVE_SPEED     = 3.f;
 constexpr Radian      CAM_ROTATION_SPEED = 90_deg;
 
-Texture& GetTexture()
+ITexture& GetTexture()
 {
-    static Texture texture;
-    static bool    isLoaded = false;
+    static std::shared_ptr<ITexture> texture  = ITexture::Create();
+    static bool                      isLoaded = false;
 
     if (!isLoaded)
     {
-        ASSERT(texture.Load("assets/textures/grid.png"));
-        ASSERT(texture.Init());
+        ASSERT(texture->Load("assets/textures/grid.png"));
+        ASSERT(texture->Init());
 
-        texture.SetFilters(ETextureFilter::NEAREST, ETextureFilter::NEAREST);
-        texture.SetWrapModes(ETextureWrapMode::REPEAT, ETextureWrapMode::REPEAT);
+        texture->SetFilters(ETextureFilter::NEAREST, ETextureFilter::NEAREST);
+        texture->SetWrapModes(ETextureWrapMode::REPEAT, ETextureWrapMode::REPEAT);
 
         isLoaded = true;
     }
 
-    return texture;
+    return *texture;
 }
 
 std::tuple<int, int> AddInputTranslate(char i)
@@ -64,7 +64,7 @@ void DrawModel(const Model& p_model)
         const Mesh& mesh = p_model.GetMesh(i);
 
         mesh.Bind();
-        IRenderAPI::getCurrent().DrawElements(EPrimitiveType::TRIANGLES, mesh.GetIndexCount());
+        IRenderAPI::GetCurrent().DrawElements(EPrimitiveType::TRIANGLES, mesh.GetIndexCount());
     }
 }
 
@@ -83,7 +83,7 @@ int main()
     GLFWwindow* window = glfwCreateWindow(800, 600, "Test", nullptr, nullptr);
     glfwMakeContextCurrent(window);
 
-    IRenderAPI& renderAPI = IRenderAPI::setCurrent(EGraphicsAPI::OPENGL);
+    IRenderAPI& renderAPI = IRenderAPI::SetCurrent(EGraphicsAPI::OPENGL);
     renderAPI.Init(true)
              .SetCapability(ERenderingCapability::DEPTH_TEST, true)
              .SetCullFace(ECullFace::BACK);
@@ -95,15 +95,12 @@ int main()
     ASSERT(model.Load("assets/models/cube.obj"), "Failed to load model");
     ASSERT(model.Init(), "Failed to initialize model");
 
-    const Texture& texture = GetTexture();
-    texture.Bind(0);
+    std::shared_ptr<IShader> unlitShader = IShader::Create();
+    ASSERT(unlitShader->Load(UNLIT_SHADER_PATH), "Failed to load shader at path \"%s\"", UNLIT_SHADER_PATH);
+    ASSERT(unlitShader->Init(), "Failed to initialize shader at path \"%s\"", UNLIT_SHADER_PATH);
 
-    Shader unlitShader;
-    ASSERT(unlitShader.Load(UNLIT_SHADER_PATH), "Failed to load shader at path \"%s\"", UNLIT_SHADER_PATH);
-    ASSERT(unlitShader.Init(), "Failed to initialize shader at path \"%s\"", UNLIT_SHADER_PATH);
-
-    unlitShader.Use();
-    unlitShader.SetUniformInt("u_diffuse", 0);
+    unlitShader->Bind();
+    unlitShader->SetUniformTexture("u_diffuse", &GetTexture());
 
     const Matrix4 projMat = perspectiveProjection(90_deg, 4.f / 3.f, .01f, 14.f);
 
@@ -279,19 +276,19 @@ int main()
         const Frustum camFrustum     = cam.GetFrustum();
         const Matrix4 viewProjection = cam.GetViewProjection();
 
-        unlitShader.Use();
-        unlitShader.SetUniformMat4("u_mvp", viewProjection * modelMat1);
-        unlitShader.SetUniformVec4("u_tint", Color::white);
+        unlitShader->Bind();
+        unlitShader->SetUniformMat4("u_mvp", viewProjection * modelMat1);
+        unlitShader->SetUniformVec4("u_tint", Color::white);
         DrawModel(model);
 
-        unlitShader.SetUniformMat4("u_mvp", viewProjection * modelMat2);
-        unlitShader.SetUniformVec4("u_tint", Color::red);
+        unlitShader->SetUniformMat4("u_mvp", viewProjection * modelMat2);
+        unlitShader->SetUniformVec4("u_tint", Color::red);
         DrawModel(model);
 
         if (camFrustum.Intersects(TransformBoundingBox(model.GetBoundingBox(), testModelMat)))
         {
-            unlitShader.SetUniformMat4("u_mvp", viewProjection * testModelMat);
-            unlitShader.SetUniformVec4("u_tint", Color::yellow);
+            unlitShader->SetUniformMat4("u_mvp", viewProjection * testModelMat);
+            unlitShader->SetUniformVec4("u_tint", Color::yellow);
             DrawModel(model);
         }
 

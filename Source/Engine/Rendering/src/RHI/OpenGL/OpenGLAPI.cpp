@@ -15,8 +15,8 @@ using namespace SvRendering::Enums;
 
 namespace SvRendering::RHI
 {
-    void GLAPIENTRY glDebugOutput(const uint32_t source, const uint32_t type, const uint32_t id, const uint32_t severity, const int,
-                                  const char*    message, const void*)
+    void GLAPIENTRY glDebugOutput(const uint32_t p_source, const uint32_t p_type, const uint32_t p_id, const uint32_t p_severity,
+                                  const int, const char* p_message, const void*)
     {
         // ignore non-significant error/warning codes
         // NOTE: Here there are the details with a sample output:
@@ -26,15 +26,15 @@ namespace SvRendering::RHI
         // - #131218 - Program/shader state performance warning: Vertex shader in program 7 is being recompiled based on GL state. (severity: medium)
         // - #131204 - Texture state usage warning: The texture object (0) bound to texture image unit 0 does not have
         //             a defined base level and cannot be used for texture mapping. (severity: low)
-        if (id == 131169 || id == 131185 || id == 131218 || id == 131204)
+        if (p_id == 131169 || p_id == 131185 || p_id == 131218 || p_id == 131204)
             return;
 
         Logger& logger = Logger::GetInstance();
 
         logger.Print("---------------\n");
-        logger.Print("Debug message (%u): %s\n", false, id, message);
+        logger.Print("Debug message (%u): %s\n", false, p_id, p_message);
 
-        switch (source)
+        switch (p_source)
         {
         case GL_DEBUG_SOURCE_API:
             logger.Print("Source: API");
@@ -59,7 +59,7 @@ namespace SvRendering::RHI
 
         logger.Print("\n");
 
-        switch (type)
+        switch (p_type)
         {
         case GL_DEBUG_TYPE_ERROR:
             logger.Print("Type: Error", true);
@@ -93,7 +93,7 @@ namespace SvRendering::RHI
 
         logger.Print("\n");
 
-        switch (severity)
+        switch (p_severity)
         {
         case GL_DEBUG_SEVERITY_HIGH:
             logger.Print("Severity: high");
@@ -115,15 +115,15 @@ namespace SvRendering::RHI
         logger.Print("\n\n");
     }
 
-    std::string GetGLString(const GLenum name)
+    std::string GetGLString(const GLenum p_name)
     {
-        const GLubyte* result = glGetString(name);
+        const GLubyte* result = glGetString(p_name);
         return result ? reinterpret_cast<const char*>(result) : std::string();
     }
 
-    GLenum OpenGLAPI::ToGLEnum(const EPixelDataFormat dataFormat)
+    GLenum OpenGLAPI::ToGLEnum(const EPixelDataFormat p_dataFormat)
     {
-        switch (dataFormat)
+        switch (p_dataFormat)
         {
         case EPixelDataFormat::STENCIL_INDEX:
             return GL_STENCIL_INDEX;
@@ -154,9 +154,9 @@ namespace SvRendering::RHI
         return GL_INVALID_ENUM;
     }
 
-    GLenum OpenGLAPI::ToGLEnum(const EPixelDataType dataType)
+    GLenum OpenGLAPI::ToGLEnum(const EPixelDataType p_dataType)
     {
-        switch (dataType)
+        switch (p_dataType)
         {
         case EPixelDataType::BYTE:
             return GL_BYTE;
@@ -201,9 +201,9 @@ namespace SvRendering::RHI
         return GL_INVALID_ENUM;
     }
 
-    GLenum OpenGLAPI::ToGLEnum(const EPrimitiveType primitiveType)
+    GLenum OpenGLAPI::ToGLEnum(const EPrimitiveType p_primitiveType)
     {
-        switch (primitiveType)
+        switch (p_primitiveType)
         {
         case EPrimitiveType::POINTS:
             return GL_POINTS;
@@ -234,9 +234,9 @@ namespace SvRendering::RHI
         return GL_INVALID_ENUM;
     }
 
-    GLenum OpenGLAPI::ToGLEnum(const ERenderingCapability capability)
+    GLenum OpenGLAPI::ToGLEnum(const ERenderingCapability p_capability)
     {
-        switch (capability)
+        switch (p_capability)
         {
         case ERenderingCapability::BLEND:
             return GL_BLEND;
@@ -263,9 +263,9 @@ namespace SvRendering::RHI
         return GL_INVALID_ENUM;
     }
 
-    GLenum OpenGLAPI::ToGLEnum(const ECompareAlgorithm algorithm)
+    GLenum OpenGLAPI::ToGLEnum(const ECompareAlgorithm p_algorithm)
     {
-        switch (algorithm)
+        switch (p_algorithm)
         {
         case ECompareAlgorithm::NEVER:
             return GL_NEVER;
@@ -288,9 +288,9 @@ namespace SvRendering::RHI
         return GL_INVALID_ENUM;
     }
 
-    GLenum OpenGLAPI::ToGLEnum(const ECullFace cullFace)
+    GLenum OpenGLAPI::ToGLEnum(const ECullFace p_cullFace)
     {
-        switch (cullFace)
+        switch (p_cullFace)
         {
         case ECullFace::FRONT:
             return GL_FRONT;
@@ -303,9 +303,9 @@ namespace SvRendering::RHI
         return GL_INVALID_ENUM;
     }
 
-    GLenum OpenGLAPI::ToGLEnum(const EBlendFactor blendFactor)
+    GLenum OpenGLAPI::ToGLEnum(const EBlendFactor p_blendFactor)
     {
-        switch (blendFactor)
+        switch (p_blendFactor)
         {
         case EBlendFactor::ZERO:
             return GL_ZERO;
@@ -340,9 +340,9 @@ namespace SvRendering::RHI
         return GL_INVALID_ENUM;
     }
 
-    GLenum OpenGLAPI::ToGLEnum(const EAccessMode accessSpecifier)
+    GLenum OpenGLAPI::ToGLEnum(const EAccessMode p_accessMode)
     {
-        switch (accessSpecifier)
+        switch (p_accessMode)
         {
         case EAccessMode::STREAM_DRAW:
             return GL_STREAM_DRAW;
@@ -368,11 +368,11 @@ namespace SvRendering::RHI
         }
     }
 
-    OpenGLAPI& OpenGLAPI::Init(const bool enableDebug)
+    OpenGLAPI& OpenGLAPI::Init(const bool p_enableDebug)
     {
         ASSERT(gladLoadGL(glfwGetProcAddress), "Failed to initialize GLAD");
 
-        if (enableDebug)
+        if (p_enableDebug)
         {
             GLint flags = 0;
             glGetIntegerv(GL_CONTEXT_FLAGS, &flags);
@@ -389,78 +389,78 @@ namespace SvRendering::RHI
         return *this;
     }
 
-    OpenGLAPI& OpenGLAPI::Clear(const bool clearColor, const bool clearDepth, const bool clearStencil)
+    OpenGLAPI& OpenGLAPI::Clear(const bool p_clearColor, const bool p_clearDepth, const bool p_clearStencil)
     {
         glClear
         (
-            (clearColor ? GL_COLOR_BUFFER_BIT : 0) |
-            (clearDepth ? GL_DEPTH_BUFFER_BIT : 0) |
-            (clearStencil ? GL_STENCIL_BUFFER_BIT : 0)
+            (p_clearColor ? GL_COLOR_BUFFER_BIT : 0) |
+            (p_clearDepth ? GL_DEPTH_BUFFER_BIT : 0) |
+            (p_clearStencil ? GL_STENCIL_BUFFER_BIT : 0)
         );
 
         return *this;
     }
 
-    OpenGLAPI& OpenGLAPI::ReadPixels(const PosT&          position, const DimensionsT& size, const EPixelDataFormat dataFormat,
-                                     const EPixelDataType dataType, void*              out)
+    OpenGLAPI& OpenGLAPI::ReadPixels(const PosT& p_position, const DimensionsT& p_size, const EPixelDataFormat p_dataFormat,
+                                     const EPixelDataType p_dataType, void* p_out)
     {
-        glReadPixels(position.m_x, position.m_y, size.m_x, size.m_y, ToGLEnum(dataFormat), ToGLEnum(dataType), out);
+        glReadPixels(p_position.m_x, p_position.m_y, p_size.m_x, p_size.m_y, ToGLEnum(p_dataFormat), ToGLEnum(p_dataType), p_out);
         return *this;
     }
 
-    OpenGLAPI& OpenGLAPI::DrawElements(const EPrimitiveType primitiveType, const uint32_t indexCount)
+    OpenGLAPI& OpenGLAPI::DrawElements(const EPrimitiveType p_primitiveType, const uint32_t p_indexCount)
     {
-        glDrawElements(ToGLEnum(primitiveType), static_cast<GLsizei>(indexCount), GL_UNSIGNED_INT, nullptr);
+        glDrawElements(ToGLEnum(p_primitiveType), static_cast<GLsizei>(p_indexCount), GL_UNSIGNED_INT, nullptr);
         return *this;
     }
 
-    OpenGLAPI& OpenGLAPI::DrawElementsInstanced(const EPrimitiveType primitiveType, const uint32_t indexCount,
-                                                const uint32_t       instances)
+    OpenGLAPI& OpenGLAPI::DrawElementsInstanced(const EPrimitiveType p_primitiveType, const uint32_t p_indexCount,
+                                                const uint32_t       p_instances)
     {
-        glDrawElementsInstanced(ToGLEnum(primitiveType), static_cast<GLsizei>(indexCount), GL_UNSIGNED_INT, nullptr,
-            static_cast<GLsizei>(instances));
+        glDrawElementsInstanced(ToGLEnum(p_primitiveType), static_cast<GLsizei>(p_indexCount), GL_UNSIGNED_INT, nullptr,
+            static_cast<GLsizei>(p_instances));
         return *this;
     }
 
-    OpenGLAPI& OpenGLAPI::DrawArrays(const EPrimitiveType primitiveType, const uint32_t vertexCount)
+    OpenGLAPI& OpenGLAPI::DrawArrays(const EPrimitiveType p_primitiveType, const uint32_t p_vertexCount)
     {
-        glDrawArrays(ToGLEnum(primitiveType), 0, static_cast<GLsizei>(vertexCount));
+        glDrawArrays(ToGLEnum(p_primitiveType), 0, static_cast<GLsizei>(p_vertexCount));
         return *this;
     }
 
-    OpenGLAPI& OpenGLAPI::DrawArraysInstanced(const EPrimitiveType primitiveType, const uint32_t vertexCount,
-                                              const uint32_t       instances)
+    OpenGLAPI& OpenGLAPI::DrawArraysInstanced(const EPrimitiveType p_primitiveType, const uint32_t p_vertexCount,
+                                              const uint32_t       p_instances)
     {
-        glDrawArraysInstanced(ToGLEnum(primitiveType), 0, static_cast<GLsizei>(vertexCount), static_cast<GLsizei>(instances));
+        glDrawArraysInstanced(ToGLEnum(p_primitiveType), 0, static_cast<GLsizei>(p_vertexCount), static_cast<GLsizei>(p_instances));
         return *this;
     }
 
-    OpenGLAPI& OpenGLAPI::SetCapability(const ERenderingCapability capability, const bool enable)
+    OpenGLAPI& OpenGLAPI::SetCapability(const ERenderingCapability p_capability, const bool p_enable)
     {
-        (enable ? glEnable : glDisable)(ToGLEnum(capability));
+        (p_enable ? glEnable : glDisable)(ToGLEnum(p_capability));
         return *this;
     }
 
-    bool OpenGLAPI::HasCapability(const ERenderingCapability capability)
+    bool OpenGLAPI::HasCapability(const ERenderingCapability p_capability)
     {
-        return glIsEnabled(ToGLEnum(capability));
+        return glIsEnabled(ToGLEnum(p_capability));
     }
 
-    OpenGLAPI& OpenGLAPI::SetDepthAlgorithm(const ECompareAlgorithm algorithm)
+    OpenGLAPI& OpenGLAPI::SetDepthAlgorithm(const ECompareAlgorithm p_algorithm)
     {
-        glDepthFunc(ToGLEnum(algorithm));
+        glDepthFunc(ToGLEnum(p_algorithm));
         return *this;
     }
 
-    OpenGLAPI& OpenGLAPI::SetStencilAlgorithm(const ECompareAlgorithm algorithm, const int32_t reference, const uint32_t mask)
+    OpenGLAPI& OpenGLAPI::SetStencilAlgorithm(const ECompareAlgorithm p_algorithm, const int32_t p_reference, const uint32_t p_mask)
     {
-        glStencilFunc(ToGLEnum(algorithm), reference, mask);
+        glStencilFunc(ToGLEnum(p_algorithm), p_reference, p_mask);
         return *this;
     }
 
-    OpenGLAPI& OpenGLAPI::SetClearColor(const Color& color)
+    OpenGLAPI& OpenGLAPI::SetClearColor(const Color& p_color)
     {
-        glClearColor(color.m_r, color.m_g, color.m_b, color.m_a);
+        glClearColor(p_color.m_r, p_color.m_g, p_color.m_b, p_color.m_a);
         return *this;
     }
 
@@ -472,34 +472,34 @@ namespace SvRendering::RHI
         return clearColor;
     }
 
-    OpenGLAPI& OpenGLAPI::SetCullFace(const ECullFace cullFace)
+    OpenGLAPI& OpenGLAPI::SetCullFace(const ECullFace p_cullFace)
     {
-        glCullFace(ToGLEnum(cullFace));
+        glCullFace(ToGLEnum(p_cullFace));
         return *this;
     }
 
-    OpenGLAPI& OpenGLAPI::SetDepthWriting(const bool enable)
+    OpenGLAPI& OpenGLAPI::SetDepthWriting(const bool p_enable)
     {
-        glDepthMask(enable);
+        glDepthMask(p_enable);
         return *this;
     }
 
-    OpenGLAPI& OpenGLAPI::SetColorWriting(const bool enableRed, const bool enableGreen, const bool enableBlue,
-                                          const bool enableAlpha)
+    OpenGLAPI& OpenGLAPI::SetColorWriting(const bool p_enableRed, const bool p_enableGreen, const bool p_enableBlue,
+                                          const bool p_enableAlpha)
     {
-        glColorMask(enableRed, enableGreen, enableBlue, enableAlpha);
+        glColorMask(p_enableRed, p_enableGreen, p_enableBlue, p_enableAlpha);
         return *this;
     }
 
-    OpenGLAPI& OpenGLAPI::SetBlendFunc(const EBlendFactor sourceFactor, const EBlendFactor destinationFactor)
+    OpenGLAPI& OpenGLAPI::SetBlendFunc(const EBlendFactor p_sourceFactor, const EBlendFactor p_destinationFactor)
     {
-        glBlendFunc(ToGLEnum(sourceFactor), ToGLEnum(destinationFactor));
+        glBlendFunc(ToGLEnum(p_sourceFactor), ToGLEnum(p_destinationFactor));
         return *this;
     }
 
-    OpenGLAPI& OpenGLAPI::SetViewport(const PosT position, const DimensionsT size)
+    OpenGLAPI& OpenGLAPI::SetViewport(const PosT p_position, const DimensionsT p_size)
     {
-        glViewport(position.m_x, position.m_y, size.m_x, size.m_y);
+        glViewport(p_position.m_x, p_position.m_y, p_size.m_x, p_size.m_y);
         return *this;
     }
 

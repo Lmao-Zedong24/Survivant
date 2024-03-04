@@ -1,11 +1,12 @@
 #include "SurvivantRendering/Core/Buffers/FrameBuffer.h"
 
 #include "SurvivantRendering/Enums/EFrameBufferAttachment.h"
+#include "SurvivantRendering/RHI/OpenGL/OpenGLTexture.h"
 
 #include <glad/gl.h>
 
 using namespace SvRendering::Enums;
-using namespace SvRendering::Resources;
+using namespace SvRendering::RHI;
 
 namespace SvRendering::Core::Buffers
 {
@@ -71,10 +72,10 @@ namespace SvRendering::Core::Buffers
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
-    void FrameBuffer::Attach(const Texture& p_texture, const EFrameBufferAttachment p_attachmentMode) const
+    void FrameBuffer::Attach(const ITexture& p_texture, const EFrameBufferAttachment p_attachmentMode) const
     {
         glBindFramebuffer(GL_FRAMEBUFFER, m_id);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, ToGLEnum(p_attachmentMode), GL_TEXTURE_2D, p_texture.GetId(), 0);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, ToGLEnum(p_attachmentMode), GL_TEXTURE_2D, dynamic_cast<const OpenGLTexture&>(p_texture).GetId(), 0);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 

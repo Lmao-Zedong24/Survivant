@@ -25,103 +25,104 @@ namespace SvRendering::RHI
 
         /**
          * \brief Initializes the graphics API
-         * \param enableDebug Whether debugging should be enabled or not
+         * \param p_enableDebug Whether debugging should be enabled or not
          * \return A reference to the current API
          */
-        virtual IRenderAPI& Init(bool enableDebug) = 0;
+        virtual IRenderAPI& Init(bool p_enableDebug) = 0;
 
         /**
          * \brief Clears the selected buffers
-         * \param clearColor Whether the color buffer should be cleared
-         * \param clearDepth Whether the depth buffer should be cleared
-         * \param clearStencil Whether the stencil buffer should be cleared
+         * \param p_clearColor Whether the color buffer should be cleared
+         * \param p_clearDepth Whether the depth buffer should be cleared
+         * \param p_clearStencil Whether the stencil buffer should be cleared
          * \return A reference to the current API
          */
-        virtual IRenderAPI& Clear(bool clearColor, bool clearDepth, bool clearStencil) = 0;
+        virtual IRenderAPI& Clear(bool p_clearColor, bool p_clearDepth, bool p_clearStencil) = 0;
 
         /**
          * \brief Reads pixels into the given buffer
-         * \param position The position of the pixels to read
-         * \param size The size of the area to read
-         * \param dataFormat The format in which the pixels should be read
-         * \param dataType The data type of the pixels to read
-         * \param out The buffer in which to read pixels
+         * \param p_position The position of the pixels to read
+         * \param p_size The size of the area to read
+         * \param p_dataFormat The format in which the pixels should be read
+         * \param p_dataType The data type of the pixels to read
+         * \param p_out The buffer in which to read pixels
          * \return A reference to the current API
          */
-        virtual IRenderAPI& ReadPixels(const PosT&           position, const DimensionsT& size, Enums::EPixelDataFormat dataFormat,
-                                       Enums::EPixelDataType dataType, void*              out) = 0;
+        virtual IRenderAPI& ReadPixels(const PosT& p_position, const DimensionsT& p_size, Enums::EPixelDataFormat p_dataFormat,
+                                       Enums::EPixelDataType p_dataType, void* p_out) = 0;
 
         /**
          * \brief Draws the given number of indices
-         * \param primitiveType The target primitive draw mode
-         * \param count The number of elements to draw
+         * \param p_primitiveType The target primitive draw mode
+         * \param p_count The number of elements to draw
          * \return A reference to the current API
          */
-        virtual IRenderAPI& DrawElements(Enums::EPrimitiveType primitiveType, uint32_t count) = 0;
+        virtual IRenderAPI& DrawElements(Enums::EPrimitiveType p_primitiveType, uint32_t p_count) = 0;
 
         /**
          * \brief Draws the given number of instances of a model with the given number of indices
-         * \param primitiveType The target primitive draw mode
-         * \param count The number of elements to draw
-         * \param instances The number of instances to draw
+         * \param p_primitiveType The target primitive draw mode
+         * \param p_count The number of elements to draw
+         * \param p_instances The number of instances to draw
          * \return A reference to the current API
          */
-        virtual IRenderAPI& DrawElementsInstanced(Enums::EPrimitiveType primitiveType, uint32_t count, uint32_t instances) = 0;
+        virtual IRenderAPI& DrawElementsInstanced(Enums::EPrimitiveType p_primitiveType, uint32_t p_count, uint32_t p_instances) =
+        0;
 
         /**
          * \brief Draws the given number of vertices
-         * \param primitiveType The target primitive draw mode
-         * \param count The number of vertices to draw
+         * \param p_primitiveType The target primitive draw mode
+         * \param p_count The number of vertices to draw
          * \return A reference to the current API
          */
-        virtual IRenderAPI& DrawArrays(Enums::EPrimitiveType primitiveType, uint32_t count) = 0;
+        virtual IRenderAPI& DrawArrays(Enums::EPrimitiveType p_primitiveType, uint32_t p_count) = 0;
 
         /**
          * \brief Draws the given number of instances of a model with the given number of vertices
-         * \param primitiveType The target primitive draw mode
-         * \param count The number of vertices to draw
-         * \param instances The number of instances to draw
+         * \param p_primitiveType The target primitive draw mode
+         * \param p_count The number of vertices to draw
+         * \param p_instances The number of instances to draw
          * \return A reference to the current API
          */
-        virtual IRenderAPI& DrawArraysInstanced(Enums::EPrimitiveType primitiveType, uint32_t count, uint32_t instances) = 0;
+        virtual IRenderAPI& DrawArraysInstanced(Enums::EPrimitiveType p_primitiveType, uint32_t p_count, uint32_t p_instances) = 0;
 
         /**
          * \brief Sets the state of the given rendering capability
-         * \param capability The rendering capability of which state should be changed
-         * \param enable Whether the rendering capability should be enabled
+         * \param p_capability The rendering capability of which state should be changed
+         * \param p_enable Whether the rendering capability should be enabled
          * \return A reference to the current API
          */
-        virtual IRenderAPI& SetCapability(Enums::ERenderingCapability capability, bool enable) = 0;
+        virtual IRenderAPI& SetCapability(Enums::ERenderingCapability p_capability, bool p_enable) = 0;
 
         /**
          * \brief Checks whether a rendering capability is enabled or not
-         * \param capability The rendering capability to check
+         * \param p_capability The rendering capability to check
          * \return True if the target rendering capability is enabled. False otherwise
          */
-        virtual bool HasCapability(Enums::ERenderingCapability capability) = 0;
+        virtual bool HasCapability(Enums::ERenderingCapability p_capability) = 0;
 
         /**
          * \brief Sets the sorting algorithm for depth testing
-         * \param algorithm The new depth algorithm
+         * \param p_algorithm The new depth algorithm
          * \return A reference to the current API
          */
-        virtual IRenderAPI& SetDepthAlgorithm(Enums::ECompareAlgorithm algorithm) = 0;
+        virtual IRenderAPI& SetDepthAlgorithm(Enums::ECompareAlgorithm p_algorithm) = 0;
 
         /**
          * \brief Sets the sorting algorithm and reference value for stencil testing
-         * \param algorithm The new stencil test algorithm
-         * \param reference The reference value
-         * \param mask The stencil mask
+         * \param p_algorithm The new stencil test algorithm
+         * \param p_reference The reference value
+         * \param p_mask The stencil mask
          * \return A reference to the current API
          */
-        virtual IRenderAPI& SetStencilAlgorithm(Enums::ECompareAlgorithm algorithm, int32_t reference, uint32_t mask) = 0;
+        virtual IRenderAPI& SetStencilAlgorithm(Enums::ECompareAlgorithm p_algorithm, int32_t p_reference, uint32_t p_mask) = 0;
 
         /**
          * \brief Sets the clear color
-         * \param color The new clear color
+         * \param p_color The new clear color
          * \return A reference to the current API
          */
-        virtual IRenderAPI& SetClearColor(const Core::Color& color) = 0;
+        virtual IRenderAPI& SetClearColor(const Core::Color& p_color) = 0;
 
         /**
          * \brief Gets the current clear color
@@ -131,43 +132,43 @@ namespace SvRendering::RHI
 
         /**
          * \brief Sets which face(s) should be culled
-         * \param cullFace The new cull face
+         * \param p_cullFace The new cull face
          * \return A reference to the current API
          */
-        virtual IRenderAPI& SetCullFace(Enums::ECullFace cullFace) = 0;
+        virtual IRenderAPI& SetCullFace(Enums::ECullFace p_cullFace) = 0;
 
         /**
          * \brief Enables/disables depth writing
-         * \param enable Whether depth writing should be enabled or not
+         * \param p_enable Whether depth writing should be enabled or not
          * \return A reference to the current API
          */
-        virtual IRenderAPI& SetDepthWriting(bool enable) = 0;
+        virtual IRenderAPI& SetDepthWriting(bool p_enable) = 0;
 
         /**
          * \brief Sets whether writing in the different color channels should be allowed or not
-         * \param enableRed Whether writing in the red color channel should be allowed
-         * \param enableGreen Whether writing in the green color channel should be allowed
-         * \param enableBlue Whether writing in the blue color channel should be allowed
-         * \param enableAlpha Whether writing in the alpha color channel should be allowed
+         * \param p_enableRed Whether writing in the red color channel should be allowed
+         * \param p_enableGreen Whether writing in the green color channel should be allowed
+         * \param p_enableBlue Whether writing in the blue color channel should be allowed
+         * \param p_enableAlpha Whether writing in the alpha color channel should be allowed
          * \return A reference to the current API
          */
-        virtual IRenderAPI& SetColorWriting(bool enableRed, bool enableGreen, bool enableBlue, bool enableAlpha) = 0;
+        virtual IRenderAPI& SetColorWriting(bool p_enableRed, bool p_enableGreen, bool p_enableBlue, bool p_enableAlpha) = 0;
 
         /**
          * \brief Sets the source and destination blending factors
-         * \param sourceFactor The blending factor to apply to the source color
-         * \param destinationFactor The blending factor to apply to the destination color
+         * \param p_sourceFactor The blending factor to apply to the source color
+         * \param p_destinationFactor The blending factor to apply to the destination color
          * \return A reference to the current API
          */
-        virtual IRenderAPI& SetBlendFunc(Enums::EBlendFactor sourceFactor, Enums::EBlendFactor destinationFactor) = 0;
+        virtual IRenderAPI& SetBlendFunc(Enums::EBlendFactor p_sourceFactor, Enums::EBlendFactor p_destinationFactor) = 0;
 
         /**
          * \brief Sets the viewport's position and size
-         * \param position The new viewport's position
-         * \param size The new viewport's size
+         * \param p_position The new viewport's position
+         * \param p_size The new viewport's size
          * \return A reference to the current API
          */
-        virtual IRenderAPI& SetViewport(PosT position, DimensionsT size) = 0;
+        virtual IRenderAPI& SetViewport(PosT p_position, DimensionsT p_size) = 0;
 
         /**
          * \brief Gets the used graphics API
@@ -203,14 +204,14 @@ namespace SvRendering::RHI
          * \brief Gets the current render api
          * \return A reference to the current render api
          */
-        inline static IRenderAPI& getCurrent();
+        inline static IRenderAPI& GetCurrent();
 
         /**
          * \brief Sets the current render api from the given backend
-         * \param backend The target graphics backend
+         * \param p_backend The target graphics backend
          * \return A reference to the current render api
          */
-        static IRenderAPI& setCurrent(EGraphicsAPI backend);
+        static IRenderAPI& SetCurrent(EGraphicsAPI p_backend);
 
     private:
         static std::unique_ptr<IRenderAPI> s_instance;

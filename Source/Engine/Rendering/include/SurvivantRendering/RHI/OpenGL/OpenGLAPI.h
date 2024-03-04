@@ -9,36 +9,38 @@ namespace SvRendering::RHI
     public:
         ~OpenGLAPI() override = default;
 
-        OpenGLAPI& Init(bool enableDebug) override;
+        OpenGLAPI& Init(bool p_enableDebug) override;
 
-        OpenGLAPI& Clear(bool clearColor, bool clearDepth, bool clearStencil) override;
+        OpenGLAPI& Clear(bool p_clearColor, bool p_clearDepth, bool p_clearStencil) override;
 
-        OpenGLAPI& ReadPixels(const PosT&           position, const DimensionsT& size, Enums::EPixelDataFormat dataFormat,
-                              Enums::EPixelDataType dataType, void*              out) override;
+        OpenGLAPI& ReadPixels(const PosT&           p_position, const DimensionsT& p_size, Enums::EPixelDataFormat p_dataFormat,
+                              Enums::EPixelDataType p_dataType, void*              p_out) override;
 
-        OpenGLAPI& DrawElements(Enums::EPrimitiveType primitiveType, uint32_t indexCount) override;
-        OpenGLAPI& DrawElementsInstanced(Enums::EPrimitiveType primitiveType, uint32_t indexCount, uint32_t instances) override;
+        OpenGLAPI& DrawElements(Enums::EPrimitiveType p_primitiveType, uint32_t p_indexCount) override;
+        OpenGLAPI& DrawElementsInstanced(Enums::EPrimitiveType p_primitiveType, uint32_t p_indexCount,
+                                         uint32_t              p_instances) override;
 
-        OpenGLAPI& DrawArrays(Enums::EPrimitiveType primitiveType, uint32_t vertexCount) override;
-        OpenGLAPI& DrawArraysInstanced(Enums::EPrimitiveType primitiveType, uint32_t vertexCount, uint32_t instances) override;
+        OpenGLAPI& DrawArrays(Enums::EPrimitiveType p_primitiveType, uint32_t p_vertexCount) override;
+        OpenGLAPI& DrawArraysInstanced(Enums::EPrimitiveType p_primitiveType, uint32_t p_vertexCount,
+                                       uint32_t              p_instances) override;
 
-        OpenGLAPI& SetCapability(Enums::ERenderingCapability capability, bool enable) override;
-        bool       HasCapability(Enums::ERenderingCapability capability) override;
+        OpenGLAPI& SetCapability(Enums::ERenderingCapability p_capability, bool p_enable) override;
+        bool       HasCapability(Enums::ERenderingCapability p_capability) override;
 
-        OpenGLAPI& SetDepthAlgorithm(Enums::ECompareAlgorithm algorithm) override;
-        OpenGLAPI& SetStencilAlgorithm(Enums::ECompareAlgorithm algorithm, int32_t reference, uint32_t mask) override;
+        OpenGLAPI& SetDepthAlgorithm(Enums::ECompareAlgorithm p_algorithm) override;
+        OpenGLAPI& SetStencilAlgorithm(Enums::ECompareAlgorithm p_algorithm, int32_t p_reference, uint32_t p_mask) override;
 
-        OpenGLAPI&  SetClearColor(const Core::Color& color) override;
+        OpenGLAPI&  SetClearColor(const Core::Color& p_color) override;
         Core::Color GetClearColor() override;
 
-        OpenGLAPI& SetCullFace(Enums::ECullFace cullFace) override;
+        OpenGLAPI& SetCullFace(Enums::ECullFace p_cullFace) override;
 
-        OpenGLAPI& SetDepthWriting(bool enable) override;
-        OpenGLAPI& SetColorWriting(bool enableRed, bool enableGreen, bool enableBlue, bool enableAlpha) override;
+        OpenGLAPI& SetDepthWriting(bool p_enable) override;
+        OpenGLAPI& SetColorWriting(bool p_enableRed, bool p_enableGreen, bool p_enableBlue, bool p_enableAlpha) override;
 
-        OpenGLAPI& SetBlendFunc(Enums::EBlendFactor sourceFactor, Enums::EBlendFactor destinationFactor) override;
+        OpenGLAPI& SetBlendFunc(Enums::EBlendFactor p_sourceFactor, Enums::EBlendFactor p_destinationFactor) override;
 
-        OpenGLAPI& SetViewport(PosT position, DimensionsT size) override;
+        OpenGLAPI& SetViewport(PosT p_position, DimensionsT p_size) override;
 
         EGraphicsAPI GetBackend() override;
 
@@ -47,13 +49,13 @@ namespace SvRendering::RHI
         std::string GetVersion() override;
         std::string GetShadingLanguageVersion() override;
 
-        static unsigned ToGLEnum(Enums::EPixelDataFormat dataFormat);
-        static unsigned ToGLEnum(Enums::EPixelDataType dataType);
-        static unsigned ToGLEnum(Enums::EPrimitiveType primitiveType);
-        static unsigned ToGLEnum(Enums::ERenderingCapability capability);
-        static unsigned ToGLEnum(Enums::ECompareAlgorithm algorithm);
-        static unsigned ToGLEnum(Enums::ECullFace cullFace);
-        static unsigned ToGLEnum(Enums::EBlendFactor blendFactor);
-        static unsigned ToGLEnum(Enums::EAccessMode accessSpecifier);
+        static unsigned ToGLEnum(Enums::EPixelDataFormat p_dataFormat);
+        static unsigned ToGLEnum(Enums::EPixelDataType p_dataType);
+        static unsigned ToGLEnum(Enums::EPrimitiveType p_primitiveType);
+        static unsigned ToGLEnum(Enums::ERenderingCapability p_capability);
+        static unsigned ToGLEnum(Enums::ECompareAlgorithm p_algorithm);
+        static unsigned ToGLEnum(Enums::ECullFace p_cullFace);
+        static unsigned ToGLEnum(Enums::EBlendFactor p_blendFactor);
+        static unsigned ToGLEnum(Enums::EAccessMode p_accessMode);
     };
 }

@@ -5,7 +5,7 @@
 
 namespace SvRendering::RHI
 {
-    inline IRenderAPI& IRenderAPI::getCurrent()
+    inline IRenderAPI& IRenderAPI::GetCurrent()
     {
         ASSERT(s_instance, "No loaded rendering API");
         return *s_instance;
