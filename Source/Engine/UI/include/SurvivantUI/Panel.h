@@ -12,8 +12,8 @@ namespace UI
 		enum ERenderFlags
 		{
 			CLOSE =					1 << 0,
-			ADD_TEST_PANNEL =		1 << 1,
-			ADD_CONSOLE_PANNEL =	1 << 2,
+			//ADD_TEST_PANNEL =		1 << 1,
+			//ADD_CONSOLE_PANNEL =	1 << 2,
 		};
 
 		const std::string& GetName();

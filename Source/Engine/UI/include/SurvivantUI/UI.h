@@ -2,6 +2,7 @@
 #pragma once
 
 #include "Panel.h"
+#include "Menu.h"
 
 #include "SurvivantCore/Events/Event.h"
 
@@ -46,7 +47,7 @@ namespace UI
 		void Layout1(int p_dockspaceId);
 
 	private:
-
+		MenuBar CreateMenuBar();
 		void HandlePanelFlags(std::shared_ptr<Panel> p_id, Panel::ERenderFlags p_flags);
 
 		std::unordered_set<std::shared_ptr<Panel>> m_currentPanels;

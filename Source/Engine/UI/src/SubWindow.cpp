@@ -54,64 +54,16 @@ Panel::ERenderFlags UI::TestPanel::Render()
 
 UI::MainPanel::MainPanel() :
     Panel(NAME),
-    m_panelFlags(ERenderFlags())
+    m_panelFlags(ERenderFlags()),
+    m_menuBar()
+{}
+
+UI::MainPanel::MainPanel(MenuBar&& p_menuBar) :
+    Panel(NAME),
+    m_panelFlags(ERenderFlags()),
+    m_menuBar()
 {
-    using namespace App;
-    auto& menuList = m_menuBar.m_menus;
-
-    //add menu 'File' to menu list
-    Menu& menu1 = menuList.emplace_back("File");
-    //add buttons to menu that triggers an event
-    menu1.m_items.emplace_back(std::make_unique<MenuButton>(
-        "New", 
-        [](char) { }));
-    //add buton with a keyboard shortcut
-    menu1.m_items.emplace_back(std::make_unique<MenuButton>(
-        "Exit", 
-        [](char) { Core::EventManager::GetInstance().Invoke<App::Window::WindowCloseRequest>(); },
-        InputManager::KeyboardKeyType(
-            EKey::KEY_F11,
-            EKeyState::KEY_PRESSED,
-            EInputModifier::MOD_ALT)
-    ));
-
-    Menu& menu2 = menuList.emplace_back("Edit");
-    menu2.m_items.emplace_back(std::make_unique<MenuButton>(
-        "Button1",
-        [](char) {  },
-        InputManager::KeyboardKeyType(
-            EKey::KEY_F11,
-            EKeyState::KEY_PRESSED,
-            EInputModifier(EInputModifier::MOD_ALT | EInputModifier::MOD_CONTROL))
-    ));
-    menu2.m_items.emplace_back(std::make_unique<MenuButton>(
-        "Cut",
-        [](char) {}));
-    menu2.m_items.emplace_back(std::make_unique<MenuButton>(
-        "Copy",
-        [](char) {}));
-    menu2.m_items.emplace_back(std::make_unique<MenuButton>(
-        "Paste",
-        [](char) {}));
-    menu2.m_items.emplace_back(std::make_unique<MenuButton>(
-        "Undo",
-        [](char) {}));
-    //Add a menu to the menu
-    {
-        auto menu3 = std::make_unique<Menu>("View");
-        menu3->m_items.emplace_back(std::make_unique<MenuButton>(
-            "Console",
-            [this](char) { m_panelFlags = Panel::ERenderFlags(m_panelFlags | Panel::ERenderFlags::ADD_CONSOLE_PANNEL); }));
-        menu3->m_items.emplace_back(std::make_unique<MenuButton>(
-            "Window2",
-            [](char) {}));
-        menu3->m_items.emplace_back(std::make_unique<MenuButton>(
-            "Window3",
-            [](char) {}));
-
-        menu2.m_items.emplace_back(std::move(menu3));
-    }
-   
+    SetMenuBar(std::move(p_menuBar));
 }
 
 Panel::ERenderFlags UI::MainPanel::Render()
@@ -148,6 +100,11 @@ Panel::ERenderFlags UI::MainPanel::Render()
     ImGui::End();
 
     return m_panelFlags;
+}
+
+void UI::MainPanel::SetMenuBar(MenuBar&& p_menuBar)
+{
+    m_menuBar = std::move(p_menuBar);
 }
 
 void UI::MainPanel::ChangePanelLayout(const ChangeLayout& p_layout)
@@ -310,6 +267,11 @@ UI::MenuButton::MenuButton(
     MenuButton(p_name, p_callback)
 {
     AddShortcut(p_shortcut);
+}
+
+IMenuable* UI::MenuButton::Clone() const
+{
+    return new MenuButton(*this);
 }
 
 void UI::MenuButton::DisplayAndUpdateMenu()
@@ -576,6 +538,11 @@ UI::MenuCheckBox::MenuCheckBox(const std::string& p_name, bool& p_isChecked) :
     m_name(p_name),
     m_isCheked(&p_isChecked)
 {
+}
+
+IMenuable* UI::MenuCheckBox::Clone() const
+{
+    return new MenuCheckBox(*this);
 }
 
 void UI::MenuCheckBox::DisplayAndUpdateMenu()

@@ -35,7 +35,7 @@ namespace Core
 
 	private:
 		std::unordered_map<size_t, EventDelegate>	m_listeners;
-		ListenerId									m_nextId;
+		ListenerId									m_nextId = 0;
 	};
 
 	template<typename ...Args>

@@ -34,7 +34,11 @@ UI::EditorUI::EditorUI() :
     MainPanel::ChangeLayout l = std::bind(&EditorUI::Layout1, this, std::placeholders::_1);
     m_main->ChangePanelLayout(l);
 
-    //spawn save m_panel on event close request
+    //auto tmp = CreateMenuBar();
+    //auto tmp2 = tmp;
+    m_main->SetMenuBar(CreateMenuBar());
+
+    //TODO : add spawn save m_panel on event close request
     //Core::EventManager::GetInstance().AddListenner<App::Window::WindowCloseRequest>(
     //    App::Window::WindowCloseRequest::EventDelegate(std::bind(&EditorUI::CreateSavePanel, this)));
 }
@@ -64,8 +68,6 @@ void UI::EditorUI::StartFrameUpdate()
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
-
-    Core::EventManager::GetInstance().Invoke<EditorUI::DebugEvent>("Created test panel");
 
     bool b = true;
     ImGui::ShowDemoWindow(&b);
@@ -105,16 +107,76 @@ void UI::EditorUI::EndFrameUpdate()
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
+UI::MenuBar UI::EditorUI::CreateMenuBar()
+{
+    using namespace App;
+    MenuBar menuBar;
+    auto& menuList = menuBar.m_menus;
+
+    //add menu 'File' to menu list
+    Menu& menu1 = menuList.emplace_back("File");
+    //add buttons to menu that triggers an event
+    menu1.m_items.emplace_back(std::make_unique<MenuButton>(
+        "New",
+        [](char) {}));
+    //add buton with a keyboard shortcut
+    menu1.m_items.emplace_back(std::make_unique<MenuButton>(
+        "Exit",
+        [](char) { Core::EventManager::GetInstance().Invoke<App::Window::WindowCloseRequest>(); },
+        InputManager::KeyboardKeyType(
+            EKey::KEY_F11,
+            EKeyState::KEY_PRESSED,
+            EInputModifier::MOD_ALT)
+    ));
+
+    Menu& menu2 = menuList.emplace_back("Edit");
+    menu2.m_items.emplace_back(std::make_unique<MenuButton>(
+        "Button1",
+        [](char) {},
+        InputManager::KeyboardKeyType(
+            EKey::KEY_F11,
+            EKeyState::KEY_PRESSED,
+            EInputModifier(EInputModifier::MOD_ALT | EInputModifier::MOD_CONTROL))
+    ));
+    menu2.m_items.emplace_back(std::make_unique<MenuButton>(
+        "Cut",
+        [](char) {}));
+    menu2.m_items.emplace_back(std::make_unique<MenuButton>(
+        "Copy",
+        [](char) {}));
+    menu2.m_items.emplace_back(std::make_unique<MenuButton>(
+        "Paste",
+        [](char) {}));
+    menu2.m_items.emplace_back(std::make_unique<MenuButton>(
+        "Undo",
+        [](char) {}));
+
+    //Add a menu to the menu
+    {
+        auto menu3 = std::make_unique<Menu>("View");
+        menu3->m_items.emplace_back(std::make_unique<MenuButton>(
+            "Test",
+            [this](char) { CreateNewTestPanel(); }));
+        menu3->m_items.emplace_back(std::make_unique<MenuButton>(
+            "Console",
+            [this](char) { CreateConsolePanel(); }));
+        menu3->m_items.emplace_back(std::make_unique<MenuButton>(
+            "Save",
+            [this](char) { CreateSavePanel(); }));
+
+        menu2.m_items.emplace_back(std::move(menu3));
+    }
+
+    Menu& menu4 = menuList.emplace_back(menu2);
+    menu4.SetName("Copy");
+
+    return menuBar;
+}
+
 void UI::EditorUI::HandlePanelFlags(std::shared_ptr<Panel> p_panel, Panel::ERenderFlags p_flags)
 {
     if (p_flags & Panel::CLOSE)
         m_currentPanels.erase(p_panel);
-
-    if (p_flags & Panel::ADD_TEST_PANNEL)
-        CreateNewTestPanel();
-
-    if (p_flags & Panel::ADD_CONSOLE_PANNEL)
-        CreateConsolePanel();
 }
 
 void UI::EditorUI::CreateNewTestPanel()
@@ -122,6 +184,9 @@ void UI::EditorUI::CreateNewTestPanel()
     static int i = 0;
 
     m_currentPanels.insert(std::make_shared<TestPanel>(std::string("test-") + std::to_string(i++)));
+
+    //TODO: remove debug message "Created Test Panel"
+    Core::EventManager::GetInstance().Invoke<EditorUI::DebugEvent>("Created Test Panel");
 }
 
 void UI::EditorUI::CreateSavePanel()

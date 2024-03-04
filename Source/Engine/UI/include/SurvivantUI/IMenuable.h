@@ -9,6 +9,7 @@ namespace UI
 	{
 	public:
 		virtual ~IMenuable() = default;
+		virtual IMenuable* Clone() const = 0;
 		virtual void DisplayAndUpdateMenu() = 0;
 	};	
 }

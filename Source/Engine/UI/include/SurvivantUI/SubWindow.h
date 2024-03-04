@@ -34,6 +34,8 @@ namespace UI
 			const App::InputManager::KeyboardKeyType& p_shortcut);
 		~MenuButton()override = default;
 
+		IMenuable* Clone() const override;
+
 		void DisplayAndUpdateMenu() override;
 
 		void AddShortcut(const App::InputManager::KeyboardKeyType& p_shortcut);
@@ -51,6 +53,7 @@ namespace UI
 		MenuCheckBox(const std::string& p_name, bool& p_isChecked);
 		~MenuCheckBox() = default;
 
+		IMenuable* Clone() const override;
 		void DisplayAndUpdateMenu() override;
 
 	private:
@@ -171,10 +174,12 @@ namespace UI
 		using ChangeLayout = std::function<void(int)>;
 
 		MainPanel();
+		MainPanel(MenuBar&& p_menuBar);
 		~MainPanel() = default;
 
 		ERenderFlags Render() override;
 
+		void SetMenuBar(MenuBar&& p_menuBar);
 		void ChangePanelLayout(const ChangeLayout& p_layout);
 
 	private:
