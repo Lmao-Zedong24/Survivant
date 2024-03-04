@@ -6,7 +6,7 @@ namespace SvRendering::Enums
     /**
      * \brief Supported buffer access specifiers
      */
-    enum class EAccessSpecifier : uint8_t
+    enum class EAccessMode : uint8_t
     {
         STREAM_DRAW,
         STREAM_READ,

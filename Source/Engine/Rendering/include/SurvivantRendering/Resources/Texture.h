@@ -2,7 +2,7 @@
 #include "SurvivantCore/Resources/IResource.h"
 
 #include "SurvivantRendering/Enums/ETextureFilter.h"
-#include "SurvivantRendering/Enums/ETextureFormat.h"
+#include "SurvivantRendering/Enums/EPixelDataFormat.h"
 #include "SurvivantRendering/Enums/ETextureWrapMode.h"
 
 #include "Vector/Vector2.h"
@@ -33,7 +33,7 @@ namespace SvRendering::Resources
          * \param p_height The texture's height
          * \param p_format The texture's pixel format
          */
-        Texture(int p_width, int p_height, Enums::ETextureFormat p_format);
+        Texture(int p_width, int p_height, Enums::EPixelDataFormat p_format);
 
         /**
          * \brief Creates a copy of the given texture

@@ -1,7 +1,5 @@
 #include "SurvivantRendering/Resources/Shader.h"
 
-#include "SurvivantRendering/Enums/EAccessSpecifier.h"
-
 #include <sstream>
 
 #include <glad/gl.h>
@@ -11,7 +9,6 @@
 #include <SurvivantCore/Utility/Utility.h>
 
 using namespace SvCore::Utility;
-using namespace SvRendering::Enums;
 
 namespace SvRendering::Resources
 {

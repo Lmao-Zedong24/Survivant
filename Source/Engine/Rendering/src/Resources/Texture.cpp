@@ -1,4 +1,5 @@
-#include "SurvivantRendering/Resources/texture.h"
+#include "SurvivantRendering/Resources/Texture.h"
+#include "SurvivantRendering/RHI/OpenGL/OpenGLAPI.h"
 
 #include <SurvivantCore/Debug/Assertion.h>
 #include <SurvivantCore/Debug/Logger.h>
@@ -9,6 +10,7 @@
 #include <stb_image.h>
 
 using namespace SvRendering::Enums;
+using namespace SvRendering::RHI;
 
 namespace SvRendering::Resources
 {
@@ -52,34 +54,6 @@ namespace SvRendering::Resources
         }
     }
 
-    GLenum ToGLEnum(const ETextureFormat p_format)
-    {
-        switch (p_format)
-        {
-        case ETextureFormat::RED:
-            return GL_RED;
-        case ETextureFormat::RG:
-            return GL_RG;
-        case ETextureFormat::RGB:
-            return GL_RGB;
-        case ETextureFormat::RGBA:
-            return GL_RGBA;
-        case ETextureFormat::BGR:
-            return GL_BGR;
-        case ETextureFormat::BGRA:
-            return GL_BGRA;
-        case ETextureFormat::STENCIL_INDEX:
-            return GL_STENCIL_INDEX;
-        case ETextureFormat::DEPTH_COMPONENT:
-            return GL_DEPTH_COMPONENT;
-        case ETextureFormat::DEPTH_STENCIL:
-            return GL_DEPTH_STENCIL;
-        default:
-            ASSERT(false, "Invalid texture format");
-            return GL_INVALID_ENUM;
-        }
-    }
-
     GLenum GetGLFormat(const uint8_t p_channels)
     {
         switch (p_channels)
@@ -98,24 +72,28 @@ namespace SvRendering::Resources
         }
     }
 
-    uint8_t ToChannelCount(const ETextureFormat p_format)
+    uint8_t ToChannelCount(const EPixelDataFormat p_format)
     {
         switch (p_format)
         {
-        case ETextureFormat::RED:
-        case ETextureFormat::STENCIL_INDEX:
-        case ETextureFormat::DEPTH_COMPONENT:
+        case EPixelDataFormat::RED:
+        case EPixelDataFormat::GREEN:
+        case EPixelDataFormat::BLUE:
+        case EPixelDataFormat::ALPHA:
+        case EPixelDataFormat::STENCIL_INDEX:
+        case EPixelDataFormat::DEPTH_COMPONENT:
             return 1;
-        case ETextureFormat::RG:
-        case ETextureFormat::DEPTH_STENCIL:
+        case EPixelDataFormat::RG:
+        case EPixelDataFormat::DEPTH_STENCIL:
             return 2;
-        case ETextureFormat::RGB:
-        case ETextureFormat::BGR:
+        case EPixelDataFormat::RGB:
+        case EPixelDataFormat::BGR:
             return 3;
-        case ETextureFormat::RGBA:
-        case ETextureFormat::BGRA:
+        case EPixelDataFormat::RGBA:
+        case EPixelDataFormat::BGRA:
             return 4;
         default:
+            ASSERT(false, "Invalid pixel data format.");
             return 0;
         }
     }
@@ -129,13 +107,13 @@ namespace SvRendering::Resources
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_width, m_height, 0, GetGLFormat(p_channels), GL_FLOAT, nullptr);
     }
 
-    Texture::Texture(const int p_width, const int p_height, const ETextureFormat p_format)
+    Texture::Texture(const int p_width, const int p_height, const EPixelDataFormat p_format)
         : m_width(p_width), m_height(p_height)
     {
         glGenTextures(1, &m_id);
         glBindTexture(GL_TEXTURE_2D, m_id);
 
-        const GLenum texFormat = ToGLEnum(p_format);
+        const GLenum texFormat = OpenGLAPI::ToGLEnum(p_format);
         glTexImage2D(GL_TEXTURE_2D, 0, static_cast<GLint>(texFormat), m_width, m_height, 0, texFormat, GL_FLOAT, nullptr);
 
         m_channels = ToChannelCount(p_format);

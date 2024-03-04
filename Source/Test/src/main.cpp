@@ -1,5 +1,6 @@
 #include "SurvivantTest/EventManager.h"
 #include "SurvivantTest/InputManager.h"
+#include "SurvivantTest/Window.h"
 
 #include <SurvivantCore/Debug/Assertion.h>
 #include <SurvivantCore/Utility/FileSystem.h>
@@ -10,13 +11,9 @@
 #include <SurvivantRendering/Resources/Model.h>
 #include <SurvivantRendering/Resources/Shader.h>
 #include <SurvivantRendering/Resources/Texture.h>
+#include <SurvivantRendering/RHI/IRenderAPI.h>
 
 #include <Transform.h>
-
-// TODO: Implement relevant parts in corresponding libs to get rid of glad dependency
-#include <glad/gl.h>
-
-#include "SurvivantTest/Window.h"
 
 using namespace LibMath;
 using namespace SvCore::Utility;
@@ -25,6 +22,7 @@ using namespace SvRendering::Core::Buffers;
 using namespace SvRendering::Enums;
 using namespace SvRendering::Geometry;
 using namespace SvRendering::Resources;
+using namespace SvRendering::RHI;
 
 constexpr const char* UNLIT_SHADER_PATH  = "assets/shaders/Unlit.glsl";
 constexpr float       CAM_MOVE_SPEED     = 3.f;
@@ -66,7 +64,7 @@ void DrawModel(const Model& p_model)
         const Mesh& mesh = p_model.GetMesh(i);
 
         mesh.Bind();
-        glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(mesh.GetIndexCount()), GL_UNSIGNED_INT, nullptr);
+        IRenderAPI::getCurrent().DrawElements(EPrimitiveType::TRIANGLES, mesh.GetIndexCount());
     }
 }
 
@@ -85,9 +83,11 @@ int main()
     GLFWwindow* window = glfwCreateWindow(800, 600, "Test", nullptr, nullptr);
     glfwMakeContextCurrent(window);
 
-    ASSERT(gladLoadGL(glfwGetProcAddress), "Failed to initialize glad");
+    IRenderAPI& renderAPI = IRenderAPI::setCurrent(EGraphicsAPI::OPENGL);
+    renderAPI.Init(true)
+             .SetCapability(ERenderingCapability::DEPTH_TEST, true)
+             .SetCullFace(ECullFace::BACK);
 
-    glEnable(GL_DEPTH_TEST);
     App::Window::SetupInputManager(window);
 
     Model model;

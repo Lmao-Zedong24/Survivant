@@ -1,5 +1,5 @@
 #pragma once
-#include "SurvivantRendering/Enums/EAccessSpecifier.h"
+#include "SurvivantRendering/Enums/EAccessMode.h"
 
 #include <cstdint>
 
@@ -8,7 +8,7 @@ namespace SvRendering::Core::Buffers
     class ShaderStorageBuffer final
     {
     public:
-        explicit ShaderStorageBuffer(Enums::EAccessSpecifier p_accessSpecifier, uint32_t p_bindIndex = 0);
+        explicit ShaderStorageBuffer(Enums::EAccessMode p_accessSpecifier, uint32_t p_bindIndex = 0);
         ShaderStorageBuffer(const ShaderStorageBuffer& p_other) = delete;
         ShaderStorageBuffer(ShaderStorageBuffer&& p_other) noexcept;
 
@@ -74,7 +74,7 @@ namespace SvRendering::Core::Buffers
     private:
         uint32_t                m_id;
         uint32_t                m_bindIndex;
-        Enums::EAccessSpecifier m_accessSpecifier;
+        Enums::EAccessMode m_accessSpecifier;
     };
 }
 

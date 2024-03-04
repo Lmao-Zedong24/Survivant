@@ -1,39 +1,15 @@
 #include "SurvivantRendering/Core/Buffers/UniformBuffer.h"
 
+#include "SurvivantRendering/RHI/OpenGL/OpenGLAPI.h"
+
 #include <glad/gl.h>
 
 using namespace SvRendering::Enums;
+using namespace SvRendering::RHI;
 
 namespace SvRendering::Core::Buffers
 {
-    GLenum ToGLEnum(const EAccessSpecifier p_accessSpecifier)
-    {
-        switch (p_accessSpecifier)
-        {
-        case EAccessSpecifier::STREAM_DRAW:
-            return GL_STREAM_DRAW;
-        case EAccessSpecifier::STREAM_READ:
-            return GL_STREAM_READ;
-        case EAccessSpecifier::STREAM_COPY:
-            return GL_STREAM_COPY;
-        case EAccessSpecifier::DYNAMIC_DRAW:
-            return GL_DYNAMIC_DRAW;
-        case EAccessSpecifier::DYNAMIC_READ:
-            return GL_DYNAMIC_READ;
-        case EAccessSpecifier::DYNAMIC_COPY:
-            return GL_DYNAMIC_COPY;
-        case EAccessSpecifier::STATIC_DRAW:
-            return GL_STATIC_DRAW;
-        case EAccessSpecifier::STATIC_READ:
-            return GL_STATIC_READ;
-        case EAccessSpecifier::STATIC_COPY:
-            return GL_STATIC_COPY;
-        default:
-            return GL_INVALID_ENUM;
-        }
-    }
-
-    UniformBuffer::UniformBuffer(const EAccessSpecifier p_accessSpecifier, const uint32_t p_bindIndex)
+    UniformBuffer::UniformBuffer(const EAccessMode p_accessSpecifier, const uint32_t p_bindIndex)
         : m_bindIndex(p_bindIndex), m_accessSpecifier(p_accessSpecifier)
     {
         glGenBuffers(1, &m_id);
@@ -91,7 +67,7 @@ namespace SvRendering::Core::Buffers
     void UniformBuffer::SetRawData(const void* p_data, const size_t p_size) const
     {
         glBindBuffer(GL_UNIFORM_BUFFER, m_id);
-        glBufferData(GL_UNIFORM_BUFFER, static_cast<GLsizeiptr>(p_size), p_data, ToGLEnum(m_accessSpecifier));
+        glBufferData(GL_UNIFORM_BUFFER, static_cast<GLsizeiptr>(p_size), p_data, OpenGLAPI::ToGLEnum(m_accessSpecifier));
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
     }
 
