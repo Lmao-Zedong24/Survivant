@@ -31,12 +31,16 @@ namespace Core
 
 		template <class T, typename ...Args>
 		void Invoke(const std::tuple<Args...>& p_paramaters);
-
-		template <class T>
-		T* AddEvent(EventBase* p_event);
+		
+		//cant add event bcs of listener ids
+		//template <class T>
+		//T* AddEvent(EventBase* p_event);
 
 		template <class T, class U = T::EventDelegate>
-		T* AddListenner(const U& p_callback);
+		EventId AddListenner(const U& p_callback);
+
+		template <class T>
+		bool RemoveListenner(const Event<>::ListenerId& p_callback);
 
 	private:
 		template <class T>
@@ -68,8 +72,8 @@ namespace Core
 		std::apply([this](auto &&... args) { this->Invoke<T>(args...); }, p_paramaters);
 	}
 
-	template<class T>
-	T* EventManager::AddEvent(EventBase* p_event)
+	template <class T, class U>
+	inline Event<>::ListenerId EventManager::AddListenner(const U& p_callback)
 	{
 		if constexpr (!std::is_same_v<EventBase, T> && !std::is_base_of_v<EventBase, T>)
 			return nullptr;
@@ -79,27 +83,23 @@ namespace Core
 		m_events.try_emplace(id, std::make_shared<T>());
 
 		T* eventPtr = dynamic_cast<T*>(m_events[id].get());
-		eventPtr->Combine<T>(*dynamic_cast<T*>(p_event));
-
-		return eventPtr;
+		return eventPtr->AddListener(p_callback);
 	}
 
-	template <class T, class U>
-	inline T* EventManager::AddListenner(const U& p_callback)
+	template<class T>
+	inline bool EventManager::RemoveListenner(const Event<>::ListenerId& p_id)
 	{
 		if constexpr (!std::is_same_v<EventBase, T> && !std::is_base_of_v<EventBase, T>)
-			return nullptr;
-
-		//auto tmp = std::make_shared<T>();
+			return false;
 
 		EventId id = GetEventId<T>();
+		auto event = m_events.find(id);
 
-		m_events.try_emplace(id, std::make_shared<T>());
+		if (event == m_events.end())
+			return false;
 
-		T* eventPtr = dynamic_cast<T*>(m_events[id].get());
-		eventPtr->AddListener(p_callback);
-
-		return eventPtr;
+		dynamic_cast<T*>(event->second.get())->RemoveListener(p_id);
+		return true;
 	}
 
 	template<class T>

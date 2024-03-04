@@ -7,6 +7,7 @@
 #include "Menu.h"
 
 #include "SurvivantApp/Inputs/InputManager.h"
+#include "SurvivantUI/UI.h"
 
 #include <ctime>
 #include <functional>
@@ -96,7 +97,7 @@ namespace UI
 		static void ClearPanelText(PanelTextInput& p_panel);
 
 	private:
-		static int TextPanelCallBack(ImGuiInputTextCallbackData* data);
+		//static int TextPanelCallBack(ImGuiInputTextCallbackData* data);
 
 		std::string								m_name;
 		std::string								m_buffer;
@@ -238,15 +239,18 @@ namespace UI
 		/// <param name="p_color">[out]</param>
 		static void LogTypeColor(ELogType p_type, ImVec4* p_color);
 
+		void TextInputCallback(PanelTextInput& p_textInput);
+
 		static constexpr char NAME[] = "DebugLog";
 		static inline int s_panelCount = 0;
 
-		PanelTextInput				m_input;
-		PanelTextBox				m_textBox;
-		PanelButtonList				m_buttons;
-		Menu						m_filterMenu;
+		PanelTextInput							m_input;
+		PanelTextBox							m_textBox;
+		PanelButtonList							m_buttons;
+		Menu									m_filterMenu;
 		//cant use vector<bool> bcs not container
-		std::vector<unsigned char>	m_currentFilters;
+		std::vector<unsigned char>				m_currentFilters;
+		EditorUI::DebugEvent::ListenerId		m_eventHandle;
 	};
 
 	class SavePanel : public Panel

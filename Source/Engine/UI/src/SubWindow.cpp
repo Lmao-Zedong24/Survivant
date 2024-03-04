@@ -1,6 +1,5 @@
 //SubWindow.cpp
 
-#include "imgui.h"
 #include "SurvivantUI/SubWindow.h"
 
 #include "SurvivantApp/Windows/Window.h"
@@ -8,6 +7,7 @@
 #include "SurvivantUI/Panel.h"
 #include "SurvivantUI/UI.h"
 
+#include "imgui.h"
 #include "backends/imgui_impl_glfw.h"
 #include "backends/imgui_impl_opengl3.h"
 
@@ -163,7 +163,7 @@ void UI::MainPanel::SetupLayout(int p_dockspaceId)
 
 UI::ConsolePanel::ConsolePanel() :
     m_filterMenu("Filters"),
-    m_input("Input", PanelTextInput::ClearPanelText)
+    m_input("Input", std::bind(&ConsolePanel::TextInputCallback, this, std::placeholders::_1))
 {
     static size_t NumLogTypes = 5;
     m_name = GetUniqueName(NAME, s_panelCount);
@@ -185,20 +185,24 @@ UI::ConsolePanel::ConsolePanel() :
     }
 
     //debug event
-    Core::EventManager::GetInstance().AddListenner<EditorUI::DebugEvent>(
-        [this](const char* m_message) 
-        { 
+    m_eventHandle = 
+
+    m_eventHandle = Core::EventManager::GetInstance().AddListenner<EditorUI::DebugEvent>(
+        [this](const char* m_message)
+        {
             if (this == nullptr)
                 return;
 
             m_textBox.AddItem(
                 std::make_shared<ConsolePanel::LogText>(LogInfo{ ELogType::DEBUG_LOG, m_message }));
-        });
+        }
+    );
 }
 
 UI::ConsolePanel::~ConsolePanel()
 {
     s_panelCount--;
+    Core::EventManager::GetInstance().RemoveListenner<EditorUI::DebugEvent>(m_eventHandle);
 }
 
 Panel::ERenderFlags UI::ConsolePanel::Render()
@@ -283,6 +287,13 @@ void UI::ConsolePanel::LogTypeColor(ELogType p_type, ImVec4* p_color)
         p_color = nullptr;
         break;
     }
+}
+
+void UI::ConsolePanel::TextInputCallback(PanelTextInput& p_textInput)
+{
+    m_textBox.AddItem(std::make_shared<LogText>(LogInfo{ ELogType::COMMAND_LOG, p_textInput.GetText() }), true);
+
+    p_textInput.Clear();
 }
 
 UI::MenuButton::MenuButton(const std::string& p_name, const App::InputManager::KeyCallback& p_callback) :
@@ -635,12 +646,17 @@ void UI::PanelTextInput::DisplayAndUpdatePanel()
         ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_EscapeClearsAll | 
         ImGuiInputTextFlags_CallbackCompletion | ImGuiInputTextFlags_CallbackHistory;
 
+    if(InputText(m_name.c_str(), &m_buffer, input_text_flags, nullptr, (void*)this))
+    {
+        //when text is finished being inputed
+        m_callback(*this);
+        reclaim_focus = true;
+    }
+
     // Auto-focus on window apparition
     ImGui::SetItemDefaultFocus();
     if (reclaim_focus)
         ImGui::SetKeyboardFocusHere(-1); // Auto focus previous widget
-
-    InputText(m_name.c_str(), &m_buffer, input_text_flags, TextPanelCallBack, (void*)this);
 }
 
 void UI::PanelTextInput::Clear()
@@ -658,13 +674,13 @@ void UI::PanelTextInput::ClearPanelText(PanelTextInput& p_panel)
     p_panel.Clear();
 }
 
-int UI::PanelTextInput::TextPanelCallBack(ImGuiInputTextCallbackData* data)
-{
-    //? imgui magic
-    PanelTextInput* panelText = (PanelTextInput*)data->UserData;
-    panelText->m_callback(*panelText);
-
-    return 0;
-}
+//int UI::PanelTextInput::TextPanelCallBack(ImGuiInputTextCallbackData* data)
+//{
+//    //? imgui magic
+//    PanelTextInput* panelText = (PanelTextInput*)data->UserData;
+//    panelText->m_callback(*panelText);
+//
+//    return 0;
+//}
 
 

@@ -213,12 +213,8 @@ int main()
 
         AddEvent::EventDelegate printAdd = [](int i, int j) { std::cout << "Add = " << i + j << std::endl; };
         ToggleEvent::EventDelegate toggle = std::bind(&App::Window::ToggleFullScreenMode, &window);
-        std::shared_ptr<AddEvent> ligEvent = std::make_shared<AddEvent>();
-        std::shared_ptr<ToggleEvent> toggleEvent = std::make_shared<ToggleEvent>();
-        ligEvent->AddListener(printAdd);
-        toggleEvent->AddListener(toggle);
-        em.AddEvent<AddEvent>(ligEvent.get());
-        em.AddEvent<ToggleEvent>(toggleEvent.get());
+        em.AddListenner<AddEvent>(printAdd);
+        em.AddListenner<ToggleEvent>(toggle);
 
         InputManager::KeyboardKeyType   a(EKey::KEY_A, EKeyState::KEY_RELEASED, EInputModifier::MOD_ALT);
         InputManager::KeyboardKeyType   b(EKey::KEY_B, EKeyState::KEY_PRESSED, EInputModifier());

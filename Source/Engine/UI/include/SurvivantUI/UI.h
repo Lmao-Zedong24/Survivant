@@ -2,7 +2,8 @@
 #pragma once
 
 #include "Panel.h"
-#include "SubWindow.h"
+
+#include "SurvivantCore/Events/Event.h"
 
 #include <unordered_set>
 #include <memory>
@@ -14,6 +15,8 @@ namespace App
 
 namespace UI
 {
+	class MainPanel;
+
 	class IUI
 	{
 		virtual void StartFrameUpdate() = 0;
