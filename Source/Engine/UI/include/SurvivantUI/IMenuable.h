@@ -1,6 +1,8 @@
 //IMenuable.h
 #pragma once
 
+#include "IPanelable.h"
+
 namespace UI
 {
 	class IMenuable
@@ -8,5 +10,5 @@ namespace UI
 	public:
 		virtual ~IMenuable() = default;
 		virtual void DisplayAndUpdateMenu() = 0;
-	};
+	};	
 }

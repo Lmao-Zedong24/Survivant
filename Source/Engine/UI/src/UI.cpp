@@ -32,7 +32,7 @@ UI::EditorUI::EditorUI() :
     MainPanel::ChangeLayout l = std::bind(&EditorUI::Layout1, this, std::placeholders::_1);
     m_main->ChangePanelLayout(l);
 
-    //spawn save panel on event close request
+    //spawn save m_panel on event close request
     //Core::EventManager::GetInstance().AddListenner<App::Window::WindowCloseRequest>(
     //    App::Window::WindowCloseRequest::EventDelegate(std::bind(&EditorUI::CreateSavePanel, this)));
 }
@@ -63,6 +63,7 @@ void UI::EditorUI::StartFrameUpdate()
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 
+    Core::EventManager::GetInstance().Invoke<EditorUI::DebugEvent>("Created test panel");
 
     bool b = true;
     ImGui::ShowDemoWindow(&b);
@@ -72,8 +73,8 @@ void UI::EditorUI::RenderPanels()
 {
     struct PanelFlags
     {
-        std::shared_ptr<Panel> panel;
-        Panel::ERenderFlags flags = Panel::ERenderFlags();
+        std::shared_ptr<Panel> m_panel;
+        Panel::ERenderFlags m_flags = Panel::ERenderFlags();
     };
 
     std::vector<PanelFlags> pfArray(m_currentPanels.size());
@@ -91,9 +92,9 @@ void UI::EditorUI::RenderPanels()
             pfArray.push_back({ panel, flags });
     }
 
-    //handle flags after
+    //handle m_flags after
     for (auto& pf : pfArray)
-        HandlePanelFlags(pf.panel, pf.flags);
+        HandlePanelFlags(pf.m_panel, pf.m_flags);
 }
 
 void UI::EditorUI::EndFrameUpdate()
@@ -109,6 +110,9 @@ void UI::EditorUI::HandlePanelFlags(std::shared_ptr<Panel> p_panel, Panel::ERend
 
     if (p_flags & Panel::ADD_TEST_PANNEL)
         CreateNewTestPanel();
+
+    if (p_flags & Panel::ADD_CONSOLE_PANNEL)
+        CreateConsolePanel();
 }
 
 void UI::EditorUI::CreateNewTestPanel()
@@ -120,7 +124,13 @@ void UI::EditorUI::CreateNewTestPanel()
 
 void UI::EditorUI::CreateSavePanel()
 {
-    m_currentPanels.insert(std::make_shared<SavePanel>());
+    if (SavePanel::GetPanelCount() != 0)
+        m_currentPanels.insert(std::make_shared<SavePanel>());
+}
+
+void UI::EditorUI::CreateConsolePanel()
+{
+    m_currentPanels.insert(std::make_shared<ConsolePanel>());
 }
 
 void UI::EditorUI::Layout1(int p_dockspaceId)

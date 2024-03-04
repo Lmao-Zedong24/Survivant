@@ -7,6 +7,7 @@
 #include "SurvivantApp/Inputs/InputManager.h"
 
 #include <unordered_map>
+#include "SurvivantCore/Events/Event.h"
 
 
 namespace UI

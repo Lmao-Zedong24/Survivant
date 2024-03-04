@@ -15,12 +15,12 @@ UI::Menu::Menu(Menu&& p_other)noexcept
     this->m_items = std::move(p_other.m_items);
 }
 
-void UI::Menu::DisplayAndUpdatePanel()
+void UI::Menu::DisplayAndUpdateMenu()
 {
     DisplayAndUpdate();
 }
 
-void UI::Menu::DisplayAndUpdateMenu()
+void UI::Menu::DisplayAndUpdatePanel()
 {
     DisplayAndUpdate();
 }
@@ -41,7 +41,7 @@ void UI::MenuBar::DisplayAndUpdatePanel()
     if (ImGui::BeginMenuBar())
     {
         for (auto& menu : m_menus)
-            menu.DisplayAndUpdatePanel();
+            menu.DisplayAndUpdateMenu();
 
         ImGui::EndMenuBar();
     }

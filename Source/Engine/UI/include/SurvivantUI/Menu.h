@@ -10,7 +10,7 @@
 
 namespace UI
 {
-	class Menu : public IPanelable, public IMenuable
+	class Menu : public IMenuable , public IPanelable
 	{
 	public:
 		Menu(std::string p_name) : m_name(p_name) {};
@@ -18,8 +18,8 @@ namespace UI
 		Menu(Menu& p_other) = delete;
 		Menu(Menu&& p_other)noexcept;
 
-		void DisplayAndUpdatePanel() override;
 		void DisplayAndUpdateMenu() override;
+		void DisplayAndUpdatePanel() override;
 
 		std::vector<std::unique_ptr<IMenuable>> m_items;
 	private:

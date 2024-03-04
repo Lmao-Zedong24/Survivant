@@ -8,9 +8,16 @@
 
 #include "SurvivantApp/Inputs/InputManager.h"
 
-
-#include <string>
+#include <ctime>
 #include <functional>
+#include <map>
+#include <string>
+#include <unordered_set>
+
+
+//foward declaration
+struct ImGuiInputTextCallbackData;
+struct ImVec4;
 
 namespace UI
 {
@@ -36,6 +43,19 @@ namespace UI
 		App::InputManager::KeyCallback	m_callback;
 	};
 
+
+	class MenuCheckBox : public IMenuable
+	{
+	public:
+		MenuCheckBox(const std::string& p_name, bool& p_isChecked);
+		~MenuCheckBox() = default;
+
+		void DisplayAndUpdateMenu() override;
+
+	private:
+		std::string		m_name;
+		bool*			m_isCheked;
+	};
 
 	class PanelButton : IPanelable
 	{
@@ -63,6 +83,66 @@ namespace UI
 		std::vector<PanelButton> m_buttons;
 	};
 
+	class PanelTextInput : IPanelable
+	{
+	public:
+		PanelTextInput(std::string p_name, std::function<void(PanelTextInput&)> p_callback);
+		~PanelTextInput() = default;
+
+		void DisplayAndUpdatePanel()override;
+		void Clear();
+		const std::string& GetText()const;
+
+		static void ClearPanelText(PanelTextInput& p_panel);
+
+	private:
+		static int TextPanelCallBack(ImGuiInputTextCallbackData* data);
+
+		std::string								m_name;
+		std::string								m_buffer;
+		std::function<void(PanelTextInput&)>	m_callback;
+	};
+
+
+	class PanelTextBox : IPanelable
+	{
+	public:
+		using FilterSet = std::unordered_set<std::string>;
+
+		PanelTextBox() = default;
+		~PanelTextBox() = default;
+
+		void DisplayAndUpdatePanel()override;
+
+		/// <summary>
+		/// Set filters for the text box, optimized for same lenght filters
+		/// </summary>
+		/// <param name="p_filters">display strings that start with at least a filter</param>
+		void SetFilters(const FilterSet& p_filters);
+		void AddFilter(const std::string& p_filter);
+		void RemoveFilter(const std::string& p_filter);
+
+		/// <summary>
+		/// Adds filter if dosent contain, remove it if contains
+		/// </summary>
+		/// <param name="p_filter"></param>
+		void AddOrRemoveFilter(const std::string& p_filter);
+
+		void AddItem(const std::shared_ptr<ITextable>& item, bool p_willScrollToBottom = false);
+		void Clear();
+		void Copy();
+
+	private:
+		bool IsFilteredItem(const ITextable* p_item);
+		void UpdateFilteredItems();
+
+		std::vector<std::shared_ptr<ITextable>>		m_items;
+		std::vector<std::shared_ptr<ITextable>>		m_filteredItems;
+		std::map<size_t, FilterSet>					m_filters;
+		bool										m_scrollToBottom = false;
+		bool										m_copy = false;
+	};
+	
 	class ImagePanel : public Panel
 	{ 
 	public:
@@ -103,22 +183,70 @@ namespace UI
 
 		ChangeLayout		m_layout;
 		MenuBar				m_menuBar;
+		Panel::ERenderFlags m_panelFlags;
 	};
 
-	class InspectorPanel : public Panel
+	class ConsolePanel : public Panel
 	{
 	public:
-		InspectorPanel();
-		~InspectorPanel();
+		enum class ELogType
+		{
+			DEFAULT_LOG	=	1 << 0,
+			DEBUG_LOG =		1 << 1,
+			WARNING_LOG =	1 << 2,
+			ERROR_LOG =		1 << 3,
+			COMMAND_LOG	=	1 << 4
+		};
+
+		struct LogInfo
+		{
+			ELogType m_type;
+			std::string m_message;
+		};
+
+		ConsolePanel();
+		~ConsolePanel();
 
 		ERenderFlags Render() override;
 
-		//void SetupGameObject();
+		void AddConsoleLog(const LogInfo& p_log);
 
 	private:
-		static constexpr char NAME[] = "Inspector";
+		class LogText : public ITextable
+		{
+		public:
+			LogText(const LogInfo& p_logInfo);
+			~LogText() = default;
 
+			void DisplayAndUpdatePanel()override;
+			std::string GetString(size_t p_len = 0)const override;
+			size_t GetLength()const override;
+
+		private:
+			static constexpr char SPACER[] = "\t";
+
+			LogInfo m_logInfo;
+			size_t m_length;
+		};
+
+		static std::string LogTypeToString(ELogType p_type);
+
+		/// <summary>
+		/// returns a color associated with the LogType, or nullptr if there are none
+		/// </summary>
+		/// <param name="p_type"></param>
+		/// <param name="p_color">[out]</param>
+		static void LogTypeColor(ELogType p_type, ImVec4* p_color);
+
+		static constexpr char NAME[] = "DebugLog";
 		static inline int s_panelCount = 0;
+
+		PanelTextInput				m_input;
+		PanelTextBox				m_textBox;
+		PanelButtonList				m_buttons;
+		Menu						m_filterMenu;
+		//cant use vector<bool> bcs not container
+		std::vector<unsigned char>	m_currentFilters;
 	};
 
 	class SavePanel : public Panel
@@ -128,6 +256,8 @@ namespace UI
 		~SavePanel(); 
 
 		ERenderFlags Render() override;
+
+		static int GetPanelCount() { return s_panelCount; };
 
 	private:
 		static constexpr char NAME[] = "Save";

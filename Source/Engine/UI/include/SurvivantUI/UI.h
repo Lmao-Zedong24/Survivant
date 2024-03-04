@@ -23,6 +23,8 @@ namespace UI
 	class EditorUI : public IUI
 	{
 	public:
+		class DebugEvent : public Core::Event<const char*> {};
+
 		EditorUI();
 		~EditorUI(); 
 
@@ -36,11 +38,13 @@ namespace UI
 
 		void CreateNewTestPanel();
 		void CreateSavePanel();
+		void CreateConsolePanel();
 
 		void Layout1(int p_dockspaceId);
 
 	private:
-		void HandlePanelFlags(std::shared_ptr<Panel> p_panel, Panel::ERenderFlags p_flags);
+
+		void HandlePanelFlags(std::shared_ptr<Panel> p_id, Panel::ERenderFlags p_flags);
 
 		std::unordered_set<std::shared_ptr<Panel>> m_currentPanels;
 		std::shared_ptr<MainPanel> m_main;
