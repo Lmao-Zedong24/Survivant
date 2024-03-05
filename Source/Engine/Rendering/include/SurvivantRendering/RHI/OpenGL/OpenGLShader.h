@@ -6,12 +6,40 @@ namespace SvRendering::RHI
     class OpenGLShader final : public IShader
     {
     public:
+        /**
+         * \brief Creates a default shader
+         */
         OpenGLShader() = default;
+
+        /**
+         * \brief Creates a copy of the given shader
+         * \param p_other The shader to copy
+         */
         OpenGLShader(const OpenGLShader& p_other);
+
+        /**
+         * \brief Creates a move copy of the given shader
+         * \param p_other The shader to move
+         */
         OpenGLShader(OpenGLShader&& p_other) noexcept;
+
+        /**
+         * \brief Destroys the given shader
+         */
         ~OpenGLShader() override;
 
+        /**
+         * \brief Assigns a copy of the given shader to this one
+         * \param p_other The shader to copy
+         * \return A reference to the modified shader
+         */
         OpenGLShader& operator=(const OpenGLShader& p_other);
+
+        /**
+         * \brief Moves the given shader into this one
+         * \param p_other The shader to move
+         * \return A reference to the modified shader
+         */
         OpenGLShader& operator=(OpenGLShader&& p_other) noexcept;
 
         /**

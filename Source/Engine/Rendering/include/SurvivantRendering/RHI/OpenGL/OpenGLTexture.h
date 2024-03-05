@@ -6,6 +6,9 @@ namespace SvRendering::RHI
     class OpenGLTexture final : public ITexture
     {
     public:
+        /**
+         * \brief Creates a default texture
+         */
         OpenGLTexture() = default;
 
         /**
