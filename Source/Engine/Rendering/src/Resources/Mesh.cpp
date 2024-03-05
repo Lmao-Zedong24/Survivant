@@ -1,8 +1,7 @@
 #include "SurvivantRendering/Resources/Mesh.h"
 
 using namespace LibMath;
-using namespace SvRendering::Core;
-using namespace SvRendering::Core::Buffers;
+using namespace SvRendering::RHI;
 using namespace SvRendering::Geometry;
 
 namespace SvRendering::Resources
@@ -44,9 +43,9 @@ namespace SvRendering::Resources
 
     bool Mesh::Init()
     {
-        m_vbo = std::make_unique<VertexBuffer>(m_vertices);
-        m_ebo = std::make_unique<IndexBuffer>(m_indices);
-        m_vao = std::make_unique<VertexArray>(*m_vbo, *m_ebo);
+        m_vbo = IVertexBuffer::Create(m_vertices);
+        m_ebo = IIndexBuffer::Create(m_indices);
+        m_vao = IVertexArray::Create(*m_vbo, *m_ebo);
 
         return true;
     }

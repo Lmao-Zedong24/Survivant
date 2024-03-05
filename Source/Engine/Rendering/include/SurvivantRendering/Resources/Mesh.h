@@ -1,7 +1,9 @@
 #pragma once
 #include "SurvivantRendering/Geometry/Vertex.h"
 #include "SurvivantRendering/Geometry/BoundingBox.h"
-#include "SurvivantRendering/Core/VertexArray.h"
+#include "SurvivantRendering/RHI/IVertexArray.h"
+
+#include <vector>
 
 namespace SvRendering::Resources
 {
@@ -80,8 +82,8 @@ namespace SvRendering::Resources
 
         Geometry::BoundingBox m_boundingBox;
 
-        std::unique_ptr<Core::Buffers::VertexBuffer> m_vbo;
-        std::unique_ptr<Core::Buffers::IndexBuffer>  m_ebo;
-        std::unique_ptr<Core::VertexArray>           m_vao;
+        std::unique_ptr<RHI::IVertexBuffer> m_vbo;
+        std::unique_ptr<RHI::IIndexBuffer>  m_ebo;
+        std::unique_ptr<RHI::IVertexArray>  m_vao;
     };
 }

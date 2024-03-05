@@ -1,24 +1,21 @@
-#include "SurvivantRendering/Core/VertexArray.h"
+#include "SurvivantRendering/RHI/OpenGL/OpenGLVertexArray.h"
 
 #include <glad/gl.h>
 
-#include <Vector/Vector3.h>
-
 using namespace LibMath;
-using namespace SvRendering::Core::Buffers;
 using namespace SvRendering::Geometry;
 
-namespace SvRendering::Core
+namespace SvRendering::RHI
 {
-    VertexArray::VertexArray(const VertexBuffer& p_vbo, const IndexBuffer& p_ebo)
+    OpenGLVertexArray::OpenGLVertexArray(const IVertexBuffer& p_vbo, const IIndexBuffer& p_ebo)
     {
-        glGenVertexArrays(1, &m_vao);
-        glBindVertexArray(m_vao);
+        glGenVertexArrays(1, &m_id);
+        glBindVertexArray(m_id);
 
         p_vbo.Bind();
         p_ebo.Bind();
 
-        constexpr GLsizei stride = sizeof(Vertex);
+        constexpr auto stride = sizeof(Vertex);
 
         // position attribute
         glEnableVertexAttribArray(0);
@@ -43,37 +40,38 @@ namespace SvRendering::Core
         Unbind();
     }
 
-    VertexArray::VertexArray(VertexArray&& p_other) noexcept
-        : m_vao(p_other.m_vao)
+    OpenGLVertexArray::OpenGLVertexArray(OpenGLVertexArray&& p_other) noexcept
+        : IVertexArray(std::forward<IVertexArray&&>(p_other)), m_id(p_other.m_id)
     {
-        p_other.m_vao = 0;
+        p_other.m_id = 0;
     }
 
-    VertexArray::~VertexArray()
+    OpenGLVertexArray::~OpenGLVertexArray()
     {
-        glDeleteVertexArrays(1, &m_vao);
+        glDeleteVertexArrays(1, &m_id);
     }
 
-    VertexArray& VertexArray::operator=(VertexArray&& p_other) noexcept
+    OpenGLVertexArray& OpenGLVertexArray::operator=(OpenGLVertexArray&& p_other) noexcept
     {
         if (&p_other == this)
             return *this;
 
-        glDeleteVertexArrays(1, &m_vao);
+        glDeleteVertexArrays(1, &m_id);
 
-        m_vao = p_other.m_vao;
+        m_id       = p_other.m_id;
+        p_other.m_id = 0;
 
-        p_other.m_vao = 0;
+        IVertexArray::operator=(std::move(p_other));
 
         return *this;
     }
 
-    void VertexArray::Bind() const
+    void OpenGLVertexArray::Bind() const
     {
-        glBindVertexArray(m_vao);
+        glBindVertexArray(m_id);
     }
 
-    void VertexArray::Unbind() const
+    void OpenGLVertexArray::Unbind() const
     {
         glBindVertexArray(0);
     }

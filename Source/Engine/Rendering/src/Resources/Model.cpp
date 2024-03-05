@@ -8,8 +8,6 @@
 #include <assimp/postprocess.h>
 
 using namespace LibMath;
-using namespace SvRendering::Core;
-using namespace SvRendering::Core::Buffers;
 using namespace SvRendering::Geometry;
 
 namespace SvRendering::Resources
