@@ -18,7 +18,6 @@
 using namespace LibMath;
 using namespace SvCore::Utility;
 using namespace SvRendering::Core;
-using namespace SvRendering::Core::Buffers;
 using namespace SvRendering::Enums;
 using namespace SvRendering::Geometry;
 using namespace SvRendering::Resources;
