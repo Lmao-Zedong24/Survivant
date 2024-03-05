@@ -34,11 +34,26 @@ Panel::ERenderFlags UI::ImagePanel::Render()
    return flags;
 }
 
+void tmpCallback(size_t p_handle)
+{
+    std::string str = "Tree callback works: " + std::to_string(static_cast<int>(p_handle));
+    Core::EventManager::GetInstance().Invoke<UI::EditorUI::DebugEvent>(str.c_str());
+}
+
 UI::TestPanel::TestPanel(const std::string& p_name) :
     Panel(p_name),
     m_unique("UNIQUE", { "Opt 1", "Opt 2", "Opt 3" }, nullptr),
-    m_multiple("MULTIPLE", { "Opt 1", "Opt 2", "Opt 3" }, nullptr)
+    m_multiple("MULTIPLE", { "Opt 1", "Opt 2", "Opt 3" }, nullptr),
+    m_tree("TREE")
 {
+    m_callback = std::make_shared<PanelTreeBranch::BranchCallback>(&tmpCallback);
+
+    auto& branches = m_tree.SetBranches({ PanelTreeBranch("0"), PanelTreeBranch("1"), PanelTreeBranch("2") });
+    branches[0].SetBranches({ PanelTreeBranch("A-123456789"), PanelTreeBranch("B-45678"), PanelTreeBranch("C") });
+    branches[1].SetBranches({ PanelTreeBranch("D-123456789"), PanelTreeBranch("E-45678"), PanelTreeBranch("F") });
+    branches[2].SetBranches({ PanelTreeBranch("G-123456789"), PanelTreeBranch("H-45678"), PanelTreeBranch("I") });
+
+    branches[0].SetOnClickCallback(m_callback, 10);
 }
 
 Panel::ERenderFlags UI::TestPanel::Render()
@@ -53,6 +68,7 @@ Panel::ERenderFlags UI::TestPanel::Render()
 
     m_unique.DisplayAndUpdatePanel();
     m_multiple.DisplayAndUpdatePanel();
+    m_tree.DisplayAndUpdatePanel();
 
     ImGui::End();
 
@@ -747,6 +763,118 @@ UI::ContentDrawerPanel::~ContentDrawerPanel()
 Panel::ERenderFlags UI::ContentDrawerPanel::Render()
 {
 
-
     return ERenderFlags();
+}
+
+UI::PanelTreeBranch::PanelTreeBranch(const std::string& p_name) :
+    m_name(p_name), 
+    m_forceOpen(EForceState::NOTHING),
+	m_wasOpen(false),
+    m_parent(nullptr),
+    m_callback(nullptr),
+    m_callbackId(0)
+{}
+
+UI::PanelTreeBranch::PanelTreeBranch(const std::string& p_name, const std::vector<PanelTreeBranch>& p_branches) :
+    m_name(p_name),
+    m_forceOpen(EForceState::NOTHING),
+    m_wasOpen(false),
+    m_parent(nullptr),
+    m_callback(nullptr),
+    m_callbackId(0)
+{
+    SetBranches(p_branches);
+}
+
+std::vector<PanelTreeBranch>& UI::PanelTreeBranch::SetBranches(const std::vector<PanelTreeBranch>& p_branches)
+{
+    m_childreen = p_branches;
+    for (auto& child : m_childreen)
+        child.m_parent = this;
+
+    return m_childreen;
+}
+
+void UI::PanelTreeBranch::AddBranch(const PanelTreeBranch& p_branch)
+{
+    auto it = m_childreen.insert(m_childreen.end(), p_branch);
+    it->m_parent = this;
+}
+
+void UI::PanelTreeBranch::RemoveBranch(const std::string& p_name)
+{
+    for (auto it = m_childreen.begin(); it != m_childreen.end(); it++)
+    {
+        if (it->m_name == p_name)
+        {
+            m_childreen.erase(it);
+            break;
+        }
+    }
+}
+
+void UI::PanelTreeBranch::ForceOpenParents(bool p_openSelf)
+{
+    if (p_openSelf)
+        m_forceOpen = EForceState::FORCE_OPEN;
+
+    if (m_parent != nullptr)
+        m_parent->ForceOpenParents(true);
+}
+
+void UI::PanelTreeBranch::ForceCloseChildreen(bool p_closeSelf)
+{
+    if (p_closeSelf)
+        m_forceOpen = EForceState::FORCE_CLOSE;
+
+    for (auto& child : m_childreen)
+        child.ForceCloseChildreen(true);
+}
+
+void UI::PanelTreeBranch::SetOnClickCallback(const std::shared_ptr<BranchCallback>& p_callback, size_t p_callbackId)
+{
+    m_callback = p_callback;
+    m_callbackId = p_callbackId;
+}
+
+void UI::PanelTreeBranch::DisplayAndUpdatePanel()
+{
+    switch (m_forceOpen)
+    {
+    case UI::PanelTreeBranch::EForceState::FORCE_OPEN:
+        ImGui::SetNextItemOpen(true, ImGuiCond_::ImGuiCond_Always);
+        break;
+    case UI::PanelTreeBranch::EForceState::FORCE_CLOSE:
+        ForceCloseChildreen();
+        ImGui::SetNextItemOpen(false, ImGuiCond_::ImGuiCond_Always);
+        break;
+    case UI::PanelTreeBranch::EForceState::NOTHING:
+    default:
+        break;
+    }
+
+    bool open = ImGui::TreeNodeEx(m_name.c_str(), ImGuiTreeNodeFlags_OpenOnDoubleClick);
+
+    if (!open && 
+        ImGui::IsMouseClicked(0) && ImGui::IsItemHovered() &&
+        m_callback != nullptr)
+            (*m_callback)(m_callbackId);
+
+    if (open)
+    {
+        for (auto& node : m_childreen)
+            node.DisplayAndUpdatePanel();
+
+        ImGui::TreePop();
+        m_wasOpen = true;
+    }
+    else
+    {
+        if (m_wasOpen)
+            ForceCloseChildreen(true);
+
+        m_wasOpen = false;
+    }
+
+    m_forceOpen = EForceState::NOTHING;
 }

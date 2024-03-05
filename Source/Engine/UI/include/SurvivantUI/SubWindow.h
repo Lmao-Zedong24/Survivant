@@ -197,6 +197,45 @@ namespace UI
 		std::function<void(int)>	m_callback;
 	};
 	
+	class PanelTreeBranch : public IPanelable
+	{
+	public:
+		using BranchCallback = std::function<void(size_t)>;
+
+		PanelTreeBranch(const std::string& p_name);
+		PanelTreeBranch(const std::string& p_name, const std::vector<PanelTreeBranch>& p_branches);
+		~PanelTreeBranch() = default;
+
+		virtual void DisplayAndUpdatePanel();
+
+		std::vector<PanelTreeBranch>&	SetBranches(const std::vector<PanelTreeBranch>& p_branches);
+		void							AddBranch(const PanelTreeBranch& p_branch);
+		void							RemoveBranch(const std::string& p_name);
+		void							ForceOpenParents(bool p_openSelf = false);
+		void							ForceCloseChildreen(bool p_closeSelf = false);
+		void							SetOnClickCallback(const std::shared_ptr<BranchCallback>& m_callback, size_t p_callbackId);
+
+	private:
+		enum class EForceState
+		{
+			NOTHING,
+			FORCE_OPEN,
+			FORCE_CLOSE,
+		};
+
+		std::string								m_name;
+		PanelTreeBranch*						m_parent;
+		std::vector<PanelTreeBranch>			m_childreen;
+		EForceState								m_forceOpen;
+		bool									m_wasOpen;
+		std::shared_ptr<BranchCallback>			m_callback;
+		size_t									m_callbackId;
+	};
+
+	//if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0))
+	//void IsSelected(bool p_isSelected);
+
+
 	class ImagePanel : public Panel
 	{ 
 	public:
@@ -217,8 +256,10 @@ namespace UI
 
 		ERenderFlags Render() override;
 
-		PanelUniqueSelection	m_unique;
-		PanelMultipleSelection	m_multiple;
+		PanelUniqueSelection								m_unique;
+		PanelMultipleSelection								m_multiple;
+		PanelTreeBranch										m_tree;
+		std::shared_ptr<PanelTreeBranch::BranchCallback>	m_callback;
 	};
 
 	class MainPanel : public Panel
@@ -329,7 +370,6 @@ namespace UI
 		PanelButtonList m_options;
 		bool			m_open = true;
 	};
-
 
 	class ContentDrawerPanel : public Panel
 	{
