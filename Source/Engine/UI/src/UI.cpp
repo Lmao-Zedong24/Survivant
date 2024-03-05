@@ -10,6 +10,8 @@
 
 #include "imgui_internal.h"
 
+#include <random>
+
 
 UI::EditorUI::EditorUI() : 
     m_main(std::make_shared<MainPanel>()),
@@ -39,8 +41,8 @@ UI::EditorUI::EditorUI() :
     m_main->SetMenuBar(CreateMenuBar());
 
     //TODO : add spawn save m_panel on event close request
-    //Core::EventManager::GetInstance().AddListenner<App::Window::WindowCloseRequest>(
-    //    App::Window::WindowCloseRequest::EventDelegate(std::bind(&EditorUI::CreateSavePanel, this)));
+    Core::EventManager::GetInstance().AddListenner<App::Window::WindowCloseRequest>(
+        App::Window::WindowCloseRequest::EventDelegate(std::bind(&EditorUI::TryCreateSavePanel, this)));
 }
 
 UI::EditorUI::~EditorUI()
@@ -189,9 +191,21 @@ void UI::EditorUI::CreateNewTestPanel()
     Core::EventManager::GetInstance().Invoke<EditorUI::DebugEvent>("Created Test Panel");
 }
 
+void UI::EditorUI::TryCreateSavePanel()
+{
+    //TODO: add save boolean here
+    std::srand((int)std::time(0));
+    auto val = std::rand();
+    if (val % 20 == 0 || SavePanel::GetPanelCount() != 0)
+    {
+        CreateSavePanel();
+        App::Window::WindowCloseRequest::InterceptCloseRequest();
+    }
+}
+
 void UI::EditorUI::CreateSavePanel()
 {
-    if (SavePanel::GetPanelCount() != 0)
+    if (SavePanel::GetPanelCount() == 0)
         m_currentPanels.insert(std::make_shared<SavePanel>());
 }
 

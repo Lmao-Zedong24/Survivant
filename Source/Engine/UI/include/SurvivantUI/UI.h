@@ -41,6 +41,7 @@ namespace UI
 		void EndFrameUpdate() override;
 
 		void CreateNewTestPanel();
+		void TryCreateSavePanel();
 		void CreateSavePanel();
 		void CreateConsolePanel();
 

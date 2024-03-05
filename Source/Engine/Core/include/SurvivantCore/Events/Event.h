@@ -24,11 +24,14 @@ namespace Core
 		void						ClearListeners() override;
 
 		ListenerId					AddListener(const EventDelegate& p_delegate);
-		std::vector<ListenerId>	AddListeners(const std::vector<EventDelegate>& p_delegates);
+		std::vector<ListenerId>		AddListeners(const std::vector<EventDelegate>& p_delegates);
 		void						RemoveListener(const ListenerId& p_id);
 		void						RemoveListeners(const std::vector<ListenerId>& p_id);
 		void						Invoke(Args... p_parameters);
-	
+		
+		virtual void	BeforeInvoke() {};
+		virtual void	AfterInvoke() {};
+
 		//cant combine bcs of Listener ids
 		//template<class T>
 		//void Combine(const T& p_other);
@@ -79,11 +82,15 @@ namespace Core
 	template<typename ...Args>
 	void Event<Args...>::Invoke(Args... p_parameters)
 	{
+		BeforeInvoke();
+
 		for (auto& pair : m_listeners)
 		{
 			auto& eventDelegate = pair.second;
 			eventDelegate(p_parameters...);
 		}
+
+		AfterInvoke();
 	}
 
 	//template<typename ...Args>

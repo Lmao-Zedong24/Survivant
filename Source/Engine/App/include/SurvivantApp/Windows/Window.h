@@ -27,7 +27,17 @@ namespace App
 		/// <summary>
 		/// Request to close window
 		/// </summary>	
-		class WindowCloseRequest : public Core::Event<> {};
+		class WindowCloseRequest : public Core::Event<> 
+		{
+		public:
+			void BeforeInvoke() override;
+			void AfterInvoke() override;
+
+			static void InterceptCloseRequest();
+
+		private:
+			static inline bool m_cancelRequest = false;
+		};
 
 		/// <summary>
 		/// Request to close window
@@ -37,22 +47,22 @@ namespace App
 		/// <summary>
 		/// (width, height)
 		/// </summary>
-		using OnWindowSize = Core::Event<int, int>;
+		class OnWindowSize : public Core::Event<int, int> {};
 
 		/// <summary>
 		/// (width, height) //TODO: unit/ de mesure
 		/// </summary>	
-		using OnFrameBufferSize = Core::Event<int, int>;
+		class OnFrameBufferSize : public Core::Event<int, int> {};
 
 		/// <summary>
 		/// Ratio between the current DPI and the platform's default DPI (xscale, yscale)
 		/// </summary>
-		using OnWindowContentScale = Core::Event<float, float>;
+		class OnWindowContentScale : public Core::Event<float, float> {};
 
 		/// <summary>
 		/// (isMinimized)
 		/// </summary>
-		using WindowMinimize = Core::Event<bool>;
+		class WindowMinimize : public Core::Event<bool> {};
 
 
 		Window(std::string p_name = "Window");

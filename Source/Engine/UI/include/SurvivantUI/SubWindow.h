@@ -146,6 +146,56 @@ namespace UI
 		bool										m_scrollToBottom = false;
 		bool										m_copy = false;
 	};
+
+	class PanelUniqueSelection : IPanelable
+	{
+	public:
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="p_selectable">Displayed options</param>
+		/// <param name="p_callback">callback with all selected flags as a parameter</param>
+		PanelUniqueSelection(
+			std::string p_name,
+			std::vector<std::string> p_selectable, 
+			std::function<void(int)> p_callback);
+		~PanelUniqueSelection() = default;
+
+		virtual void DisplayAndUpdatePanel();
+
+	private:
+		std::string					m_name;
+		std::string					m_items;
+		int							m_count;
+		int							m_curentSelection;
+		std::function<void(int)>	m_callback;
+	};
+
+	class PanelMultipleSelection : IPanelable
+	{
+	public:
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="p_selectable">Displayed options</param>
+		/// <param name="p_callback">callback with the new selected index as parameter</param>
+		PanelMultipleSelection(
+			std::string p_name,
+			std::vector<std::string> p_selectable, 
+			std::function<void(int)> p_callback);
+		~PanelMultipleSelection() = default;
+
+		virtual void DisplayAndUpdatePanel();
+
+	private:
+		std::string GetDisplayString();
+
+		std::string					m_name;
+		std::vector<std::string>	m_items;
+		int							m_count;
+		int							m_curentSelection;
+		std::function<void(int)>	m_callback;
+	};
 	
 	class ImagePanel : public Panel
 	{ 
@@ -162,10 +212,13 @@ namespace UI
 	class TestPanel : public Panel
 	{
 	public:
-		TestPanel(const std::string& p_name) : Panel(p_name) {}
+		TestPanel(const std::string& p_name);
 		~TestPanel() = default;
 
 		ERenderFlags Render() override;
+
+		PanelUniqueSelection	m_unique;
+		PanelMultipleSelection	m_multiple;
 	};
 
 	class MainPanel : public Panel
@@ -201,7 +254,7 @@ namespace UI
 			DEBUG_LOG =		1 << 1,
 			WARNING_LOG =	1 << 2,
 			ERROR_LOG =		1 << 3,
-			COMMAND_LOG	=	1 << 4
+			//COMMAND_LOG	=	1 << 4
 		};
 
 		struct LogInfo
@@ -229,7 +282,7 @@ namespace UI
 			size_t GetLength()const override;
 
 		private:
-			static constexpr char SPACER[] = "\t";
+			static constexpr char SPACER[] = "";
 
 			LogInfo m_logInfo;
 			size_t m_length;
@@ -277,4 +330,22 @@ namespace UI
 		bool			m_open = true;
 	};
 
+
+	class ContentDrawerPanel : public Panel
+	{
+		ContentDrawerPanel();
+		~ContentDrawerPanel();
+
+		ERenderFlags Render() override;
+
+		static int GetPanelCount() { return s_panelCount; };
+
+	private:
+		static constexpr char NAME[] = "ContentDrawer";
+
+		static inline int s_panelCount = 0;
+
+		PanelButtonList m_options;
+		bool			m_open = true;
+	};
 }

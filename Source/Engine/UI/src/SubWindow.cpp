@@ -34,6 +34,13 @@ Panel::ERenderFlags UI::ImagePanel::Render()
    return flags;
 }
 
+UI::TestPanel::TestPanel(const std::string& p_name) :
+    Panel(p_name),
+    m_unique("UNIQUE", { "Opt 1", "Opt 2", "Opt 3" }, nullptr),
+    m_multiple("MULTIPLE", { "Opt 1", "Opt 2", "Opt 3" }, nullptr)
+{
+}
+
 Panel::ERenderFlags UI::TestPanel::Render()
 {
     bool showWindow = true;
@@ -42,6 +49,10 @@ Panel::ERenderFlags UI::TestPanel::Render()
     ImGui::Text("TESSSSSSSSSSSSTTTTTTTTTT");
     if (ImGui::Button("Close Me"))
         showWindow = false;
+
+
+    m_unique.DisplayAndUpdatePanel();
+    m_multiple.DisplayAndUpdatePanel();
 
     ImGui::End();
 
@@ -215,11 +226,11 @@ std::string UI::ConsolePanel::LogTypeToString(ELogType p_type)
         return "[Warning] ";
     case UI::ConsolePanel::ELogType::ERROR_LOG:
         return "[ERROR]   ";
-    case UI::ConsolePanel::ELogType::COMMAND_LOG:
-        return "[Command] ";
+    //case UI::ConsolePanel::ELogType::COMMAND_LOG:
+    //    return "[Command] ";
     case UI::ConsolePanel::ELogType::DEFAULT_LOG:
     default:
-        return "[Default] ";
+        return "          ";
     }
 }
 
@@ -236,9 +247,9 @@ void UI::ConsolePanel::LogTypeColor(ELogType p_type, ImVec4* p_color)
     case UI::ConsolePanel::ELogType::ERROR_LOG:
         *p_color = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
         break;
-    case UI::ConsolePanel::ELogType::COMMAND_LOG:
-        *p_color = ImVec4(0.0f, 0.0f, 1.0f, 1.0f);
-        break;
+    //case UI::ConsolePanel::ELogType::COMMAND_LOG:
+    //    *p_color = ImVec4(0.0f, 0.0f, 1.0f, 1.0f);
+        //break;
     case UI::ConsolePanel::ELogType::DEFAULT_LOG:
     default:
         p_color = nullptr;
@@ -248,8 +259,7 @@ void UI::ConsolePanel::LogTypeColor(ELogType p_type, ImVec4* p_color)
 
 void UI::ConsolePanel::TextInputCallback(PanelTextInput& p_textInput)
 {
-    m_textBox.AddItem(std::make_shared<LogText>(LogInfo{ ELogType::COMMAND_LOG, p_textInput.GetText() }), true);
-
+    m_textBox.AddItem(std::make_shared<LogText>(LogInfo{ ELogType::WARNING_LOG, p_textInput.GetText() }), true);
     p_textInput.Clear();
 }
 
@@ -641,13 +651,102 @@ void UI::PanelTextInput::ClearPanelText(PanelTextInput& p_panel)
     p_panel.Clear();
 }
 
-//int UI::PanelTextInput::TextPanelCallBack(ImGuiInputTextCallbackData* data)
-//{
-//    //? imgui magic
-//    PanelTextInput* panelText = (PanelTextInput*)data->UserData;
-//    panelText->m_callback(*panelText);
-//
-//    return 0;
-//}
+UI::PanelUniqueSelection::PanelUniqueSelection(
+    std::string p_name,
+    std::vector<std::string> p_selectable, 
+    std::function<void(int)> p_callback) :
+    m_name(p_name),
+    m_callback(p_callback)
+{
+    m_curentSelection = 0;
+    m_count = static_cast<int>(p_selectable.size());
+
+    for (auto& item : p_selectable)
+        m_items += (item + '\0');
+}
+
+void UI::PanelUniqueSelection::DisplayAndUpdatePanel()
+{
+    if (ImGui::Combo(m_name.c_str(), &m_curentSelection, m_items.c_str()) && m_callback != nullptr)
+        m_callback(m_curentSelection);
+}
+
+UI::PanelMultipleSelection::PanelMultipleSelection(
+    std::string p_name, 
+    std::vector<std::string> p_selectable, 
+    std::function<void(int)> p_callback) :
+    m_name(p_name),
+    m_callback(p_callback)
+{
+    m_curentSelection = 0;
+    m_count = static_cast<int>(p_selectable.size());
+
+    m_items = p_selectable;
+}
+
+void UI::PanelMultipleSelection::DisplayAndUpdatePanel()
+{
+    auto oldSelection = m_curentSelection;
+
+    if (ImGui::BeginCombo(m_name.c_str(), GetDisplayString().c_str()))
+    {
+        for (int i = 0; i < m_items.size(); i++)
+        {
+            int flag = 1 << i;
+            bool is_selected = (m_curentSelection & flag);
+
+            if (ImGui::Selectable(m_items[i].c_str(), is_selected, ImGuiSelectableFlags_DontClosePopups))
+            {
+                if (is_selected)
+                    m_curentSelection &= ~flag;
+                else
+                    m_curentSelection |= flag;
+            }
+            if (is_selected)
+                ImGui::SetItemDefaultFocus();
+        }
+        ImGui::EndCombo();
+    }
+
+    if (oldSelection != m_curentSelection && m_callback != nullptr)
+        m_callback(m_curentSelection);
+}
+
+std::string UI::PanelMultipleSelection::GetDisplayString()
+{
+    static const char* Seperator = ", ";
+    static const char* EmptyString = "(none)";
+    std::string str;
+    size_t count = 0;
+    
+    for (size_t i = 0; i < m_items.size(); i++)
+    {
+        int flag = 1 << i;
+        if (m_curentSelection & flag)
+        {
+            if (count++ > 0)
+                str += Seperator;
+
+            str += (m_items[i]);
+        }
+    }
+
+    return str.empty() ? EmptyString : str;
+}
+
+UI::ContentDrawerPanel::ContentDrawerPanel()
+{
+    s_panelCount++;
+}
+
+UI::ContentDrawerPanel::~ContentDrawerPanel()
+{
+    s_panelCount--;
+}
+
+Panel::ERenderFlags UI::ContentDrawerPanel::Render()
+{
 
 
+    return ERenderFlags();
+}

@@ -31,8 +31,8 @@ void UI::EditorWindow::EndRender()
 
 bool UI::EditorWindow::ShouldClose()
 {
-	return Window::ShouldClose();
-	//return Window::ShouldClose() && m_shouldClose;
+	//return Window::ShouldClose();
+	return Window::ShouldClose() && m_shouldClose;
 }
 
 void UI::EditorWindow::SetupUI(EditorUI* p_ui)

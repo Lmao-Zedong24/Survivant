@@ -219,3 +219,18 @@ void App::Window::SetFocusWindow()
     glfwFocusWindow(m_glfwWindow);
 }
 
+void App::Window::WindowCloseRequest::BeforeInvoke()
+{
+    m_cancelRequest = false;
+}
+
+void App::Window::WindowCloseRequest::AfterInvoke()
+{
+    if (!m_cancelRequest)
+        Core::EventManager::GetInstance().Invoke<WindowClosing>();
+}
+
+void App::Window::WindowCloseRequest::InterceptCloseRequest()
+{
+    m_cancelRequest = true;
+}
