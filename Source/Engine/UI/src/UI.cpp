@@ -43,6 +43,20 @@ UI::EditorUI::EditorUI() :
     //TODO : add spawn save m_panel on event close request
     Core::EventManager::GetInstance().AddListenner<App::Window::WindowCloseRequest>(
         App::Window::WindowCloseRequest::EventDelegate(std::bind(&EditorUI::TryCreateSavePanel, this)));
+
+    //fonts
+    if (s_iconFont == nullptr)
+    {
+        //font.FontSize = ICON_FONT_SIZE;
+        ImFontConfig config;
+        config.SizePixels = DEFAULT_FONT_SIZE;
+        config.OversampleH = config.OversampleV = 1;
+        config.PixelSnapH = true;
+        io.Fonts->AddFontDefault(&config);
+
+        config.SizePixels = ICON_FONT_SIZE;
+        s_iconFont = io.Fonts->AddFontDefault(&config);
+    }
 }
 
 UI::EditorUI::~EditorUI()
@@ -105,7 +119,17 @@ void UI::EditorUI::RenderPanels()
 
 void UI::EditorUI::EndFrameUpdate()
 {
+    ImGui::EndFrame();
     ImGui::Render();
+
+    for (auto& callback : m_endFrameCallbacks)
+    {
+        //magic!
+        (this->*callback)();
+    }
+
+    m_endFrameCallbacks.clear();
+
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
@@ -158,13 +182,16 @@ UI::MenuBar UI::EditorUI::CreateMenuBar()
         auto menu3 = std::make_unique<Menu>("View");
         menu3->m_items.emplace_back(std::make_unique<MenuButton>(
             "Test",
-            [this](char) { CreateNewTestPanel(); }));
+            [this](char) { m_endFrameCallbacks.push_back(&EditorUI::CreateNewTestPanel); }));
         menu3->m_items.emplace_back(std::make_unique<MenuButton>(
             "Console",
-            [this](char) { CreateConsolePanel(); }));
+            [this](char) { m_endFrameCallbacks.push_back(&EditorUI::CreateConsolePanel); }));
         menu3->m_items.emplace_back(std::make_unique<MenuButton>(
             "Save",
-            [this](char) { CreateSavePanel(); }));
+            [this](char) { m_endFrameCallbacks.push_back(&EditorUI::CreateSavePanel); }));
+        menu3->m_items.emplace_back(std::make_unique<MenuButton>(
+            "Content",
+            [this](char) { m_endFrameCallbacks.push_back(&EditorUI::CreateContentPanel); }));
 
         menu2.m_items.emplace_back(std::move(menu3));
     }
@@ -214,6 +241,11 @@ void UI::EditorUI::CreateConsolePanel()
     m_currentPanels.insert(std::make_shared<ConsolePanel>());
 }
 
+void UI::EditorUI::CreateContentPanel()
+{
+    m_currentPanels.insert(std::make_shared<ContentDrawerPanel>());
+}
+
 void UI::EditorUI::Layout1(int p_dockspaceId)
 {
     ImGuiViewport* viewport = ImGui::GetMainViewport();
@@ -241,4 +273,9 @@ void UI::EditorUI::Layout1(int p_dockspaceId)
 
 
     ImGui::DockBuilderFinish(id);
+}
+
+ImFont* UI::EditorUI::GetIconFont()
+{
+    return s_iconFont;
 }

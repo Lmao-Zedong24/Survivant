@@ -34,27 +34,18 @@ Panel::ERenderFlags UI::ImagePanel::Render()
    return flags;
 }
 
-void tmpCallback(size_t p_handle)
+void tmpCallback(PanelTreeBranch& /*p_branch*/)
 {
-    std::string str = "Tree callback works: " + std::to_string(static_cast<int>(p_handle));
+    std::string str = "Tree callback works";
+    //p_branch.ForceCloseChildreen();
     Core::EventManager::GetInstance().Invoke<UI::EditorUI::DebugEvent>(str.c_str());
 }
 
 UI::TestPanel::TestPanel(const std::string& p_name) :
     Panel(p_name),
     m_unique("UNIQUE", { "Opt 1", "Opt 2", "Opt 3" }, nullptr),
-    m_multiple("MULTIPLE", { "Opt 1", "Opt 2", "Opt 3" }, nullptr),
-    m_tree("TREE")
-{
-    m_callback = std::make_shared<PanelTreeBranch::BranchCallback>(&tmpCallback);
-
-    auto& branches = m_tree.SetBranches({ PanelTreeBranch("0"), PanelTreeBranch("1"), PanelTreeBranch("2") });
-    branches[0].SetBranches({ PanelTreeBranch("A-123456789"), PanelTreeBranch("B-45678"), PanelTreeBranch("C") });
-    branches[1].SetBranches({ PanelTreeBranch("D-123456789"), PanelTreeBranch("E-45678"), PanelTreeBranch("F") });
-    branches[2].SetBranches({ PanelTreeBranch("G-123456789"), PanelTreeBranch("H-45678"), PanelTreeBranch("I") });
-
-    branches[0].SetOnClickCallback(m_callback, 10);
-}
+    m_multiple("MULTIPLE", { "Opt 1", "Opt 2", "Opt 3" }, nullptr)
+{}
 
 Panel::ERenderFlags UI::TestPanel::Render()
 {
@@ -68,7 +59,6 @@ Panel::ERenderFlags UI::TestPanel::Render()
 
     m_unique.DisplayAndUpdatePanel();
     m_multiple.DisplayAndUpdatePanel();
-    m_tree.DisplayAndUpdatePanel();
 
     ImGui::End();
 
@@ -641,7 +631,7 @@ void UI::PanelTextInput::DisplayAndUpdatePanel()
 
     if(InputText(m_name.c_str(), &m_buffer, input_text_flags, nullptr, (void*)this))
     {
-        //when text is finished being inputed
+        //when iconTxt is finished being inputed
         m_callback(*this);
         reclaim_focus = true;
     }
@@ -750,8 +740,32 @@ std::string UI::PanelMultipleSelection::GetDisplayString()
     return str.empty() ? EmptyString : str;
 }
 
-UI::ContentDrawerPanel::ContentDrawerPanel()
+UI::ContentDrawerPanel::ContentDrawerPanel() :
+    m_tree("TREE")
 {
+    m_name = GetUniqueName(NAME, s_panelCount);
+
+    m_callback = std::make_shared<PanelTreeBranch::BranchCallback>(&tmpCallback);
+
+    auto& branches = m_tree.SetBranches({ std::make_shared<PanelTreeBranch>("0"), std::make_shared<PanelTreeBranch>("1"), std::make_shared<PanelTreeBranch>("2") });
+    branches[0]->SetBranches({ 
+        std::make_shared<PanelTreeBranch>("A-123456789"), 
+        std::make_shared<PanelTreeBranch>("B-45678"), 
+        std::make_shared<PanelTreeBranch>("B-45678"), 
+        std::make_shared<PanelTreeBranch>("B-45678"), 
+        std::make_shared<PanelTreeBranch>("B-45678"), 
+        std::make_shared<PanelTreeBranch>("B-45678"), 
+        std::make_shared<PanelTreeBranch>("B-45678"), 
+        std::make_shared<PanelTreeBranch>("B-45678"), 
+        std::make_shared<PanelTreeBranch>("B-45678"), 
+        std::make_shared<PanelTreeBranch>("C") 
+        });
+    branches[1]->SetBranches({ std::make_shared<PanelTreeBranch>("D-123456789"), std::make_shared<PanelTreeBranch>("E-45678"), std::make_shared<PanelTreeBranch>("F") });
+    branches[2]->SetBranches({ std::make_shared<PanelTreeBranch>("G-123456789"), std::make_shared<PanelTreeBranch>("H-45678"), std::make_shared<PanelTreeBranch>("I") });
+
+    branches[0]->SetOnClickCallback(m_callback);
+    SetGridDisplay(*branches[0]);
+
     s_panelCount++;
 }
 
@@ -762,50 +776,120 @@ UI::ContentDrawerPanel::~ContentDrawerPanel()
 
 Panel::ERenderFlags UI::ContentDrawerPanel::Render()
 {
+    static float treeWidth = ImGui::GetContentRegionAvail().x * 0.5f;
 
-    return ERenderFlags();
+    auto panelSize = ImGui::GetWindowContentRegionMax();
+    ImGuiWindowFlags    window_flags = ImGuiWindowFlags_None;
+    ImGuiChildFlags     child_flags = ImGuiChildFlags_AlwaysAutoResize | ImGuiChildFlags_AutoResizeY;
+    bool open = true;
+
+    if (!ImGui::Begin(m_name.c_str(), &open))
+        return Panel::ERenderFlags();
+
+    //tree
+    {
+        ImGui::BeginChild("ChildL", ImVec2(treeWidth, ImGui::GetContentRegionAvail().y), child_flags, window_flags);
+
+        m_tree.DisplayAndUpdatePanel();
+        ImGui::EndChild();
+    }
+
+    ImGui::SameLine();
+    auto pos = ImGui::GetCursorPos();
+    ImGui::Button("##", ImVec2(5, ImGui::GetContentRegionAvail().y));
+    if (ImGui::IsItemHovered())
+    {
+        ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
+    }
+
+    if (ImGui::IsItemActive())
+    {
+        treeWidth += ImGui::GetIO().MouseDelta.x;
+        treeWidth = std::clamp(treeWidth, 10.0f, panelSize.x - 30.0f);
+    }
+
+    ImGui::SameLine();
+
+    //grid
+    {
+        ImGui::BeginChild("ChildR", ImVec2(0, ImGui::GetContentRegionAvail().y), child_flags, window_flags);
+
+        m_grid.DisplayAndUpdatePanel();
+        ImGui::EndChild();
+    }
+
+    ImGui::End();
+
+    auto flags = ERenderFlags();
+    if (!open)
+        flags = ERenderFlags::CLOSE;
+
+    return flags;
 }
+
+void UI::ContentDrawerPanel::SetGridDisplay(PanelTreeBranch& p_branch)
+{
+    p_branch.ForceOpenParents();
+    auto& childreen = p_branch.GetChildreen();
+
+    //"cast" from PanelTreeBranch to ISelectionBoxable
+    std::vector<std::shared_ptr<ISelectionBoxable>> gridItems(childreen.begin(), childreen.end());
+
+    //bad
+    //std::vector<std::shared_ptr<PanelTreeBranch>> copy = childreen;
+    //std::vector<std::shared_ptr<ISelectionBoxable>> bad = *(std::vector<std::shared_ptr<ISelectionBoxable>>*)(&copy);
+
+    m_grid.SetSelectionBoxable(gridItems);
+}
+
+//ImFont& GetBigFont()
+//{
+//    static float FONT_SIZE = 100;
+//
+//    ImFont myFont = *ImGui::GetFont();
+//    myFont.FontSize = FONT_SIZE;
+//
+//    return myFont;
+//}
 
 UI::PanelTreeBranch::PanelTreeBranch(const std::string& p_name) :
     m_name(p_name), 
     m_forceOpen(EForceState::NOTHING),
 	m_wasOpen(false),
     m_parent(nullptr),
-    m_callback(nullptr),
-    m_callbackId(0)
+    m_callback(nullptr)
 {}
 
-UI::PanelTreeBranch::PanelTreeBranch(const std::string& p_name, const std::vector<PanelTreeBranch>& p_branches) :
+UI::PanelTreeBranch::PanelTreeBranch(const std::string& p_name, const Childreen& p_branches) :
     m_name(p_name),
     m_forceOpen(EForceState::NOTHING),
     m_wasOpen(false),
     m_parent(nullptr),
-    m_callback(nullptr),
-    m_callbackId(0)
+    m_callback(nullptr)
 {
     SetBranches(p_branches);
 }
 
-std::vector<PanelTreeBranch>& UI::PanelTreeBranch::SetBranches(const std::vector<PanelTreeBranch>& p_branches)
+PanelTreeBranch::Childreen& UI::PanelTreeBranch::SetBranches(const Childreen& p_branches)
 {
     m_childreen = p_branches;
     for (auto& child : m_childreen)
-        child.m_parent = this;
+        child->m_parent = this;
 
     return m_childreen;
 }
 
-void UI::PanelTreeBranch::AddBranch(const PanelTreeBranch& p_branch)
+void UI::PanelTreeBranch::AddBranch(const std::shared_ptr<PanelTreeBranch>& p_branch)
 {
     auto it = m_childreen.insert(m_childreen.end(), p_branch);
-    it->m_parent = this;
+    it->get()->m_parent = this;
 }
 
 void UI::PanelTreeBranch::RemoveBranch(const std::string& p_name)
 {
     for (auto it = m_childreen.begin(); it != m_childreen.end(); it++)
     {
-        if (it->m_name == p_name)
+        if (it->get()->m_name == p_name)
         {
             m_childreen.erase(it);
             break;
@@ -828,13 +912,12 @@ void UI::PanelTreeBranch::ForceCloseChildreen(bool p_closeSelf)
         m_forceOpen = EForceState::FORCE_CLOSE;
 
     for (auto& child : m_childreen)
-        child.ForceCloseChildreen(true);
+        child->ForceCloseChildreen(true);
 }
 
-void UI::PanelTreeBranch::SetOnClickCallback(const std::shared_ptr<BranchCallback>& p_callback, size_t p_callbackId)
+void UI::PanelTreeBranch::SetOnClickCallback(const std::shared_ptr<BranchCallback>& p_callback)
 {
     m_callback = p_callback;
-    m_callbackId = p_callbackId;
 }
 
 void UI::PanelTreeBranch::DisplayAndUpdatePanel()
@@ -853,28 +936,162 @@ void UI::PanelTreeBranch::DisplayAndUpdatePanel()
         break;
     }
 
-    bool open = ImGui::TreeNodeEx(m_name.c_str(), ImGuiTreeNodeFlags_OpenOnDoubleClick);
+    bool open = ImGui::TreeNodeEx(m_name.c_str(), ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_OpenOnArrow);
 
     if (!open && 
         ImGui::IsMouseClicked(0) && ImGui::IsItemHovered() &&
         m_callback != nullptr)
-            (*m_callback)(m_callbackId);
+            (*m_callback)(*this);
 
     if (open)
     {
         for (auto& node : m_childreen)
-            node.DisplayAndUpdatePanel();
+            node->DisplayAndUpdatePanel();
 
         ImGui::TreePop();
         m_wasOpen = true;
     }
-    else
-    {
-        if (m_wasOpen)
-            ForceCloseChildreen(true);
+    //else
+    //{
+    //    if (m_wasOpen)
+    //        ForceCloseChildreen(true);
 
-        m_wasOpen = false;
-    }
+    //    m_wasOpen = false;
+    //}
 
     m_forceOpen = EForceState::NOTHING;
+}
+
+void UI::PanelTreeBranch::DisplayAndUpdateSelection(float& p_width, float& /*p_height*/)
+{
+    auto font = EditorUI::GetIconFont();
+    auto cursorPos = ImGui::GetCursorPos();
+    std::string iconTxt;
+
+    if (HasChildreen())
+        iconTxt = "Fl";
+    else
+        iconTxt = "Tx";
+
+    ImGui::PushFont(font);
+    ImVec2 sz = ImGui::CalcTextSize(iconTxt.c_str());
+    ImGui::PopFont();
+    //float canvasWidth = ImGui::GetWindowContentRegionWidth();
+    float canvasWidth = p_width - 16;
+    float origScale = font->Scale;
+    font->Scale = canvasWidth / sz.x;
+    ImGui::SetCursorPos({cursorPos.x + 8, cursorPos.y + 8});
+
+    ImGui::PushFont(font);
+    ImGui::Text("%s", iconTxt.c_str());
+    ImGui::PopFont();
+    font->Scale = origScale;
+
+    cursorPos = ImGui::GetCursorPos();
+    ImGui::SetCursorPos({ cursorPos.x + 4, cursorPos.y + 4 });
+
+    ImGui::PushTextWrapPos(p_width - 4);
+    ImGui::TextWrapped(m_name.c_str());
+    ImGui::PopTextWrapPos();
+
+}
+
+const std::string& UI::PanelTreeBranch::GetName()
+{
+    return m_name;
+}
+
+bool UI::PanelTreeBranch::HasChildreen() const
+{
+    return !m_childreen.empty();
+}
+
+const PanelTreeBranch::Childreen& UI::PanelTreeBranch::GetChildreen() const
+{
+    return m_childreen;
+}
+
+void UI::PanelSelectionBox::SetSelectionSize(float p_width, float p_height)
+{
+    m_width = p_width;
+    m_height = p_height;
+}
+
+void UI::PanelSelectionBox::DisplayAndUpdatePanel()
+{
+    static float spacingX = 10;
+    static auto Padding = ImVec2(15, 15);
+    ImGuiStyle& style = ImGui::GetStyle();
+    float window_visible_x2 = ImGui::GetWindowPos().x + ImGui::GetWindowContentRegionMax().x;
+
+    ImGuiSelectableFlags    sFlags = ImGuiSelectableFlags_None;
+    auto                    cFlags = ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_AlwaysAutoResize;
+
+    size_t count = m_elements.size();
+
+    for (size_t i = 0; i < count; i++)
+    {
+        auto item = m_elements[i].get();
+        bool isSelected = m_currentSelection.contains(item);
+
+        ImGui::BeginChild(std::string("##" + std::to_string(i)).c_str(), ImVec2(m_width + Padding.x, m_height + Padding.y), cFlags);
+
+        auto cursorBefore = ImGui::GetCursorPos();
+        ImGui::PushID(static_cast<int>(i));
+        bool open = ImGui::Selectable("##", isSelected, sFlags, ImVec2(m_width, m_height));
+        ImGui::PopID();
+        auto cursorAfter = ImGui::GetCursorPos();
+
+        float last_button_x2 = ImGui::GetItemRectMax().x;
+        float next_button_x2 = last_button_x2 + style.ItemSpacing.x + m_width; // Expected position if next button was on same line
+
+        ImGui::SetCursorPos(cursorBefore);
+        item->DisplayAndUpdateSelection(m_width, m_height);
+
+        ImGui::EndChild();
+
+        //ImGui::GetID();
+        if (i + 1 < count && next_button_x2 < window_visible_x2)
+        {
+            ImGui::SameLine();
+        }
+
+        if (open)
+        {
+            if (isSelected)
+                m_currentSelection.erase(item);
+            else
+                m_currentSelection.insert(item);
+        }
+
+
+    }
+}
+
+void UI::PanelSelectionBox::SetSelectionBoxable(const std::vector<std::shared_ptr<ISelectionBoxable>>& p_elements)
+{
+    m_elements = p_elements;
+}
+
+void UI::PanelSelectionBox::DisplayCenteredText(const std::string& p_text, float p_maxWidth)
+{
+    //float win_width = ImGui::GetWindowSize().x;
+    float text_width = ImGui::CalcTextSize(p_text.c_str()).x;
+
+    // offset cursor
+    auto cursorPos = ImGui::GetCursorPos();// (ImVec2(cursorPos.x + 10, cursorPos.y + 10));
+
+    float text_indentation = (p_maxWidth - text_width) * 0.5f;
+
+    // if iconTxt is too long to be drawn on one line, `text_indentation` can
+    // become too small or even negative, so we check a minimum indentation
+    float min_indentation = 0.0f;
+    if (text_indentation <= min_indentation) {
+        text_indentation = min_indentation;
+    }
+
+    ImGui::SameLine(text_indentation);
+    ImGui::PushTextWrapPos(p_maxWidth - text_indentation);
+    ImGui::TextWrapped(p_text.c_str());
+    ImGui::PopTextWrapPos();
 }

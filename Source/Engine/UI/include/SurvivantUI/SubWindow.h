@@ -19,6 +19,7 @@
 //foward declaration
 struct ImGuiInputTextCallbackData;
 struct ImVec4;
+struct ImFont;
 
 namespace UI
 {
@@ -196,24 +197,61 @@ namespace UI
 		int							m_curentSelection;
 		std::function<void(int)>	m_callback;
 	};
-	
-	class PanelTreeBranch : public IPanelable
+
+	class ISelectionBoxable
 	{
 	public:
-		using BranchCallback = std::function<void(size_t)>;
+		virtual ~ISelectionBoxable() = default;
+		virtual void DisplayAndUpdateSelection(float& p_width, float& p_height) = 0;
+		virtual const std::string& GetName() = 0;
+
+	};
+
+	class PanelSelectionBox : public IPanelable
+	{
+	public:
+		PanelSelectionBox() = default;
+		~PanelSelectionBox() = default;
+
+		void DisplayAndUpdatePanel() override;
+
+		void SetSelectionSize(float p_width, float p_height);
+		void SetSelectionBoxable(const std::vector<std::shared_ptr<ISelectionBoxable>>& p_selectionBoxable);
+
+		static void DisplayCenteredText(const std::string& p_text, float p_maxWidth);
+	private:
+		std::vector<std::shared_ptr<ISelectionBoxable>>		m_elements;
+		std::set<ISelectionBoxable*>						m_currentSelection;
+		float												m_width = 80;
+		float												m_height = 120;
+	};
+	
+	class PanelTreeBranch : public IPanelable, public ISelectionBoxable
+	{
+	public:
+		using BranchCallback = std::function<void(PanelTreeBranch&)>;
+		using Childreen = std::vector<std::shared_ptr<PanelTreeBranch>>;
 
 		PanelTreeBranch(const std::string& p_name);
-		PanelTreeBranch(const std::string& p_name, const std::vector<PanelTreeBranch>& p_branches);
+		PanelTreeBranch(const std::string& p_name, const Childreen& p_branches);
 		~PanelTreeBranch() = default;
 
-		virtual void DisplayAndUpdatePanel();
+		//IPanelable
+		void DisplayAndUpdatePanel() override;
 
-		std::vector<PanelTreeBranch>&	SetBranches(const std::vector<PanelTreeBranch>& p_branches);
-		void							AddBranch(const PanelTreeBranch& p_branch);
-		void							RemoveBranch(const std::string& p_name);
-		void							ForceOpenParents(bool p_openSelf = false);
-		void							ForceCloseChildreen(bool p_closeSelf = false);
-		void							SetOnClickCallback(const std::shared_ptr<BranchCallback>& m_callback, size_t p_callbackId);
+		//ISelectionBoxable
+		void				DisplayAndUpdateSelection(float& p_width, float& p_height) override;
+		const std::string&	GetName() override;
+
+		bool				HasChildreen()const;
+		const Childreen&	GetChildreen()const;
+
+		Childreen&	SetBranches(const Childreen& p_branches);
+		void		AddBranch(const std::shared_ptr<PanelTreeBranch>& p_branch);
+		void		RemoveBranch(const std::string& p_name);
+		void		ForceOpenParents(bool p_openSelf = false);
+		void		ForceCloseChildreen(bool p_closeSelf = false);
+		void		SetOnClickCallback(const std::shared_ptr<BranchCallback>& m_callback);
 
 	private:
 		enum class EForceState
@@ -223,17 +261,14 @@ namespace UI
 			FORCE_CLOSE,
 		};
 
-		std::string								m_name;
-		PanelTreeBranch*						m_parent;
-		std::vector<PanelTreeBranch>			m_childreen;
-		EForceState								m_forceOpen;
-		bool									m_wasOpen;
-		std::shared_ptr<BranchCallback>			m_callback;
-		size_t									m_callbackId;
-	};
+		std::string							m_name;
+		PanelTreeBranch*					m_parent;
+		Childreen							m_childreen;
+		EForceState							m_forceOpen;
+		bool								m_wasOpen;
+		std::shared_ptr<BranchCallback>		m_callback;
 
-	//if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0))
-	//void IsSelected(bool p_isSelected);
+	};
 
 
 	class ImagePanel : public Panel
@@ -258,8 +293,6 @@ namespace UI
 
 		PanelUniqueSelection								m_unique;
 		PanelMultipleSelection								m_multiple;
-		PanelTreeBranch										m_tree;
-		std::shared_ptr<PanelTreeBranch::BranchCallback>	m_callback;
 	};
 
 	class MainPanel : public Panel
@@ -373,10 +406,14 @@ namespace UI
 
 	class ContentDrawerPanel : public Panel
 	{
+	public:
 		ContentDrawerPanel();
 		~ContentDrawerPanel();
 
+		//Panel
 		ERenderFlags Render() override;
+
+		void SetGridDisplay(PanelTreeBranch& p_branch);
 
 		static int GetPanelCount() { return s_panelCount; };
 
@@ -385,7 +422,8 @@ namespace UI
 
 		static inline int s_panelCount = 0;
 
-		PanelButtonList m_options;
-		bool			m_open = true;
+		PanelTreeBranch										m_tree;
+		std::shared_ptr<PanelTreeBranch::BranchCallback>	m_callback;
+		PanelSelectionBox									m_grid;
 	};
 }
