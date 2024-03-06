@@ -1,95 +1,157 @@
 #include "SurvivantRendering/Resources/Material.h"
-#include "SurvivantCore/Debug/Logger.h"
 
-#include <fstream>
+#include "SurvivantCore/Debug/Assertion.h"
 
-bool Material::Load(const std::string& filename) 
+#include "SurvivantRendering/RHI/ITexture.h"
+
+using namespace LibMath;
+using namespace SvCore::Resources;
+using namespace SvRendering::Enums;
+using namespace SvRendering::RHI;
+
+namespace SvRendering::Resources
 {
-    // Opening the materials file
-    std::ifstream file(filename);
-    if (!file.is_open()) 
+    Material::Material(const std::shared_ptr<IShader>& p_shader)
     {
-        SV_LOG_ERROR("Failed to Load file");
+        SetShader(p_shader);
+    }
+
+    bool Material::Load(const std::string&)
+    {
+        // TODO: Support material files
         return false;
     }
 
-    // Read materials datas
-    file >> m_diffuseTexture;
-    file >> m_specularTexture;
-    file >> m_normalTexture;
-
-    file >> m_ambientColor[0] >> m_ambientColor[1] >> m_ambientColor[2];
-    file >> m_diffuseColor[0] >> m_diffuseColor[1] >> m_diffuseColor[2];
-    file >> m_specularColor[0] >> m_specularColor[1] >> m_specularColor[2];
-
-    file >> m_shininess;
-
-    //Close file
-    file.close();
-
-    return true;
-}
-
-void Material::SetDiffuseTexture(const std::string& filename) 
-{
-    // Checking if the path is absolute
-    if (std::filesystem::path(filename).is_absolute())
+    IShader& Material::GetShader() const
     {
-        m_diffuseTexture = filename;
+        ASSERT(m_shader, "Missing material shader");
+        return *m_shader;
     }
-    else 
+
+    void Material::SetShader(const std::shared_ptr<IShader>& p_shader)
     {
-        // If the file path is relative, make it absolute using the current working directory.
-        std::string absolutePath = std::filesystem::absolute(filename).string();
-        m_diffuseTexture = absolutePath;
+        m_shader = p_shader;
+        m_properties.clear();
+
+        for (auto [name, uniform] : m_shader->GetUniforms())
+        {
+            if (name.starts_with(ENGINE_UNIFORM_PREFIX))
+                continue;
+
+            m_properties[name] =
+            {
+                uniform.m_type,
+                GetDefaultValue(uniform.m_type)
+            };
+        }
     }
-}
 
-void Material::SetSpecularTexture(const std::string& filename) 
-{
-    if (std::filesystem::path(filename).is_absolute()) {
-        m_specularTexture = filename;
+    const Material::Property& Material::GetProperty(const std::string& p_name) const
+    {
+        const auto it = m_properties.find(p_name);
+        ASSERT(it != m_properties.end(), "Unable to find material property \"%s\"", p_name.c_str());
+        return it->second;
     }
-    else {
-        std::string absolutePath = std::filesystem::absolute(filename).string();
-        m_specularTexture = absolutePath;
+
+    Material::Property& Material::GetProperty(const std::string& p_name)
+    {
+        const auto it = m_properties.find(p_name);
+        ASSERT(it != m_properties.end(), "Unable to find material property \"%s\"", p_name.c_str());
+        return it->second;
     }
-}
 
-void Material::SetNormalTexture(const std::string& filename) 
-{
-    if (std::filesystem::path(filename).is_absolute()) {
-        m_normalTexture = filename;
+    const std::unordered_map<std::string, Material::Property>& Material::GetProperties() const
+    {
+        return m_properties;
     }
-    else {
-        std::string absolutePath = std::filesystem::absolute(filename).string();
-        m_normalTexture = absolutePath;
+
+    std::unordered_map<std::string, Material::Property>& Material::GetProperties()
+    {
+        return m_properties;
     }
-}
 
-void Material::SetAmbientColor(float r, float g, float b) {
-    // Définir la couleur ambiante
-    m_ambientColor[0] = r;
-    m_ambientColor[1] = g;
-    m_ambientColor[2] = b;
-}
+    void Material::Bind() const
+    {
+        ASSERT(m_shader, "Failed to bind material - Missing shader");
+        m_shader->Bind();
 
-void Material::SetDiffuseColor(float r, float g, float b) {
-    // Définir la couleur de diffusion
-    m_diffuseColor[0] = r;
-    m_diffuseColor[1] = g;
-    m_diffuseColor[2] = b;
-}
+        for (const auto& [name, property] : m_properties)
+            BindProperty(name, property);
+    }
 
-void Material::SetSpecularColor(float r, float g, float b) {
-    // Définir la couleur spéculaire
-    m_specularColor[0] = r;
-    m_specularColor[1] = g;
-    m_specularColor[2] = b;
-}
+    std::any Material::GetDefaultValue(const EShaderDataType p_dataType)
+    {
+        switch (p_dataType)
+        {
+        case EShaderDataType::BOOL:
+            return false;
+        case EShaderDataType::INT:
+            return 0;
+        case EShaderDataType::UNSIGNED_INT:
+            return 0u;
+        case EShaderDataType::FLOAT:
+            return 0.f;
+        case EShaderDataType::VEC2:
+            return Vector2();
+        case EShaderDataType::VEC3:
+            return Vector3();
+        case EShaderDataType::VEC4:
+            return Vector4();
+        case EShaderDataType::MAT3:
+            return Matrix3();
+        case EShaderDataType::MAT4:
+            return Matrix4();
+        case EShaderDataType::TEXTURE:
+            return std::shared_ptr<ITexture>();
+        case EShaderDataType::UNKNOWN:
+        default:
+            ASSERT(false, "Failed to get default value - Unkown data type");
+            return {};
+        }
+    }
 
-void Material::SetShininess(float shininess) 
-{
-    // Définir la brillance
-    m_shininess = shininess;
+    void Material::BindProperty(const std::string& p_name, const Property& p_property) const
+    {
+        ASSERT(m_shader, "Unable to bind material property - No shader");
+
+        switch (p_property.m_type)
+        {
+        case EShaderDataType::BOOL:
+            m_shader->SetUniformInt(p_name, std::any_cast<bool>(p_property.m_value));
+            break;
+        case EShaderDataType::INT:
+            m_shader->SetUniformInt(p_name, std::any_cast<int>(p_property.m_value));
+            break;
+        case EShaderDataType::UNSIGNED_INT:
+            m_shader->SetUniformUInt(p_name, std::any_cast<uint32_t>(p_property.m_value));
+            break;
+        case EShaderDataType::FLOAT:
+            m_shader->SetUniformFloat(p_name, std::any_cast<float>(p_property.m_value));
+            break;
+        case EShaderDataType::VEC2:
+            m_shader->SetUniformVec2(p_name, std::any_cast<const Vector2&>(p_property.m_value));
+            break;
+        case EShaderDataType::VEC3:
+            m_shader->SetUniformVec3(p_name, std::any_cast<const Vector3&>(p_property.m_value));
+            break;
+        case EShaderDataType::VEC4:
+            m_shader->SetUniformVec4(p_name, std::any_cast<const Vector4&>(p_property.m_value));
+            break;
+        case EShaderDataType::MAT3:
+            m_shader->SetUniformMat3(p_name, std::any_cast<const Matrix3&>(p_property.m_value));
+            break;
+        case EShaderDataType::MAT4:
+            m_shader->SetUniformMat4(p_name, std::any_cast<const Matrix4&>(p_property.m_value));
+            break;
+        case EShaderDataType::TEXTURE:
+        {
+            m_shader->SetUniformTexture(p_name, std::any_cast<const std::shared_ptr<ITexture>&>(p_property.m_value).get());
+            break;
+        }
+        case EShaderDataType::UNKNOWN:
+        default:
+            ASSERT(false, "Unknown uniform type");
+            return;
+        }
+    }
 }
