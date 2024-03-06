@@ -8,6 +8,7 @@
 
 #include <SurvivantRendering/Core/Camera.h>
 #include <SurvivantRendering/Core/Color.h>
+#include <SurvivantRendering/Resources/Material.h>
 #include <SurvivantRendering/Resources/Model.h>
 #include <SurvivantRendering/RHI/IRenderAPI.h>
 #include <SurvivantRendering/RHI/IShader.h>
@@ -27,7 +28,7 @@ constexpr const char* UNLIT_SHADER_PATH  = "assets/shaders/Unlit.glsl";
 constexpr float       CAM_MOVE_SPEED     = 3.f;
 constexpr Radian      CAM_ROTATION_SPEED = 90_deg;
 
-ITexture& GetTexture()
+std::shared_ptr<ITexture> GetTexture()
 {
     static std::shared_ptr<ITexture> texture  = ITexture::Create();
     static bool                      isLoaded = false;
@@ -43,7 +44,7 @@ ITexture& GetTexture()
         isLoaded = true;
     }
 
-    return *texture;
+    return texture;
 }
 
 std::tuple<int, int> AddInputTranslate(char i)
@@ -56,8 +57,14 @@ std::tuple<int, int> AddMouseTranslate(float i, float j)
     return { (int)i, (int)j };
 }
 
-void DrawModel(const Model& p_model)
+void DrawModel(const Model& p_model, const Camera& p_camera, const Matrix4& p_transform, const Material& p_material)
 {
+    if (!p_camera.GetFrustum().Intersects(TransformBoundingBox(p_model.GetBoundingBox(), p_transform)))
+        return;
+
+    p_material.Bind();
+    p_material.GetShader().SetUniformMat4("sv_mvp", p_camera.GetViewProjection() * p_transform);
+
     for (size_t i = 0; i < p_model.GetMeshCount(); ++i)
     {
         const Mesh& mesh = p_model.GetMesh(i);
@@ -98,8 +105,15 @@ int main()
     ASSERT(unlitShader->Load(UNLIT_SHADER_PATH), "Failed to load shader at path \"%s\"", UNLIT_SHADER_PATH);
     ASSERT(unlitShader->Init(), "Failed to initialize shader at path \"%s\"", UNLIT_SHADER_PATH);
 
-    unlitShader->Bind();
-    unlitShader->SetUniformTexture("u_diffuse", &GetTexture());
+    Material whiteMaterial(unlitShader);
+    whiteMaterial.GetProperty<std::shared_ptr<ITexture>>("u_diffuse") = GetTexture();
+    whiteMaterial.GetProperty<Vector4>("u_tint")                      = Color::white;
+
+    Material redMaterial(whiteMaterial);
+    redMaterial.GetProperty<Vector4>("u_tint") = Color::red;
+
+    Material yellowMaterial(whiteMaterial);
+    yellowMaterial.GetProperty<Vector4>("u_tint") = Color::yellow;
 
     const Matrix4 projMat = perspectiveProjection(90_deg, 4.f / 3.f, .01f, 14.f);
 
@@ -272,24 +286,9 @@ int main()
         cam.SetView(camTransform.getWorldMatrix().inverse());
         cam.Clear();
 
-        const Frustum camFrustum     = cam.GetFrustum();
-        const Matrix4 viewProjection = cam.GetViewProjection();
-
-        unlitShader->Bind();
-        unlitShader->SetUniformMat4("u_mvp", viewProjection * modelMat1);
-        unlitShader->SetUniformVec4("u_tint", Color::white);
-        DrawModel(model);
-
-        unlitShader->SetUniformMat4("u_mvp", viewProjection * modelMat2);
-        unlitShader->SetUniformVec4("u_tint", Color::red);
-        DrawModel(model);
-
-        if (camFrustum.Intersects(TransformBoundingBox(model.GetBoundingBox(), testModelMat)))
-        {
-            unlitShader->SetUniformMat4("u_mvp", viewProjection * testModelMat);
-            unlitShader->SetUniformVec4("u_tint", Color::yellow);
-            DrawModel(model);
-        }
+        DrawModel(model, cam, modelMat1, whiteMaterial);
+        DrawModel(model, cam, modelMat2, redMaterial);
+        DrawModel(model, cam, testModelMat, yellowMaterial);
 
         glfwSwapBuffers(window);
     }
