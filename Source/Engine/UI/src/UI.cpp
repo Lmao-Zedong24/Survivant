@@ -121,6 +121,7 @@ void UI::EditorUI::EndFrameUpdate()
 {
     ImGui::EndFrame();
     ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
     for (auto& callback : m_endFrameCallbacks)
     {
@@ -130,7 +131,6 @@ void UI::EditorUI::EndFrameUpdate()
 
     m_endFrameCallbacks.clear();
 
-    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
 UI::MenuBar UI::EditorUI::CreateMenuBar()
@@ -150,8 +150,8 @@ UI::MenuBar UI::EditorUI::CreateMenuBar()
         "Exit",
         [](char) { Core::EventManager::GetInstance().Invoke<App::Window::WindowCloseRequest>(); },
         InputManager::KeyboardKeyType(
-            EKey::KEY_F11,
-            EKeyState::KEY_PRESSED,
+            EKey::F11,
+            EKeyState::PRESSED,
             EInputModifier::MOD_ALT)
     ));
 
@@ -160,8 +160,8 @@ UI::MenuBar UI::EditorUI::CreateMenuBar()
         "Button1",
         [](char) {},
         InputManager::KeyboardKeyType(
-            EKey::KEY_F11,
-            EKeyState::KEY_PRESSED,
+            EKey::F11,
+            EKeyState::PRESSED,
             EInputModifier(EInputModifier::MOD_ALT | EInputModifier::MOD_CONTROL))
     ));
     menu2.m_items.emplace_back(std::make_unique<MenuButton>(

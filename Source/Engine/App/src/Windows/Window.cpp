@@ -161,7 +161,7 @@ bool App::Window::EvaluteModif(EInputModifier p_modif)
     {
         int modif = 1 << i;
         int state = glfwGetKey(m_glfwWindow, static_cast<int>(InputManager::GetModifKey(static_cast<EInputModifier>(modif))));
-        if (state == static_cast<int>(EKeyState::KEY_PRESSED))
+        if (state == static_cast<int>(EKeyState::PRESSED))
             currentModif += modif;
     }
 

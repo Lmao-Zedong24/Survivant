@@ -1,6 +1,3 @@
-#include "SurvivantTest/EventManager.h"
-#include "SurvivantTest/InputManager.h"
-
 #include <SurvivantCore/Debug/Assertion.h>
 #include <SurvivantCore/Utility/FileSystem.h>
 #include <SurvivantCore/Utility/Timer.h>
@@ -9,14 +6,22 @@
 #include <SurvivantRendering/Core/Color.h>
 #include <SurvivantRendering/Resources/Model.h>
 #include <SurvivantRendering/Resources/Shader.h>
+
+#include "SurvivantCore/Events/EventManager.h"
+#include "SurvivantApp/Inputs/InputManager.h"
+#include "SurvivantApp/Windows/Window.h"
+#include "SurvivantApp/Inputs/KeyboardInputs.h"
+#include "SurvivantApp/Inputs/MouseInputs.h"
+#include "SurvivantUI/UI.h"
+#include "SurvivantUI/EditorWindow.h"
 #include <SurvivantRendering/Resources/Texture.h>
+#include <SurvivantRendering/Core/Buffers/FrameBuffer.h>
 
 #include <Transform.h>
 
 // TODO: Implement relevant parts in corresponding libs to get rid of glad dependency
 #include <glad/gl.h>
-
-#include "SurvivantTest/Window.h"
+#include <GLFW/glfw3.h>
 
 using namespace LibMath;
 using namespace SvCore::Utility;
@@ -49,49 +54,50 @@ Texture& GetTexture()
     return texture;
 }
 
-static GLuint frameBufferId;
+static FrameBuffer* frameBufferId;
 
 GLuint GetDefaultFrameBuffer()
 {
-    static GLuint textureId;
+    static Texture texture(800, 600, ETextureFormat::RGB);
+    static FrameBuffer frameBuffer;
 
-    if (textureId == 0)
-    {
-        glGenFramebuffers(1, &frameBufferId);
-        glBindFramebuffer(GL_FRAMEBUFFER, frameBufferId);
+    frameBuffer.Attach(texture, EFrameBufferAttachment::COLOR);
 
-        glGenTextures(1, &textureId);
-        glBindTexture(GL_TEXTURE_2D, textureId);
+    texture.Bind(0);
+    frameBufferId = &frameBuffer;
+    return texture.GetId();
 
-        //screen width here
-        constexpr GLsizei width = 800;
-        constexpr GLsizei height = 600;
+    //static GLuint textureId;
 
-        //Vector4 c(0.5);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+    //if (textureId == 0)
+    //{
+    //    glGenFramebuffers(1, &frameBufferId);
+    //    glBindFramebuffer(GL_FRAMEBUFFER, frameBufferId);
 
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    //    glGenTextures(1, &textureId);
+    //    glBindTexture(GL_TEXTURE_2D, textureId);
 
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureId, 0);
+    //    //screen width here
+    //    constexpr GLsizei width = 800;
+    //    constexpr GLsizei height = 600;
+
+    //    //Vector4 c(0.5);
+    //    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+
+    //    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    //    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    //    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureId, 0);
 
 
-        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE)
-        {
-            int i = 0; i;
-        }
-    }
+    //    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE)
+    //    {
+    //        int i = 0; i;
+    //    }
+    //}
 
-    return textureId;
+    //return textureId;
 }
-
-#include "SurvivantCore/Events/EventManager.h"
-#include "SurvivantApp/Inputs/InputManager.h"
-#include "SurvivantApp/Windows/Window.h"
-#include "SurvivantApp/Inputs/KeyboardInputs.h"
-#include "SurvivantApp/Inputs/MouseInputs.h"
-#include "SurvivantUI/UI.h"
-#include "SurvivantUI/EditorWindow.h"
 
 
 std::tuple<int, int> AddInputTranslate(char i) 
@@ -135,7 +141,7 @@ int main()
 
     //window
     UI::EditorWindow window;
-    GLFWwindow* windowPtr = window.GetWindow();
+    //GLFWwindow* windowPtr = window.GetWindow();
 
     ASSERT(gladLoadGL(glfwGetProcAddress), "Failed to initialize glad");
 
@@ -143,7 +149,8 @@ int main()
     ASSERT(shader.Load(UNLIT_SHADER_PATH), "Failed to load shader at path \"%s\"", UNLIT_SHADER_PATH);
     ASSERT(shader.Init(), "Failed to initialize shader at path \"%s\"", UNLIT_SHADER_PATH);
     glEnable(GL_DEPTH_TEST);
-    App::Window::SetupInputManager(window);
+
+    //App::Window::SetupInputManager(window);
 
     Model model;
 
@@ -164,7 +171,8 @@ int main()
 
     Vector3   camPos(0.f, 1.8f, 2.f);
     Transform camTransform(camPos, Quaternion::identity(), Vector3::one());
-    const GLuint textureId = GetDefaultTexture();
+
+    //const GLuint textureId = Texture();
     App::Window::m_textureId = GetDefaultFrameBuffer();
 
     const Vector3 testPos      = camPos + Vector3::front();
@@ -184,21 +192,21 @@ int main()
     using AddEvent = Event<int, int>;
     class ToggleEvent : public Core::Event<> {};
 
+    InputManager& im = InputManager::GetInstance();
     {
         InputManager::GetInstance().InitWindow(&window);
 
         EventManager& em = EventManager::GetInstance();
-        InputManager& im = InputManager::GetInstance();
 
         AddEvent::EventDelegate printAdd = [](int i, int j) { std::cout << "Add = " << i + j << std::endl; };
         ToggleEvent::EventDelegate toggle = std::bind(&App::Window::ToggleFullScreenMode, &window);
         em.AddListenner<AddEvent>(printAdd);
         em.AddListenner<ToggleEvent>(toggle);
 
-        InputManager::KeyboardKeyType   a(EKey::KEY_A, EKeyState::KEY_RELEASED, EInputModifier::MOD_ALT);
-        InputManager::KeyboardKeyType   b(EKey::KEY_B, EKeyState::KEY_PRESSED, EInputModifier());
-        InputManager::MouseKeyType      mouse(EMouseButton::MOUSE_BUTTON_1, EMouseButtonState::MOUSE_PRESSED, EInputModifier());
-        InputManager::KeyboardKeyType   space(EKey::KEY_SPACE, EKeyState::KEY_PRESSED, EInputModifier());
+        InputManager::KeyboardKeyType   a(EKey::A, EKeyState::RELEASED, EInputModifier::MOD_ALT);
+        InputManager::KeyboardKeyType   b(EKey::B, EKeyState::PRESSED, EInputModifier());
+        InputManager::MouseKeyType      mouse(EMouseButton::MOUSE_1, EMouseButtonState::PRESSED, EInputModifier());
+        InputManager::KeyboardKeyType   space(EKey::SPACE, EKeyState::PRESSED, EInputModifier());
         im.AddInputEventBinding<AddEvent>(a, &AddInputTranslate);
         im.AddInputEventBinding<AddEvent>(b, &AddInputTranslate);
         im.AddInputEventBinding<AddEvent>(mouse, &AddMouseTranslate);
@@ -207,8 +215,6 @@ int main()
 
     //ui
     UI::EditorUI ui;
-    //ui.InitEditorUi(&window);
-
     window.SetupUI(&ui);
 
     Vector2 moveInput, rotateInput;
@@ -300,7 +306,7 @@ int main()
 
     im.AddInputBinding({ EKey::ESCAPE, EKeyState::RELEASED, {} }, [&window](const char)
     {
-        glfwSetWindowShouldClose(window, true);
+        glfwSetWindowShouldClose(window.GetWindow(), true);
     });
 
     while (!window.ShouldClose())
@@ -318,7 +324,9 @@ int main()
         Vector3    newPos = camTransform.getPosition();
         Quaternion newRot = camTransform.getRotation();
 
-        glBindFramebuffer(GL_FRAMEBUFFER, frameBufferId);
+        frameBufferId->Bind();
+        glViewport(0, 0, 800, 600);
+
         if (moveInput.magnitudeSquared() > 0.f)
         {
             const Vector3 moveDir = moveInput.m_x * camTransform.worldRight() + moveInput.m_y * camTransform.worldBack();
@@ -359,16 +367,17 @@ int main()
             unlitShader.SetUniformVec4("u_tint", Color::yellow);
             DrawModel(model);
         }
-
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        
+        frameBufferId->Unbind();
+        glViewport(0, 0, 800, 600);
 
         window.RenderUI();
         window.EndRender();
 
-        //glfwSwapBuffers(window);
+        //glfwSwapBuffers(window.GetWindow());
     }
 
-    glfwDestroyWindow(window);
+    //glfwDestroyWindow(window);
     glfwTerminate();
 
     return 0;

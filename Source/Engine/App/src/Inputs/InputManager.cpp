@@ -35,13 +35,13 @@ std::string App::InputManager::KeyNameToString(const EKey& p_name)
 {
 	switch (p_name)
 	{
-	case EKey::KEY_UNKNOWN:			return "UNKNOWN";
-	case EKey::KEY_SPACE:			return "SPACE";
-	case EKey::KEY_APOSTROPHE:
-	case EKey::KEY_COMMA:
-	case EKey::KEY_MINUS:
-	case EKey::KEY_PERIOD:
-	case EKey::KEY_SLASH:
+	case EKey::UNKNOWN:			return "UNKNOWN";
+	case EKey::SPACE:			return "SPACE";
+	case EKey::APOSTROPHE:
+	case EKey::COMMA:
+	case EKey::MINUS:
+	case EKey::PERIOD:
+	case EKey::SLASH:
 	case EKey::KEY_0:
 	case EKey::KEY_1:
 	case EKey::KEY_2:
@@ -52,110 +52,110 @@ std::string App::InputManager::KeyNameToString(const EKey& p_name)
 	case EKey::KEY_7:
 	case EKey::KEY_8:
 	case EKey::KEY_9:
-	case EKey::KEY_SEMICOLON:
-	case EKey::KEY_EQUAL:
-	case EKey::KEY_A:
-	case EKey::KEY_B:
-	case EKey::KEY_C:
-	case EKey::KEY_D:
-	case EKey::KEY_E:
-	case EKey::KEY_F:
-	case EKey::KEY_G:
-	case EKey::KEY_H:
-	case EKey::KEY_I:
-	case EKey::KEY_J:
-	case EKey::KEY_K:
-	case EKey::KEY_L:
-	case EKey::KEY_M:
-	case EKey::KEY_N:
-	case EKey::KEY_O:
-	case EKey::KEY_P:
-	case EKey::KEY_Q:
-	case EKey::KEY_R:
-	case EKey::KEY_S:
-	case EKey::KEY_T:
-	case EKey::KEY_U:
-	case EKey::KEY_V:
-	case EKey::KEY_W:
-	case EKey::KEY_X:
-	case EKey::KEY_Y:
-	case EKey::KEY_Z:
-	case EKey::KEY_LEFT_BRACKET:
-	case EKey::KEY_BACKSLASH:
-	case EKey::KEY_RIGHT_BRACKET:
-	case EKey::KEY_GRAVE_ACCENT:	return std::string(1, static_cast<char>(p_name));
-	case EKey::KEY_WORLD_1:			return "WORLD_1";
-	case EKey::KEY_WORLD_2:			return "WORLD_2";
-	case EKey::KEY_ESCAPE:			return "ESCAPE";
-	case EKey::KEY_ENTER:			return "ENTER";
-	case EKey::KEY_TAB:				return "TAB";
-	case EKey::KEY_BACKSPACE:		return "BACKSPACE";
-	case EKey::KEY_INSERT:			return "INSERT";
-	case EKey::KEY_DELETE:			return "DELETE";
-	case EKey::KEY_RIGHT:			return "RIGHT";
-	case EKey::KEY_LEFT:			return "LEFT";
-	case EKey::KEY_DOWN:			return "DOWN";
-	case EKey::KEY_UP:				return "UP";
-	case EKey::KEY_PAGE_UP:			return "PAGE_UP";
-	case EKey::KEY_PAGE_DOWN:		return "PAGE_DOWN";
-	case EKey::KEY_HOME:			return "HOME";
-	case EKey::KEY_END:				return "END";
-	case EKey::KEY_CAPS_LOCK:		return "CAPS_LOCK";
-	case EKey::KEY_SCROLL_LOCK:		return "SCROLL_LOCK";
-	case EKey::KEY_NUM_LOCK:		return "NUM_LOCK";
-	case EKey::KEY_PRINT_SCREEN:	return "PRINT_SCREEN";
-	case EKey::KEY_PAUSE:			return "PAUSE"; 
-	case EKey::KEY_F1 :
-	case EKey::KEY_F2 :
-	case EKey::KEY_F3 :
-	case EKey::KEY_F4 :
-	case EKey::KEY_F5 :
-	case EKey::KEY_F6 :
-	case EKey::KEY_F7 :
-	case EKey::KEY_F8 :
-	case EKey::KEY_F9 :
-	case EKey::KEY_F10:
-	case EKey::KEY_F11:
-	case EKey::KEY_F12:
-	case EKey::KEY_F13:
-	case EKey::KEY_F14:
-	case EKey::KEY_F15:
-	case EKey::KEY_F16:
-	case EKey::KEY_F17:
-	case EKey::KEY_F18:
-	case EKey::KEY_F19:
-	case EKey::KEY_F20:
-	case EKey::KEY_F21:
-	case EKey::KEY_F22:
-	case EKey::KEY_F23:
-	case EKey::KEY_F24:
-	case EKey::KEY_F25:				return "F" + std::to_string((static_cast<int>(p_name) % 290) + 1);
-	case EKey::KEY_KP_0:
-	case EKey::KEY_KP_1:
-	case EKey::KEY_KP_2:
-	case EKey::KEY_KP_3:
-	case EKey::KEY_KP_4:
-	case EKey::KEY_KP_5:
-	case EKey::KEY_KP_6:
-	case EKey::KEY_KP_7:
-	case EKey::KEY_KP_8:
-	case EKey::KEY_KP_9:			return "KP_" + std::to_string((static_cast<int>(p_name) % 320) + 1);
-	case EKey::KEY_KP_DECIMAL:		return "KP_DECIMAL";
-	case EKey::KEY_KP_DIVIDE:		return "KP_DIVIDE";
-	case EKey::KEY_KP_MULTIPLY:		return "KP_SUBTRACT";
-	case EKey::KEY_KP_SUBTRACT:		return "KP_SUBTRACT";
-	case EKey::KEY_KP_ADD:			return "KP_ADD";
-	case EKey::KEY_KP_ENTER:		return "KP_ENTER";
-	case EKey::KEY_KP_EQUAL:		return "KP_EQUAL";
-	case EKey::KEY_LEFT_SHIFT:		return "LEFT_SHIFT";
-	case EKey::KEY_LEFT_CONTROL:	return "LEFT_CONTROL";
-	case EKey::KEY_LEFT_ALT:		return "LEFT_ALT";
-	case EKey::KEY_LEFT_SUPER:		return "LEFT_SUPER";
-	case EKey::KEY_RIGHT_SHIFT:		return "RIGHT_SHIFT";
-	case EKey::KEY_RIGHT_CONTROL:	return "RIGHT_CONTROL";
-	case EKey::KEY_RIGHT_ALT:		return "RIGHT_ALT";
-	case EKey::KEY_RIGHT_SUPER:		return "RIGHT_SUPER";
-	case EKey::KEY_MENU:			return "MENU";
+	case EKey::SEMICOLON:
+	case EKey::EQUAL:
+	case EKey::A:
+	case EKey::B:
+	case EKey::C:
+	case EKey::D:
+	case EKey::E:
+	case EKey::F:
+	case EKey::G:
+	case EKey::H:
+	case EKey::I:
+	case EKey::J:
+	case EKey::K:
+	case EKey::L:
+	case EKey::M:
+	case EKey::N:
+	case EKey::O:
+	case EKey::P:
+	case EKey::Q:
+	case EKey::R:
+	case EKey::S:
+	case EKey::T:
+	case EKey::U:
+	case EKey::V:
+	case EKey::W:
+	case EKey::X:
+	case EKey::Y:
+	case EKey::Z:
+	case EKey::LEFT_BRACKET:
+	case EKey::BACKSLASH:
+	case EKey::RIGHT_BRACKET:
+	case EKey::GRAVE_ACCENT:	return std::string(1, static_cast<char>(p_name));
+	case EKey::WORLD_1:			return "WORLD_1";
+	case EKey::WORLD_2:			return "WORLD_2";
+	case EKey::ESCAPE:			return "ESCAPE";
+	case EKey::ENTER:			return "ENTER";
+	case EKey::TAB:				return "TAB";
+	case EKey::BACKSPACE:		return "BACKSPACE";
+	case EKey::INSERT:			return "INSERT";
+	case EKey::DEL:				return "DELETE";
+	case EKey::RIGHT:			return "RIGHT";
+	case EKey::LEFT:			return "LEFT";
+	case EKey::DOWN:			return "DOWN";
+	case EKey::UP:				return "UP";
+	case EKey::PAGE_UP:			return "PAGE_UP";
+	case EKey::PAGE_DOWN:		return "PAGE_DOWN";
+	case EKey::HOME:			return "HOME";
+	case EKey::END:				return "END";
+	case EKey::CAPS_LOCK:		return "CAPS_LOCK";
+	case EKey::SCROLL_LOCK:		return "SCROLL_LOCK";
+	case EKey::NUM_LOCK:		return "NUM_LOCK";
+	case EKey::PRINT_SCREEN:	return "PRINT_SCREEN";
+	case EKey::PAUSE:			return "PAUSE"; 
+	case EKey::F1 :
+	case EKey::F2 :
+	case EKey::F3 :
+	case EKey::F4 :
+	case EKey::F5 :
+	case EKey::F6 :
+	case EKey::F7 :
+	case EKey::F8 :
+	case EKey::F9 :
+	case EKey::F10:
+	case EKey::F11:
+	case EKey::F12:
+	case EKey::F13:
+	case EKey::F14:
+	case EKey::F15:
+	case EKey::F16:
+	case EKey::F17:
+	case EKey::F18:
+	case EKey::F19:
+	case EKey::F20:
+	case EKey::F21:
+	case EKey::F22:
+	case EKey::F23:
+	case EKey::F24:
+	case EKey::F25:				return "F" + std::to_string((static_cast<int>(p_name) % 290) + 1);
+	case EKey::KP_0:
+	case EKey::KP_1:
+	case EKey::KP_2:
+	case EKey::KP_3:
+	case EKey::KP_4:
+	case EKey::KP_5:
+	case EKey::KP_6:
+	case EKey::KP_7:
+	case EKey::KP_8:
+	case EKey::KP_9:			return "KP_" + std::to_string((static_cast<int>(p_name) % 320) + 1);
+	case EKey::KP_DECIMAL:		return "KP_DECIMAL";
+	case EKey::KP_DIVIDE:		return "KP_DIVIDE";
+	case EKey::KP_MULTIPLY:		return "KP_SUBTRACT";
+	case EKey::KP_SUBTRACT:		return "KP_SUBTRACT";
+	case EKey::KP_ADD:			return "KP_ADD";
+	case EKey::KP_ENTER:		return "KP_ENTER";
+	case EKey::KP_EQUAL:		return "KP_EQUAL";
+	case EKey::LEFT_SHIFT:		return "LEFT_SHIFT";
+	case EKey::LEFT_CONTROL:	return "LEFT_CONTROL";
+	case EKey::LEFT_ALT:		return "LEFT_ALT";
+	case EKey::LEFT_SUPER:		return "LEFT_SUPER";
+	case EKey::RIGHT_SHIFT:		return "RIGHT_SHIFT";
+	case EKey::RIGHT_CONTROL:	return "RIGHT_CONTROL";
+	case EKey::RIGHT_ALT:		return "RIGHT_ALT";
+	case EKey::RIGHT_SUPER:		return "RIGHT_SUPER";
+	case EKey::MENU:			return "MENU";
 
 	default:						return "";
 	}
@@ -185,17 +185,17 @@ EKey App::InputManager::GetModifKey(const EInputModifier& p_modif)
 	switch (p_modif)
 	{
 	case App::EInputModifier::MOD_SHIFT:
-		return EKey::KEY_LEFT_SHIFT;
+		return EKey::LEFT_SHIFT;
 	case App::EInputModifier::MOD_CONTROL:
-		return EKey::KEY_LEFT_CONTROL;
+		return EKey::LEFT_CONTROL;
 	case App::EInputModifier::MOD_ALT:
-		return EKey::KEY_LEFT_ALT;
+		return EKey::LEFT_ALT;
 	case App::EInputModifier::MOD_SUPER:
-		return EKey::KEY_LEFT_SUPER;
+		return EKey::LEFT_SUPER;
 	case App::EInputModifier::MOD_CAPS_LOCK:
-		return EKey::KEY_CAPS_LOCK;
+		return EKey::CAPS_LOCK;
 	case App::EInputModifier::MOD_NUM_LOCK:
-		return EKey::KEY_NUM_LOCK;
+		return EKey::NUM_LOCK;
 	default:
 		return EKey();
 	}
