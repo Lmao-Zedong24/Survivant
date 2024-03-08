@@ -11,7 +11,7 @@ function(copy_resources TARGET_NAME)
 
 	# remove unwanted files
 	add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
-		COMMAND ${CMAKE_COMMAND} -E rm -f $<TARGET_FILE_DIR:${TARGET_NAME}>/.gitkeep $<TARGET_FILE_DIR:${TARGET_NAME}>/CMakeLists.txt
+		COMMAND ${CMAKE_COMMAND} -E rm -f $<TARGET_FILE_DIR:${TARGET_NAME}>/assets/.gitkeep $<TARGET_FILE_DIR:${TARGET_NAME}>/assets/CMakeLists.txt
 	)
 	
 	message(STATUS "Resources added to target ${TARGET_NAME}")
