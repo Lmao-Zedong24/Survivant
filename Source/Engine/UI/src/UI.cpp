@@ -97,7 +97,7 @@ void UI::EditorUI::RenderPanels()
         Panel::ERenderFlags m_flags = Panel::ERenderFlags();
     };
 
-    std::vector<PanelFlags> pfArray(m_currentPanels.size());
+    std::vector<PanelFlags> pfArray;
 
     {//main always first
         auto flags = m_main->Render();

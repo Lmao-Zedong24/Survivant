@@ -14,6 +14,7 @@
 #include <map>
 #include <string>
 #include <unordered_set>
+#include <filesystem>
 
 
 //foward declaration
@@ -202,9 +203,16 @@ namespace UI
 	{
 	public:
 		virtual ~ISelectionBoxable() = default;
-		virtual void DisplayAndUpdateSelection(float& p_width, float& p_height) = 0;
-		virtual const std::string& GetName() = 0;
 
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="p_width"></param>
+		/// <param name="p_height"></param>
+		/// <param name="p_doubleClicked"></param>
+		/// <returns>true if need to stop displaying other SelectionBoxable</returns>
+		virtual bool DisplayAndUpdateSelection(float& p_width, float& p_height, bool p_doubleClicked) = 0;
+		virtual const std::string& GetName() = 0;
 	};
 
 	class PanelSelectionBox : public IPanelable
@@ -229,29 +237,38 @@ namespace UI
 	class PanelTreeBranch : public IPanelable, public ISelectionBoxable
 	{
 	public:
-		using BranchCallback = std::function<void(PanelTreeBranch&)>;
-		using Childreen = std::vector<std::shared_ptr<PanelTreeBranch>>;
+		using BranchCallback = std::function<bool(PanelTreeBranch&)>;
+		using Childreen = std::unordered_map<std::string, std::shared_ptr<PanelTreeBranch>>;
 
-		PanelTreeBranch(const std::string& p_name);
-		PanelTreeBranch(const std::string& p_name, const Childreen& p_branches);
+		PanelTreeBranch(const std::string& p_name, bool p_hideLeafs = true);
+		PanelTreeBranch(const std::string& p_name, const Childreen& p_branches, bool p_hideLeafs = true);
 		~PanelTreeBranch() = default;
 
 		//IPanelable
 		void DisplayAndUpdatePanel() override;
 
 		//ISelectionBoxable
-		void				DisplayAndUpdateSelection(float& p_width, float& p_height) override;
+		bool				DisplayAndUpdateSelection(float& p_width, float& p_height, bool p_doubleClicked) override;
 		const std::string&	GetName() override;
 
-		bool				HasChildreen()const;
+		void DisplayTreePanel();
+
+		bool				IsBranch()const;
 		const Childreen&	GetChildreen()const;
+		std::string			GetPathName()const;
 
 		Childreen&	SetBranches(const Childreen& p_branches);
+		Childreen&	SetBranches(const std::set<std::shared_ptr<PanelTreeBranch>>& p_branches);
 		void		AddBranch(const std::shared_ptr<PanelTreeBranch>& p_branch);
 		void		RemoveBranch(const std::string& p_name);
 		void		ForceOpenParents(bool p_openSelf = false);
 		void		ForceCloseChildreen(bool p_closeSelf = false);
-		void		SetOnClickCallback(const std::shared_ptr<BranchCallback>& m_callback);
+		void		ForceOpenAll();
+
+		void		SetOnClickCallback(const std::shared_ptr<BranchCallback>& p_callback);
+		void		SetAllOnClickCallback(const std::shared_ptr<BranchCallback>& p_callback);
+		void		SetAllBranchesOnClickCallback(const std::shared_ptr<BranchCallback>& p_callback);
+		void		SetAllLeavesOnClickCallback(const std::shared_ptr<BranchCallback>& p_callback);
 
 	private:
 		enum class EForceState
@@ -261,13 +278,12 @@ namespace UI
 			FORCE_CLOSE,
 		};
 
+		bool								m_hideLeafs;
 		std::string							m_name;
 		PanelTreeBranch*					m_parent;
 		Childreen							m_childreen;
-		EForceState							m_forceOpen;
-		bool								m_wasOpen;
+		EForceState							m_forceState;
 		std::shared_ptr<BranchCallback>		m_callback;
-
 	};
 
 
@@ -413,17 +429,22 @@ namespace UI
 		//Panel
 		ERenderFlags Render() override;
 
-		void SetGridDisplay(PanelTreeBranch& p_branch);
+		bool SetGridDisplay(PanelTreeBranch& p_branch);
+		bool TryOpenFile(PanelTreeBranch& p_branch);
 
 		static int GetPanelCount() { return s_panelCount; };
 
 	private:
-		static constexpr char NAME[] = "ContentDrawer";
+		void SetupTree();
+		void SetupBranches(std::shared_ptr<PanelTreeBranch> p_parent, const std::filesystem::path& p_filePath);
+
+		static constexpr char NAME[] =				"ContentDrawer";
+		static constexpr char DIRECTORY_PATH[] =	"Source";
+		static constexpr char BACKSLASH[] =			"/";
 
 		static inline int s_panelCount = 0;
 
-		PanelTreeBranch										m_tree;
-		std::shared_ptr<PanelTreeBranch::BranchCallback>	m_callback;
+		std::shared_ptr<PanelTreeBranch>					m_tree;
 		PanelSelectionBox									m_grid;
 	};
 }
