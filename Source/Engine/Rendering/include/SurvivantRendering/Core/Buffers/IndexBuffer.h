@@ -8,7 +8,6 @@ namespace SvRendering::Core::Buffers
     class IndexBuffer final : public Buffer
     {
     public:
-        IndexBuffer() = default;
         IndexBuffer(const uint32_t* p_indices, intptr_t p_indexCount);
         explicit IndexBuffer(const std::vector<uint32_t>& p_indices);
 

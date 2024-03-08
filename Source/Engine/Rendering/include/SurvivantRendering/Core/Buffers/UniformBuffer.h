@@ -5,42 +5,42 @@
 
 namespace SvRendering::Core::Buffers
 {
-    class ShaderStorageBuffer final
+    class UniformBuffer final
     {
     public:
-        explicit ShaderStorageBuffer(Enums::EAccessSpecifier p_accessSpecifier, uint32_t p_bindIndex = 0);
-        ShaderStorageBuffer(const ShaderStorageBuffer& p_other) = delete;
-        ShaderStorageBuffer(ShaderStorageBuffer&& p_other) noexcept;
+        explicit UniformBuffer(Enums::EAccessSpecifier p_accessSpecifier, uint32_t p_bindIndex = 0);
+        UniformBuffer(const UniformBuffer& p_other) = delete;
+        UniformBuffer(UniformBuffer&& p_other) noexcept;
 
-        ~ShaderStorageBuffer();
+        ~UniformBuffer();
 
-        ShaderStorageBuffer& operator=(const ShaderStorageBuffer& p_other) = delete;
-        ShaderStorageBuffer& operator=(ShaderStorageBuffer&& p_other) noexcept;
+        UniformBuffer& operator=(const UniformBuffer& p_other) = delete;
+        UniformBuffer& operator=(UniformBuffer&& p_other) noexcept;
 
         /**
-         * \brief Sets the ssbo's bind index
-         * \param p_bindIndex The ssbo's new bind index
+         * \brief Sets the ubo's binding point
+         * \param p_bindIndex The ubo's new binding point
          */
         void SetBindIndex(uint32_t p_bindIndex);
 
         /**
-         * \brief Binds the ssbo at the given bind index
+         * \brief Binds the ubo at the given binding point
          * \param p_bindIndex The target binding point
          */
         void Bind(uint32_t p_bindIndex);
 
         /**
-         * \brief Binds the ssbo to the current bind index
+         * \brief Binds the ubo to the current binding point
          */
         void Bind() const;
 
         /**
-         * \brief Unbinds the ssbo from the current bind index
+         * \brief Unbinds the ubo from the current binding point
          */
         void Unbind() const;
 
         /**
-         * \brief Sends the given data block to the buffer
+         * \brief Sends the data block to the buffer
          * \param p_data The data block to send
          * \param p_size The data block's size in bytes
          */
@@ -78,4 +78,4 @@ namespace SvRendering::Core::Buffers
     };
 }
 
-#include "SurvivantRendering/Core/Buffers/ShaderStorageBuffer.inl"
+#include "SurvivantRendering/Core/Buffers/UniformBuffer.inl"

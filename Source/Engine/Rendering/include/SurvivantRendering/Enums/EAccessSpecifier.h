@@ -1,11 +1,12 @@
 #pragma once
+#include <cstdint>
 
 namespace SvRendering::Enums
 {
     /**
-    * \brief OpenGL compare algorithm enum wrapper
-    */
-    enum class EAccessSpecifier
+     * \brief Supported buffer access specifiers
+     */
+    enum class EAccessSpecifier : uint8_t
     {
         STREAM_DRAW,
         STREAM_READ,
