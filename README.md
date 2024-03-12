@@ -1,8 +1,6 @@
 # Survivant
 ## Game Engine
 
-# Documentation - Survivant
-
 ## Introduction
 
 The goal of this project is to create a game engine. In a team of 3, we'll research, structure, project and annotate our plan for tackling this task.  Once completed, we'll use our engine to develop a rather simple game demonstrating its core features.
